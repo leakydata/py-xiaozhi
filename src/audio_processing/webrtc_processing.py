@@ -1,15 +1,16 @@
-"""WebRTC音频处理模块.
+"""WebRTC Audio Processing Module.
 
-该模块提供WebRTC APM库的回声消除(AEC)、噪声抑制(NS)等音频处理功能。
-从webrtc_aec_demo.py提取并优化为实时处理模块。
+This module provides audio processing functions from the WebRTC APM library,
+such as Echo Cancellation (AEC) and Noise Suppression (NS).
+It is extracted and optimized from webrtc_aec_demo.py for real-time processing.
 
-主要功能:
-1. 回声消除(AEC) - 消除扬声器输出对麦克风输入的干扰
-2. 噪声抑制(NS) - 减少环境噪声
-3. 增益控制(AGC) - 自动调整音频增益
-4. 高通滤波 - 移除低频噪声
+Main features:
+1. Echo Cancellation (AEC) - Eliminates interference from speaker output to microphone input.
+2. Noise Suppression (NS) - Reduces ambient noise.
+3. Automatic Gain Control (AGC) - Automatically adjusts audio gain.
+4. High-pass Filtering - Removes low-frequency noise.
 
-用法:
+Usage:
     processor = WebRTCProcessor()
     processed_audio = processor.process_capture_stream(input_audio, reference_audio)
 """
@@ -27,36 +28,36 @@ from src.utils.path_resolver import find_resource
 logger = get_logger(__name__)
 
 
-# 获取DLL文件的绝对路径
+# Get the absolute path of the DLL file
 def get_webrtc_dll_path():
     """
-    获取WebRTC APM库的路径.
+    Get the path to the WebRTC APM library.
     """
     dll_path = find_resource("libs/webrtc_apm/win/x86_64/libwebrtc_apm.dll")
     if dll_path:
         return str(dll_path)
 
-    # 备用方案：使用原有逻辑
+    # Fallback solution: use the original logic
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(current_dir))
     fallback_path = os.path.join(
         project_root, "libs", "webrtc_apm", "win", "x86_64", "libwebrtc_apm.dll"
     )
-    logger.warning(f"未找到WebRTC库，使用备用路径: {fallback_path}")
+    logger.warning(f"WebRTC library not found, using fallback path: {fallback_path}")
     return fallback_path
 
 
-# 加载WebRTC APM库
+# Load the WebRTC APM library
 try:
     dll_path = get_webrtc_dll_path()
     apm_lib = ctypes.CDLL(dll_path)
-    logger.info(f"成功加载WebRTC APM库: {dll_path}")
+    logger.info(f"Successfully loaded WebRTC APM library: {dll_path}")
 except Exception as e:
-    logger.error(f"加载WebRTC APM库失败: {e}")
+    logger.error(f"Failed to load WebRTC APM library: {e}")
     apm_lib = None
 
 
-# 定义枚举类型
+# Define enumeration types
 class DownmixMethod(ctypes.c_int):
     AverageChannels = 0
     UseFirstChannel = 1
@@ -81,7 +82,7 @@ class ClippingPredictorMode(ctypes.c_int):
     FixedStepClippingPeakPrediction = 2
 
 
-# 定义结构体
+# Define structures
 class Pipeline(Structure):
     _fields_ = [
         ("MaximumInternalProcessingRate", c_int),
@@ -212,7 +213,7 @@ class Config(Structure):
     ]
 
 
-# 定义DLL函数原型
+# Define DLL function prototypes
 if apm_lib:
     apm_lib.WebRTC_APM_Create.restype = c_void_p
     apm_lib.WebRTC_APM_Create.argtypes = []
@@ -253,53 +254,53 @@ if apm_lib:
 
 def create_optimized_apm_config():
     """
-    创建优化的WebRTC APM配置，专为实时音频处理优化.
+    Create an optimized WebRTC APM configuration, specifically for real-time audio processing.
     """
     config = Config()
 
-    # Pipeline配置 - 使用16kHz优化
+    # Pipeline configuration - optimized for 16kHz
     config.PipelineConfig.MaximumInternalProcessingRate = 16000
     config.PipelineConfig.MultiChannelRender = False
     config.PipelineConfig.MultiChannelCapture = False
     config.PipelineConfig.CaptureDownmixMethod = DownmixMethod.AverageChannels
 
-    # 预放大器 - 关闭以减少失真
+    # Pre-amplifier - disabled to reduce distortion
     config.PreAmp.Enabled = False
     config.PreAmp.FixedGainFactor = 1.0
 
-    # 电平调整 - 简化配置
+    # Level adjustment - simplified configuration
     config.LevelAdjustment.Enabled = False
     config.LevelAdjustment.PreGainFactor = 1.0
     config.LevelAdjustment.PostGainFactor = 1.0
     config.LevelAdjustment.MicGainEmulation.Enabled = False
     config.LevelAdjustment.MicGainEmulation.InitialLevel = 100
 
-    # 高通滤波器 - 启用以移除低频噪声
+    # High-pass filter - enabled to remove low-frequency noise
     config.HighPass.Enabled = True
     config.HighPass.ApplyInFullBand = True
 
-    # 回声消除 - 核心功能
+    # Echo canceller - core feature
     config.Echo.Enabled = True
     config.Echo.MobileMode = False
     config.Echo.ExportLinearAecOutput = False
     config.Echo.EnforceHighPassFiltering = True
 
-    # 噪声抑制 - 中等强度
+    # Noise suppression - moderate level
     config.NoiseSuppress.Enabled = True
     config.NoiseSuppress.NoiseLevel = NoiseSuppressionLevel.Moderate
     config.NoiseSuppress.AnalyzeLinearAecOutputWhenAvailable = True
 
-    # 瞬态抑制 - 关闭以保护语音
+    # Transient suppression - disabled to protect speech
     config.TransientSuppress.Enabled = False
 
-    # 增益控制1 - 启用自适应数字增益
+    # Gain control 1 - enable adaptive digital gain
     config.GainControl1.Enabled = True
     config.GainControl1.ControllerMode = GainControllerMode.AdaptiveDigital
     config.GainControl1.TargetLevelDbfs = 3
     config.GainControl1.CompressionGainDb = 9
     config.GainControl1.EnableLimiter = True
 
-    # 模拟增益控制器 - 关闭
+    # Analog gain controller - disabled
     config.GainControl1.AnalogController.Enabled = False
     config.GainControl1.AnalogController.StartupMinVolume = 0
     config.GainControl1.AnalogController.ClippedLevelMin = 70
@@ -308,7 +309,7 @@ def create_optimized_apm_config():
     config.GainControl1.AnalogController.ClippedRatioThreshold = 0.1
     config.GainControl1.AnalogController.ClippedWaitFrames = 300
 
-    # 削波预测器 - 关闭
+    # Clipping predictor - disabled
     predictor = config.GainControl1.AnalogController.Predictor
     predictor.Enabled = False
     predictor.PredictorMode = ClippingPredictorMode.ClippingEventPrediction
@@ -319,7 +320,7 @@ def create_optimized_apm_config():
     predictor.CrestFactorMargin = 3.0
     predictor.UsePredictedStep = True
 
-    # 增益控制2 - 关闭以避免冲突
+    # Gain control 2 - disabled to avoid conflicts
     config.GainControl2.Enabled = False
     config.GainControl2.VolumeController.Enabled = False
     config.GainControl2.AdaptiveController.Enabled = False
@@ -335,118 +336,118 @@ def create_optimized_apm_config():
 
 class WebRTCProcessor:
     """
-    WebRTC音频处理器，提供实时回声消除和音频增强功能.
+    WebRTC audio processor, providing real-time echo cancellation and audio enhancement.
     """
 
     def __init__(self, sample_rate=16000, channels=1, frame_size=160):
-        """初始化WebRTC处理器.
+        """Initializes the WebRTC processor.
 
         Args:
-            sample_rate: 采样率，默认16000Hz
-            channels: 声道数，默认1（单声道）
-            frame_size: 帧大小，默认160样本（10ms @ 16kHz）
+            sample_rate: The sample rate, default 16000Hz.
+            channels: The number of channels, default 1 (mono).
+            frame_size: The frame size, default 160 samples (10ms @ 16kHz).
         """
         self.sample_rate = sample_rate
         self.channels = channels
         self.frame_size = frame_size
 
-        # WebRTC APM实例
+        # WebRTC APM instance
         self.apm = None
         self.stream_config = None
         self.config = None
 
-        # 线程安全锁
+        # Thread-safe lock
         self._lock = threading.Lock()
 
-        # 初始化状态
+        # Initialization state
         self._initialized = False
 
-        # 参考信号缓冲区（用于回声消除）
+        # Reference signal buffer (for echo cancellation)
         self._reference_buffer = []
         self._reference_lock = threading.Lock()
 
-        # 初始化WebRTC APM
+        # Initialize WebRTC APM
         self._initialize()
 
     def _initialize(self):
         """
-        初始化WebRTC APM.
+        Initializes WebRTC APM.
         """
         if not apm_lib:
-            logger.error("WebRTC APM库未加载，无法初始化处理器")
+            logger.error("WebRTC APM library not loaded, cannot initialize processor.")
             return False
 
         try:
             with self._lock:
-                # 创建APM实例
+                # Create APM instance
                 self.apm = apm_lib.WebRTC_APM_Create()
                 if not self.apm:
-                    logger.error("创建WebRTC APM实例失败")
+                    logger.error("Failed to create WebRTC APM instance.")
                     return False
 
-                # 创建流配置
+                # Create stream configuration
                 self.stream_config = apm_lib.WebRTC_APM_CreateStreamConfig(
                     self.sample_rate, self.channels
                 )
                 if not self.stream_config:
-                    logger.error("创建WebRTC流配置失败")
+                    logger.error("Failed to create WebRTC stream configuration.")
                     return False
 
-                # 应用配置
+                # Apply configuration
                 self.config = create_optimized_apm_config()
                 result = apm_lib.WebRTC_APM_ApplyConfig(self.apm, byref(self.config))
                 if result != 0:
-                    logger.warning(f"应用WebRTC配置失败，错误码: {result}")
+                    logger.warning(f"Failed to apply WebRTC configuration, error code: {result}")
 
-                # 设置延迟
+                # Set delay
                 apm_lib.WebRTC_APM_SetStreamDelayMs(self.apm, 50)
 
                 self._initialized = True
-                logger.info("WebRTC处理器初始化成功")
+                logger.info("WebRTC processor initialized successfully.")
                 return True
 
         except Exception as e:
-            logger.error(f"初始化WebRTC处理器失败: {e}")
+            logger.error(f"Failed to initialize WebRTC processor: {e}")
             return False
 
     def process_capture_stream(self, input_data, reference_data=None):
-        """处理捕获流（麦克风输入）
+        """Processes the capture stream (microphone input).
 
         Args:
-            input_data: 输入音频数据（bytes）
-            reference_data: 参考音频数据（bytes，可选）
+            input_data: The input audio data (bytes).
+            reference_data: The reference audio data (bytes, optional).
 
         Returns:
-            处理后的音频数据（bytes），失败返回原始数据
+            The processed audio data (bytes), or the original data on failure.
         """
         if not self._initialized or not self.apm:
-            logger.warning("WebRTC处理器未初始化，返回原始数据")
+            logger.warning("WebRTC processor not initialized, returning original data.")
             return input_data
 
         try:
             with self._lock:
-                # 转换输入数据为numpy数组
+                # Convert input data to a numpy array
                 input_array = np.frombuffer(input_data, dtype=np.int16)
 
-                # 检查数据长度
+                # Check data length
                 if len(input_array) != self.frame_size:
                     logger.warning(
-                        f"输入数据长度不匹配，期望{self.frame_size}，实际{len(input_array)}"
+                        f"Input data length mismatch, expected {self.frame_size}, got {len(input_array)}"
                     )
                     return input_data
 
-                # 创建输入指针
+                # Create input pointer
                 input_ptr = input_array.ctypes.data_as(POINTER(c_short))
 
-                # 创建输出缓冲区
+                # Create output buffer
                 output_array = np.zeros(self.frame_size, dtype=np.int16)
                 output_ptr = output_array.ctypes.data_as(POINTER(c_short))
 
-                # 处理参考信号（如果提供）
+                # Process reference signal (if provided)
                 if reference_data:
                     self._process_reference_stream(reference_data)
 
-                # 处理捕获流
+                # Process capture stream
                 result = apm_lib.WebRTC_APM_ProcessStream(
                     self.apm,
                     input_ptr,
@@ -456,44 +457,44 @@ class WebRTCProcessor:
                 )
 
                 if result != 0:
-                    logger.debug(f"WebRTC处理警告，错误码: {result}")
-                    # 即使有警告，也返回处理后的数据
+                    logger.debug(f"WebRTC processing warning, error code: {result}")
+                    # Return processed data even if there's a warning
 
                 return output_array.tobytes()
 
         except Exception as e:
-            logger.error(f"处理捕获流失败: {e}")
+            logger.error(f"Failed to process capture stream: {e}")
             return input_data
 
     def _process_reference_stream(self, reference_data):
-        """处理参考流（扬声器输出）
+        """Processes the reference stream (speaker output).
 
         Args:
-            reference_data: 参考音频数据（bytes）
+            reference_data: The reference audio data (bytes).
         """
         try:
-            # 转换参考数据为numpy数组
+            # Convert reference data to a numpy array
             ref_array = np.frombuffer(reference_data, dtype=np.int16)
 
-            # 检查数据长度
+            # Check data length
             if len(ref_array) != self.frame_size:
-                # 如果长度不匹配，调整到正确长度
+                # If length doesn't match, adjust to the correct length
                 if len(ref_array) > self.frame_size:
                     ref_array = ref_array[: self.frame_size]
                 else:
-                    # 补零
+                    # Pad with zeros
                     padded = np.zeros(self.frame_size, dtype=np.int16)
                     padded[: len(ref_array)] = ref_array
                     ref_array = padded
 
-            # 创建参考信号指针
+            # Create reference signal pointer
             ref_ptr = ref_array.ctypes.data_as(POINTER(c_short))
 
-            # 创建参考输出缓冲区（虽然不使用但必须提供）
+            # Create reference output buffer (required but not used)
             ref_output_array = np.zeros(self.frame_size, dtype=np.int16)
             ref_output_ptr = ref_output_array.ctypes.data_as(POINTER(c_short))
 
-            # 处理参考流
+            # Process reference stream
             result = apm_lib.WebRTC_APM_ProcessReverseStream(
                 self.apm,
                 ref_ptr,
@@ -503,29 +504,29 @@ class WebRTCProcessor:
             )
 
             if result != 0:
-                logger.debug(f"处理参考流警告，错误码: {result}")
+                logger.debug(f"Processing reference stream warning, error code: {result}")
 
         except Exception as e:
-            logger.error(f"处理参考流失败: {e}")
+            logger.error(f"Failed to process reference stream: {e}")
 
     def add_reference_data(self, reference_data):
-        """添加参考数据到缓冲区.
+        """Adds reference data to the buffer.
 
         Args:
-            reference_data: 参考音频数据（bytes）
+            reference_data: The reference audio data (bytes).
         """
         with self._reference_lock:
             self._reference_buffer.append(reference_data)
-            # 保持缓冲区大小合理（约1秒的数据）
+            # Keep the buffer size reasonable (about 1 second of data)
             max_buffer_size = self.sample_rate // self.frame_size
             if len(self._reference_buffer) > max_buffer_size:
                 self._reference_buffer = self._reference_buffer[-max_buffer_size:]
 
     def get_reference_data(self):
-        """获取并移除最旧的参考数据.
+        """Gets and removes the oldest reference data.
 
         Returns:
-            参考音频数据（bytes），如果缓冲区为空返回None
+            The reference audio data (bytes), or None if the buffer is empty.
         """
         with self._reference_lock:
             if self._reference_buffer:
@@ -534,35 +535,35 @@ class WebRTCProcessor:
 
     def close(self):
         """
-        关闭WebRTC处理器，释放资源.
+        Closes the WebRTC processor and releases resources.
         """
         if not self._initialized:
             return
 
         try:
             with self._lock:
-                # 清理参考缓冲区
+                # Clear reference buffer
                 with self._reference_lock:
                     self._reference_buffer.clear()
 
-                # 销毁流配置
+                # Destroy stream configuration
                 if self.stream_config:
                     apm_lib.WebRTC_APM_DestroyStreamConfig(self.stream_config)
                     self.stream_config = None
 
-                # 销毁APM实例
+                # Destroy APM instance
                 if self.apm:
                     apm_lib.WebRTC_APM_Destroy(self.apm)
                     self.apm = None
 
                 self._initialized = False
-                logger.info("WebRTC处理器已关闭")
+                logger.info("WebRTC processor has been closed.")
 
         except Exception as e:
-            logger.error(f"关闭WebRTC处理器失败: {e}")
+            logger.error(f"Failed to close WebRTC processor: {e}")
 
     def __del__(self):
         """
-        析构函数，确保资源被释放.
+        Destructor to ensure resources are released.
         """
         self.close()

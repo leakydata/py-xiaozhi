@@ -19,44 +19,44 @@ logger = get_logger(__name__)
 
 
 class WakeWordDetector:
-    """唤醒词检测器 - 高级匹配算法版本"""
+    """Wake Word Detector - Advanced Matching Algorithm Version"""
 
     def __init__(self):
-        # 基本属性
+        # Basic properties
         self.audio_codec = None
         self.is_running_flag = False
         self.paused = False
         self.detection_task = None
         
-        # 防重复触发机制
+        # Anti-repeat trigger mechanism
         self.last_detection_time = 0
-        self.detection_cooldown = 3.0  # 3秒冷却时间
+        self.detection_cooldown = 3.0  # 3-second cooldown
         
-        # 回调函数
+        # Callback functions
         self.on_detected_callback: Optional[Callable] = None
         self.on_error: Optional[Callable] = None
 
-        # 配置检查
+        # Configuration check
         config = ConfigManager.get_instance()
         if not config.get_config("WAKE_WORD_OPTIONS.USE_WAKE_WORD", False):
-            logger.info("唤醒词功能已禁用")
+            logger.info("Wake word function is disabled")
             self.enabled = False
             return
 
-        # 基本参数初始化
+        # Basic parameter initialization
         self.enabled = True
         self.sample_rate = AudioConfig.INPUT_SAMPLE_RATE
 
-        # 唤醒词配置
+        # Wake word configuration
         self.wake_words = config.get_config(
             "WAKE_WORD_OPTIONS.WAKE_WORDS",
-            ["你好小明", "你好小智", "你好小天", "小爱同学", "贾维斯"],
+            ["Hello Xiaoming", "Hello Xiaozhi", "Hello Xiaotian", "Xiaoai Speaker", "Jarvis"],
         )
 
-        # 预计算拼音变体以提升性能
+        # Pre-calculate pinyin variants to improve performance
         self.wake_word_patterns = self._build_wake_word_patterns()
 
-        # 匹配参数
+        # Matching parameters
         self.similarity_threshold = config.get_config(
             "WAKE_WORD_OPTIONS.SIMILARITY_THRESHOLD", 0.85
         )
@@ -64,32 +64,32 @@ class WakeWordDetector:
             "WAKE_WORD_OPTIONS.MAX_EDIT_DISTANCE", 1
         )
 
-        # 性能优化：缓存最近的识别结果
+        # Performance optimization: cache recent recognition results
         self._recent_texts = []
         self._max_recent_cache = 10
 
-        # 初始化模型
+        # Initialize model
         self._init_model(config)
         
-        # 验证配置
+        # Validate configuration
         self._validate_config()
 
     def _build_wake_word_patterns(self):
         """
-        构建唤醒词的拼音模式，包括多种变体.
+        Build pinyin patterns for wake words, including multiple variants.
         """
         patterns = {}
         for word in self.wake_words:
-            # 标准拼音（无音调）
+            # Standard pinyin (without tones)
             standard_pinyin = "".join(lazy_pinyin(word, style=Style.NORMAL))
 
-            # 首字母拼音
+            # Pinyin with first letter
             initials_pinyin = "".join(lazy_pinyin(word, style=Style.FIRST_LETTER))
 
-            # 音调拼音
+            # Pinyin with tones
             tone_pinyin = "".join(lazy_pinyin(word, style=Style.TONE))
 
-            # 韵母拼音
+            # Pinyin finals
             finals_pinyin = "".join(lazy_pinyin(word, style=Style.FINALS))
 
             patterns[word] = {
@@ -106,12 +106,12 @@ class WakeWordDetector:
     @lru_cache(maxsize=128)
     def _get_text_pinyin_variants(self, text):
         """
-        获取文本的拼音变体（带缓存）
+        Get pinyin variants of text (with cache).
         """
         if not text or not text.strip():
             return {}
 
-        # 清理文本
+        # Clean text
         cleaned_text = re.sub(r"[^\u4e00-\u9fff\w]", "", text)
         if not cleaned_text:
             return {}
@@ -127,27 +127,27 @@ class WakeWordDetector:
 
     def _init_model(self, config):
         """
-        初始化语音识别模型.
+        Initialize the speech recognition model.
         """
         try:
             model_path = self._get_model_path(config)
             if not os.path.exists(model_path):
-                raise FileNotFoundError(f"模型路径不存在: {model_path}")
+                raise FileNotFoundError(f"Model path does not exist: {model_path}")
 
-            logger.info(f"加载语音识别模型: {model_path}")
+            logger.info(f"Loading speech recognition model: {model_path}")
             SetLogLevel(-1)
             self.model = Model(model_path=model_path)
             self.recognizer = KaldiRecognizer(self.model, self.sample_rate)
             self.recognizer.SetWords(True)
-            logger.info(f"模型加载完成，已配置 {len(self.wake_words)} 个唤醒词")
+            logger.info(f"Model loaded, {len(self.wake_words)} wake words configured")
 
         except Exception as e:
-            logger.error(f"初始化失败: {e}", exc_info=True)
+            logger.error(f"Initialization failed: {e}", exc_info=True)
             self.enabled = False
 
     def _get_model_path(self, config):
         """
-        获取模型路径.
+        Get the model path.
         """
         from src.utils.resource_finder import resource_finder
 
@@ -157,20 +157,20 @@ class WakeWordDetector:
 
         model_path = Path(model_name)
 
-        # 绝对路径直接返回
+        # Return absolute path directly
         if model_path.is_absolute() and model_path.exists():
             return str(model_path)
 
-        # 标准化为models子目录路径
+        # Standardize to models subdirectory path
         if len(model_path.parts) == 1:
             model_path = Path("models") / model_path
 
-        # 使用resource_finder查找
+        # Find using resource_finder
         model_dir_path = resource_finder.find_directory(model_path)
         if model_dir_path:
             return str(model_dir_path)
 
-        # 在models目录中查找
+        # Find in models directory
         models_dir = resource_finder.find_models_dir()
         if models_dir:
             model_name_only = (
@@ -180,25 +180,25 @@ class WakeWordDetector:
             if direct_model_path.exists():
                 return str(direct_model_path)
 
-            # 遍历子目录查找
+            # Traverse subdirectories to find
             for item in models_dir.iterdir():
                 if item.is_dir() and item.name == model_name_only:
                     return str(item)
 
-        # 使用默认路径
+        # Use default path
         project_root = resource_finder.get_project_root()
         default_path = project_root / model_path
-        logger.warning(f"未找到模型，将使用默认路径: {default_path}")
+        logger.warning(f"Model not found, will use default path: {default_path}")
         return str(default_path)
 
     def _calculate_similarity(self, text_variants, pattern):
         """
-        计算文本与唤醒词模式的相似度.
+        Calculate the similarity between the text and the wake word pattern.
         """
         max_similarity = 0.0
         best_match_type = None
 
-        # 检查各种拼音变体的匹配
+        # Check matching for various pinyin variants
         for variant_type in ["standard", "tone", "initials", "finals"]:
             text_variant = text_variants.get(variant_type, "")
             pattern_variant = pattern.get(variant_type, "")
@@ -206,16 +206,16 @@ class WakeWordDetector:
             if not text_variant or not pattern_variant:
                 continue
 
-            # 1. 精确匹配（最高优先级）
+            # 1. Exact match (highest priority)
             if pattern_variant in text_variant:
                 return 1.0, f"exact_{variant_type}"
 
-            # 2. 序列匹配器相似度
+            # 2. SequenceMatcher similarity
             similarity = difflib.SequenceMatcher(
                 None, text_variant, pattern_variant
             ).ratio()
 
-            # 3. 编辑距离匹配（适用于短文本）
+            # 3. Edit distance matching (for short text)
             if len(pattern_variant) <= 10:
                 edit_distance = self._levenshtein_distance(
                     text_variant, pattern_variant
@@ -227,7 +227,7 @@ class WakeWordDetector:
                     edit_similarity = 1.0 - (edit_distance / len(pattern_variant))
                     similarity = max(similarity, edit_similarity)
 
-            # 4. 子序列匹配（对于首字母缩写）
+            # 4. Subsequence matching (for initials)
             if variant_type == "initials" and len(pattern_variant) >= 2:
                 if self._is_subsequence(pattern_variant, text_variant):
                     similarity = max(similarity, 0.80)
@@ -240,7 +240,7 @@ class WakeWordDetector:
 
     def _levenshtein_distance(self, s1, s2):
         """
-        计算编辑距离.
+        Calculate the Levenshtein distance.
         """
         if len(s1) < len(s2):
             return self._levenshtein_distance(s2, s1)
@@ -262,7 +262,7 @@ class WakeWordDetector:
 
     def _is_subsequence(self, pattern, text):
         """
-        检查pattern是否为text的子序列.
+        Check if pattern is a subsequence of text.
         """
         i = 0
         for char in text:
@@ -272,16 +272,16 @@ class WakeWordDetector:
 
     def on_detected(self, callback: Callable):
         """
-        设置检测到唤醒词的回调函数.
+        Set the callback function for when a wake word is detected.
         """
         self.on_detected_callback = callback
 
     async def start(self, audio_codec) -> bool:
         """
-        启动唤醒词检测器.
+        Start the wake word detector.
         """
         if not self.enabled:
-            logger.warning("唤醒词功能未启用")
+            logger.warning("Wake word function is not enabled")
             return False
 
         try:
@@ -289,19 +289,19 @@ class WakeWordDetector:
             self.is_running_flag = True
             self.paused = False
 
-            # 启动检测任务
+            # Start detection task
             self.detection_task = asyncio.create_task(self._detection_loop())
 
-            logger.info("异步唤醒词检测器启动成功")
+            logger.info("Asynchronous wake word detector started successfully")
             return True
         except Exception as e:
-            logger.error(f"启动异步唤醒词检测器失败: {e}")
+            logger.error(f"Failed to start asynchronous wake word detector: {e}")
             self.enabled = False
             return False
 
     async def _detection_loop(self):
         """
-        检测循环.
+        Detection loop.
         """
         error_count = 0
         MAX_ERRORS = 5
@@ -316,10 +316,10 @@ class WakeWordDetector:
                     await asyncio.sleep(0.5)
                     continue
 
-                # 从音频编解码器获取数据并处理
+                # Get data from the audio codec and process it
                 await self._process_audio()
 
-                # 短暂延迟避免过度占用CPU
+                # Short delay to avoid excessive CPU usage
                 await asyncio.sleep(0.02)
                 error_count = 0
 
@@ -327,7 +327,7 @@ class WakeWordDetector:
                 break
             except Exception as e:
                 error_count += 1
-                logger.error(f"唤醒词检测循环错误({error_count}/{MAX_ERRORS}): {e}")
+                logger.error(f"Wake word detection loop error ({error_count}/{MAX_ERRORS}): {e}")
                 if self.on_error:
                     try:
                         if asyncio.iscoroutinefunction(self.on_error):
@@ -335,54 +335,54 @@ class WakeWordDetector:
                         else:
                             self.on_error(e)
                     except Exception as callback_error:
-                        logger.error(f"执行错误回调时失败: {callback_error}")
+                        logger.error(f"Failed to execute error callback: {callback_error}")
 
                 if error_count >= MAX_ERRORS:
-                    logger.critical("达到最大错误次数，停止检测")
+                    logger.critical("Maximum number of errors reached, stopping detection")
                     break
 
-                await asyncio.sleep(1)  # 错误后延迟重试
+                await asyncio.sleep(1)  # Delay before retrying after an error
 
     async def _process_audio(self):
         """
-        处理音频数据 - 使用旧版本的完整处理逻辑.
+        Process audio data - using the old full processing logic.
         """
         try:
-            # 使用AudioCodec的公开接口获取音频数据
+            # Use the public interface of AudioCodec to get audio data
             if not self.audio_codec:
                 return
 
-            # 获取原始音频数据用于唤醒词检测
+            # Get raw audio data for wake word detection
             data = await self.audio_codec.get_raw_audio_for_detection()
             if not data:
                 return
 
-            # 处理音频数据
+            # Process audio data
             await self._process_audio_data(data)
 
         except Exception as e:
-            logger.debug(f"音频处理错误: {e}")
+            logger.debug(f"Audio processing error: {e}")
 
     async def _process_audio_data(self, data):
         """
-        异步处理音频数据.
+        Asynchronously process audio data.
         """
         try:
-            # 处理完整识别结果
+            # Process full recognition result
             if self.recognizer.AcceptWaveform(data):
                 result = json.loads(self.recognizer.Result())
                 if text := result.get("text", "").strip():
-                    # 过滤过短的文本以减少误触发
+                    # Filter out text that is too short to reduce false positives
                     if len(text) >= 3:
                         await self._check_wake_word_text(text)
 
-            # 处理部分识别结果（降低频率）
+            # Process partial recognition result (at a lower frequency)
             if hasattr(self, "_partial_check_counter"):
                 self._partial_check_counter += 1
             else:
                 self._partial_check_counter = 0
 
-            # 每3次才检查一次部分结果
+            # Check partial result only every 3 times
             if self._partial_check_counter % 3 == 0:
                 partial = (
                     json.loads(self.recognizer.PartialResult())
@@ -393,32 +393,32 @@ class WakeWordDetector:
                     await self._check_wake_word_text(partial)
 
         except json.JSONDecodeError as e:
-            logger.warning(f"JSON解析错误: {e}")
+            logger.warning(f"JSON parsing error: {e}")
         except Exception as e:
-            logger.error(f"音频数据处理错误: {e}")
+            logger.error(f"Audio data processing error: {e}")
 
     async def _check_wake_word_text(self, text):
         """
-        检查文本中的唤醒词.
+        Check for wake words in the text.
         """
         if not text or not text.strip():
             return
 
-        # 防重复触发检查
+        # Anti-repeat trigger check
         current_time = time.time()
         if current_time - self.last_detection_time < self.detection_cooldown:
             return
 
-        # 避免重复处理相同文本
+        # Avoid processing the same text repeatedly
         if text in self._recent_texts:
             return
 
-        # 更新最近文本缓存
+        # Update recent text cache
         self._recent_texts.append(text)
         if len(self._recent_texts) > self._max_recent_cache:
             self._recent_texts.pop(0)
 
-        # 获取文本的拼音变体
+        # Get pinyin variants of the text
         text_variants = self._get_text_pinyin_variants(text)
         if not text_variants or not any(text_variants.values()):
             return
@@ -427,7 +427,7 @@ class WakeWordDetector:
         best_similarity = 0.0
         best_match_info = None
 
-        # 检查每个唤醒词模式
+        # Check each wake word pattern
         for wake_word, pattern in self.wake_word_patterns.items():
             similarity, match_type = self._calculate_similarity(text_variants, pattern)
 
@@ -436,22 +436,22 @@ class WakeWordDetector:
                 best_match = wake_word
                 best_match_info = match_type
 
-        # 触发检测
+        # Trigger detection
         if best_match:
             self.last_detection_time = current_time
             logger.info(
-                f"检测到唤醒词 '{best_match}' "
-                f"(相似度: {best_similarity:.3f}, 匹配类型: {best_match_info})"
+                f"Detected wake word '{best_match}' "
+                f"(Similarity: {best_similarity:.3f}, Match type: {best_match_info})"
             )
 
             await self._trigger_callbacks(best_match, text)
             self.recognizer.Reset()
-            # 清空缓存避免重复触发
+            # Clear cache to avoid repeated triggers
             self._recent_texts.clear()
 
     async def _trigger_callbacks(self, wake_word, text):
         """
-        触发回调函数.
+        Trigger callback functions.
         """
         if self.on_detected_callback:
             try:
@@ -460,13 +460,13 @@ class WakeWordDetector:
                 else:
                     self.on_detected_callback(wake_word, text)
             except Exception as e:
-                logger.error(f"唤醒词回调执行失败: {e}")
+                logger.error(f"Wake word callback execution failed: {e}")
 
 
 
     async def stop(self):
         """
-        停止检测器.
+        Stop the detector.
         """
         self.is_running_flag = False
 
@@ -477,67 +477,67 @@ class WakeWordDetector:
             except asyncio.CancelledError:
                 pass
 
-        logger.info("唤醒词检测器已停止")
+        logger.info("Wake word detector stopped")
 
     async def pause(self):
         """
-        暂停检测.
+        Pause detection.
         """
         self.paused = True
 
     async def resume(self):
         """
-        恢复检测.
+        Resume detection.
         """
         self.paused = False
 
     def is_running(self) -> bool:
         """
-        检查是否正在运行.
+        Check if it is running.
         """
         return self.is_running_flag and not self.paused
 
     def _validate_config(self):
         """
-        验证配置参数.
+        Validate configuration parameters.
         """
         if not self.enabled:
             return
 
-        # 验证相似度阈值
+        # Validate similarity threshold
         if not 0.1 <= self.similarity_threshold <= 1.0:
             logger.warning(
-                f"相似度阈值 {self.similarity_threshold} 超出合理范围，重置为0.85"
+                f"Similarity threshold {self.similarity_threshold} is out of reasonable range, resetting to 0.85"
             )
             self.similarity_threshold = 0.85
 
-        # 验证编辑距离
+        # Validate edit distance
         if self.max_edit_distance < 0 or self.max_edit_distance > 5:
             logger.warning(
-                f"最大编辑距离 {self.max_edit_distance} 超出合理范围，重置为1"
+                f"Max edit distance {self.max_edit_distance} is out of reasonable range, resetting to 1"
             )
             self.max_edit_distance = 1
 
-        # 验证唤醒词
+        # Validate wake words
         if not self.wake_words:
-            logger.error("未配置唤醒词")
+            logger.error("No wake words configured")
             self.enabled = False
             return
 
-        # 检查唤醒词长度
+        # Check wake word length
         for word in self.wake_words:
             if len(word) < 2:
-                logger.warning(f"唤醒词 '{word}' 过短，可能导致误触发")
+                logger.warning(f"Wake word '{word}' is too short, may cause false positives")
             elif len(word) > 10:
-                logger.warning(f"唤醒词 '{word}' 过长，可能影响识别准确度")
+                logger.warning(f"Wake word '{word}' is too long, may affect recognition accuracy")
 
         logger.info(
-            f"配置验证完成 - 阈值: {self.similarity_threshold}, 编辑距离: {self.max_edit_distance}"
+            f"Configuration validation complete - Threshold: {self.similarity_threshold}, Edit distance: {self.max_edit_distance}"
         )
 
     def get_performance_stats(self):
         """
-        获取性能统计信息.
+        Get performance statistics.
         """
         cache_info = self._get_text_pinyin_variants.cache_info()
         return {
@@ -553,9 +553,9 @@ class WakeWordDetector:
 
     def clear_cache(self):
         """
-        清空缓存.
+        Clear the cache.
         """
         self._get_text_pinyin_variants.cache_clear()
         self._recent_texts.clear()
-        logger.info("缓存已清空")
+        logger.info("Cache cleared")
 
