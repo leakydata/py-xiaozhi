@@ -9,11 +9,11 @@ logger = get_logger(__name__)
 
 
 class ConfigManager:
-    """配置管理器 - 单例模式"""
+    """Configuration Manager - Singleton Pattern"""
 
     _instance = None
 
-    # 默认配置
+    # Default configuration
     DEFAULT_CONFIG = {
         "SYSTEM_OPTIONS": {
             "CLIENT_ID": None,
@@ -23,14 +23,14 @@ class ConfigManager:
                 "WEBSOCKET_URL": None,
                 "WEBSOCKET_ACCESS_TOKEN": None,
                 "MQTT_INFO": None,
-                "ACTIVATION_VERSION": "v2",  # 可选值: v1, v2
+                "ACTIVATION_VERSION": "v2",  # Options: v1, v2
                 "AUTHORIZATION_URL": "https://xiaozhi.me/",
             },
         },
         "WAKE_WORD_OPTIONS": {
             "USE_WAKE_WORD": False,
             "MODEL_PATH": "models/vosk-model-small-cn-0.22",
-            "WAKE_WORDS": ["小智", "小美"],
+            "WAKE_WORDS": ["xiao zhi", "xiao mei"],
         },
         "CAMERA": {
             "camera_index": 0,
@@ -43,21 +43,21 @@ class ConfigManager:
         },
         "SHORTCUTS": {
             "ENABLED": True,
-            "MANUAL_PRESS": {"modifier": "ctrl", "key": "j", "description": "按住说话"},
-            "AUTO_TOGGLE": {"modifier": "ctrl", "key": "k", "description": "自动对话"},
-            "ABORT": {"modifier": "ctrl", "key": "q", "description": "中断对话"},
-            "MODE_TOGGLE": {"modifier": "ctrl", "key": "m", "description": "切换模式"},
+            "MANUAL_PRESS": {"modifier": "ctrl", "key": "j", "description": "Hold to talk"},
+            "AUTO_TOGGLE": {"modifier": "ctrl", "key": "k", "description": "Auto-chat"},
+            "ABORT": {"modifier": "ctrl", "key": "q", "description": "Interrupt chat"},
+            "MODE_TOGGLE": {"modifier": "ctrl", "key": "m", "description": "Toggle mode"},
             "WINDOW_TOGGLE": {
                 "modifier": "ctrl",
                 "key": "w",
-                "description": "显示/隐藏窗口",
+                "description": "Show/hide window",
             },
         },
     }
 
     def __new__(cls):
         """
-        确保单例模式.
+        Ensure singleton pattern.
         """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -66,109 +66,109 @@ class ConfigManager:
 
     def __init__(self):
         """
-        初始化配置管理器.
+        Initialize the configuration manager.
         """
         if self._initialized:
             return
         self._initialized = True
 
-        # 初始化配置文件路径
+        # Initialize configuration file paths
         self._init_config_paths()
 
-        # 确保必要的目录存在
+        # Ensure necessary directories exist
         self._ensure_required_directories()
 
-        # 加载配置
+        # Load configuration
         self._config = self._load_config()
 
     def _init_config_paths(self):
         """
-        初始化配置文件路径.
+        Initialize configuration file paths.
         """
-        # 使用resource_finder查找或创建配置目录
+        # Use resource_finder to find or create the configuration directory
         self.config_dir = resource_finder.find_config_dir()
         if not self.config_dir:
-            # 如果找不到配置目录，在项目根目录下创建
+            # If the configuration directory is not found, create it in the project root
             project_root = resource_finder.get_project_root()
             self.config_dir = project_root / "config"
             self.config_dir.mkdir(parents=True, exist_ok=True)
-            logger.info(f"创建配置目录: {self.config_dir.absolute()}")
+            logger.info(f"Created configuration directory: {self.config_dir.absolute()}")
 
         self.config_file = self.config_dir / "config.json"
 
-        # 记录配置文件路径
-        logger.info(f"配置目录: {self.config_dir.absolute()}")
-        logger.info(f"配置文件: {self.config_file.absolute()}")
+        # Log configuration file paths
+        logger.info(f"Configuration directory: {self.config_dir.absolute()}")
+        logger.info(f"Configuration file: {self.config_file.absolute()}")
 
     def _ensure_required_directories(self):
         """
-        确保必要的目录存在.
+        Ensure necessary directories exist.
         """
         project_root = resource_finder.get_project_root()
 
-        # 创建 models 目录
+        # Create models directory
         models_dir = project_root / "models"
         if not models_dir.exists():
             models_dir.mkdir(parents=True, exist_ok=True)
-            logger.info(f"创建模型目录: {models_dir.absolute()}")
+            logger.info(f"Created models directory: {models_dir.absolute()}")
 
-        # 创建 cache 目录
+        # Create cache directory
         cache_dir = project_root / "cache"
         if not cache_dir.exists():
             cache_dir.mkdir(parents=True, exist_ok=True)
-            logger.info(f"创建缓存目录: {cache_dir.absolute()}")
+            logger.info(f"Created cache directory: {cache_dir.absolute()}")
 
     def _load_config(self) -> Dict[str, Any]:
         """
-        加载配置文件，如果不存在则创建.
+        Load the configuration file, or create it if it doesn't exist.
         """
         try:
-            # 首先尝试使用resource_finder查找配置文件
+            # First, try to find the configuration file using resource_finder
             config_file_path = resource_finder.find_file("config/config.json")
 
             if config_file_path:
-                logger.debug(f"使用resource_finder找到配置文件: {config_file_path}")
+                logger.debug(f"Found configuration file using resource_finder: {config_file_path}")
                 config = json.loads(config_file_path.read_text(encoding="utf-8"))
                 return self._merge_configs(self.DEFAULT_CONFIG, config)
 
-            # 如果resource_finder没找到，尝试使用实例变量中的路径
+            # If resource_finder doesn't find it, try using the path from the instance variable
             if self.config_file.exists():
-                logger.debug(f"使用实例路径找到配置文件: {self.config_file}")
+                logger.debug(f"Found configuration file using instance path: {self.config_file}")
                 config = json.loads(self.config_file.read_text(encoding="utf-8"))
                 return self._merge_configs(self.DEFAULT_CONFIG, config)
             else:
-                # 创建默认配置文件
-                logger.info("配置文件不存在，创建默认配置")
+                # Create default configuration file
+                logger.info("Configuration file not found, creating default configuration.")
                 self._save_config(self.DEFAULT_CONFIG)
                 return self.DEFAULT_CONFIG.copy()
 
         except Exception as e:
-            logger.error(f"配置加载错误: {e}")
+            logger.error(f"Configuration loading error: {e}")
             return self.DEFAULT_CONFIG.copy()
 
     def _save_config(self, config: dict) -> bool:
         """
-        保存配置到文件.
+        Save configuration to file.
         """
         try:
-            # 确保配置目录存在
+            # Ensure the configuration directory exists
             self.config_dir.mkdir(parents=True, exist_ok=True)
 
-            # 保存配置文件
+            # Save the configuration file
             self.config_file.write_text(
                 json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8"
             )
-            logger.debug(f"配置已保存到: {self.config_file}")
+            logger.debug(f"Configuration saved to: {self.config_file}")
             return True
 
         except Exception as e:
-            logger.error(f"配置保存错误: {e}")
+            logger.error(f"Configuration saving error: {e}")
             return False
 
     @staticmethod
     def _merge_configs(default: dict, custom: dict) -> dict:
         """
-        递归合并配置字典.
+        Recursively merge configuration dictionaries.
         """
         result = default.copy()
         for key, value in custom.items():
@@ -184,8 +184,8 @@ class ConfigManager:
 
     def get_config(self, path: str, default: Any = None) -> Any:
         """
-        通过路径获取配置值
-        path: 点分隔的配置路径，如 "SYSTEM_OPTIONS.NETWORK.MQTT_INFO"
+        Get a configuration value by path.
+        path: Dot-separated configuration path, e.g., "SYSTEM_OPTIONS.NETWORK.MQTT_INFO"
         """
         try:
             value = self._config
@@ -197,8 +197,8 @@ class ConfigManager:
 
     def update_config(self, path: str, value: Any) -> bool:
         """
-        更新特定配置项
-        path: 点分隔的配置路径，如 "SYSTEM_OPTIONS.NETWORK.MQTT_INFO"
+        Update a specific configuration item.
+        path: Dot-separated configuration path, e.g., "SYSTEM_OPTIONS.NETWORK.MQTT_INFO"
         """
         try:
             current = self._config
@@ -208,58 +208,58 @@ class ConfigManager:
             current[last] = value
             return self._save_config(self._config)
         except Exception as e:
-            logger.error(f"配置更新错误 {path}: {e}")
+            logger.error(f"Configuration update error {path}: {e}")
             return False
 
     def reload_config(self) -> bool:
         """
-        重新加载配置文件.
+        Reload the configuration file.
         """
         try:
             self._config = self._load_config()
-            logger.info("配置文件已重新加载")
+            logger.info("Configuration file reloaded.")
             return True
         except Exception as e:
-            logger.error(f"配置重新加载失败: {e}")
+            logger.error(f"Configuration reload failed: {e}")
             return False
 
     def generate_uuid(self) -> str:
         """
-        生成 UUID v4.
+        Generate a UUID v4.
         """
         return str(uuid.uuid4())
 
     def initialize_client_id(self):
         """
-        确保存在客户端ID.
+        Ensure a client ID exists.
         """
         if not self.get_config("SYSTEM_OPTIONS.CLIENT_ID"):
             client_id = self.generate_uuid()
             success = self.update_config("SYSTEM_OPTIONS.CLIENT_ID", client_id)
             if success:
-                logger.info(f"已生成新的客户端ID: {client_id}")
+                logger.info(f"Generated new client ID: {client_id}")
             else:
-                logger.error("保存新的客户端ID失败")
+                logger.error("Failed to save new client ID.")
 
     def initialize_device_id_from_fingerprint(self, device_fingerprint):
         """
-        从设备指纹初始化设备ID.
+        Initialize device ID from device fingerprint.
         """
         if not self.get_config("SYSTEM_OPTIONS.DEVICE_ID"):
             try:
-                # 从efuse.json获取MAC地址作为DEVICE_ID
+                # Get MAC address from efuse.json as DEVICE_ID
                 mac_address = device_fingerprint.get_mac_address_from_efuse()
                 if mac_address:
                     success = self.update_config(
                         "SYSTEM_OPTIONS.DEVICE_ID", mac_address
                     )
                     if success:
-                        logger.info(f"从efuse.json获取DEVICE_ID: {mac_address}")
+                        logger.info(f"Got DEVICE_ID from efuse.json: {mac_address}")
                     else:
-                        logger.error("保存DEVICE_ID失败")
+                        logger.error("Failed to save DEVICE_ID.")
                 else:
-                    logger.error("无法从efuse.json获取MAC地址")
-                    # 备用方案：从设备指纹直接获取
+                    logger.error("Could not get MAC address from efuse.json")
+                    # Fallback: get from device fingerprint directly
                     fingerprint = device_fingerprint.generate_fingerprint()
                     mac_from_fingerprint = fingerprint.get("mac_address")
                     if mac_from_fingerprint:
@@ -268,18 +268,18 @@ class ConfigManager:
                         )
                         if success:
                             logger.info(
-                                f"使用指纹中的MAC地址作为DEVICE_ID: "
+                                f"Using MAC address from fingerprint as DEVICE_ID: "
                                 f"{mac_from_fingerprint}"
                             )
                         else:
-                            logger.error("保存备用DEVICE_ID失败")
+                            logger.error("Failed to save fallback DEVICE_ID.")
             except Exception as e:
-                logger.error(f"初始化DEVICE_ID时出错: {e}")
+                logger.error(f"Error initializing DEVICE_ID: {e}")
 
     @classmethod
     def get_instance(cls):
         """
-        获取配置管理器实例.
+        Get the configuration manager instance.
         """
         if cls._instance is None:
             cls._instance = cls()

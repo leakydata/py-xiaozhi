@@ -11,14 +11,14 @@ logger = get_logger(__name__)
 
 class Camera:
     _instance = None
-    _lock = threading.Lock()  # 线程安全
+    _lock = threading.Lock()  # Thread safe
 
     def __init__(self):
         self.explain_url = ""
         self.explain_token = ""
-        self.jpeg_data = {"buf": b"", "len": 0}  # 图像的JPEG字节数据  # 字节数据长度
+        self.jpeg_data = {"buf": b"", "len": 0}  # JPEG byte data of the image  # Length of the byte data
 
-        # 从配置中读取相机参数
+        # Read camera parameters from configuration
         config = ConfigManager.get_instance()
         self.camera_index = config.get_config("CAMERA.camera_index", 0)
         self.frame_width = config.get_config("CAMERA.frame_width", 640)
@@ -34,14 +34,14 @@ class Camera:
 
     def set_explain_url(self, url):
         """
-        设置解释服务的URL.
+        Set the URL for the explanation service.
         """
         self.explain_url = url
         logger.info(f"Vision service URL set to: {url}")
 
     def set_explain_token(self, token):
         """
-        设置解释服务的token.
+        Set the token for the explanation service.
         """
         self.explain_token = token
         if token:
@@ -49,29 +49,29 @@ class Camera:
 
     def set_jpeg_data(self, data_bytes):
         """
-        设置JPEG图像数据.
+        Set the JPEG image data.
         """
         self.jpeg_data["buf"] = data_bytes
         self.jpeg_data["len"] = len(data_bytes)
 
     def capture(self) -> bool:
         """
-        捕获图像.
+        Capture an image.
         """
         try:
             logger.info("Accessing camera...")
 
-            # 尝试打开摄像头
+            # Try to open the camera
             cap = cv2.VideoCapture(self.camera_index)
             if not cap.isOpened():
                 logger.error(f"Cannot open camera at index {self.camera_index}")
                 return False
 
-            # 设置摄像头参数
+            # Set camera parameters
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
 
-            # 读取图像
+            # Read the image
             ret, frame = cap.read()
             cap.release()
 
@@ -79,14 +79,14 @@ class Camera:
                 logger.error("Failed to capture image")
                 return False
 
-            # 获取原始图像尺寸
+            # Get original image dimensions
             height, width = frame.shape[:2]
 
-            # 计算缩放比例，使最长边为320
+            # Calculate scaling factor to make the longest side 320
             max_dim = max(height, width)
             scale = 320 / max_dim if max_dim > 320 else 1.0
 
-            # 等比例缩放图像
+            # Scale the image proportionally
             if scale < 1.0:
                 new_width = int(width * scale)
                 new_height = int(height * scale)
@@ -94,14 +94,14 @@ class Camera:
                     frame, (new_width, new_height), interpolation=cv2.INTER_AREA
                 )
 
-            # 直接将图像编码为JPEG字节流
+            # Directly encode the image into a JPEG byte stream
             success, jpeg_data = cv2.imencode(".jpg", frame)
 
             if not success:
                 logger.error("Failed to encode image to JPEG")
                 return False
 
-            # 获取字节数据
+            # Get byte data
             self.jpeg_data["buf"] = jpeg_data.tobytes()
             self.jpeg_data["len"] = len(self.jpeg_data["buf"])
             logger.info(
@@ -115,19 +115,19 @@ class Camera:
 
     def get_device_id(self):
         """
-        获取设备ID.
+        Get the device ID.
         """
         return ConfigManager.get_instance().get_config("SYSTEM_OPTIONS.DEVICE_ID")
 
     def get_client_id(self):
         """
-        获取客户端ID.
+        Get the client ID.
         """
         return ConfigManager.get_instance().get_config("SYSTEM_OPTIONS.CLIENT_ID")
 
     def explain(self, question: str) -> str:
         """
-        发送图像分析请求.
+        Send an image analysis request.
         """
         if not self.explain_url:
             return '{"success": false, "message": "Image explain URL is not set"}'
@@ -135,25 +135,25 @@ class Camera:
         if not self.jpeg_data["buf"]:
             return '{"success": false, "message": "Camera buffer is empty"}'
 
-        # 准备请求头
+        # Prepare request headers
         headers = {"Device-Id": self.get_device_id(), "Client-Id": self.get_client_id()}
 
         if self.explain_token:
             headers["Authorization"] = f"Bearer {self.explain_token}"
 
-        # 准备文件数据
+        # Prepare file data
         files = {
             "question": (None, question),
             "file": ("camera.jpg", self.jpeg_data["buf"], "image/jpeg"),
         }
 
         try:
-            # 发送请求
+            # Send the request
             response = requests.post(
                 self.explain_url, headers=headers, files=files, timeout=10
             )
 
-            # 检查响应状态
+            # Check the response status
             if response.status_code != 200:
                 error_msg = (
                     f"Failed to upload photo, status code: {response.status_code}"
@@ -161,7 +161,7 @@ class Camera:
                 logger.error(error_msg)
                 return f'{{"success": false, "message": "{error_msg}"}}'
 
-            # 记录响应
+            # Log the response
             logger.info(
                 f"Explain image size={self.jpeg_data['len']}, "
                 f"question={question}\n{response.text}"
@@ -176,15 +176,15 @@ class Camera:
 
 def take_photo(arguments: dict) -> str:
     """
-    拍照并解释的工具函数.
+    Tool function to take a photo and explain it.
     """
     camera = Camera.get_instance()
     question = arguments.get("question", "")
 
-    # 拍照
+    # Take a photo
     success = camera.capture()
     if not success:
         return '{"success": false, "message": "Failed to capture photo"}'
 
-    # 发送解释请求
+    # Send an explanation request
     return camera.explain(question)

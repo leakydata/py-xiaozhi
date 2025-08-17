@@ -1,6 +1,6 @@
-"""高德地图MCP工具函数.
+"""Amap MCP tool functions.
 
-提供给MCP服务器调用的异步工具函数，包括地理编码、路径规划、搜索等功能
+Provides asynchronous tool functions for the MCP server, including geocoding, route planning, search, etc.
 """
 
 import asyncio
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 
 def get_amap_api_key() -> str:
-    """获取高德地图API密钥."""
+    """Get Amap API key."""
     # api_key = os.getenv("AMAP_API_KEY")
     # if not api_key:
     #     raise ValueError("AMAP_API_KEY environment variable is not set")
@@ -24,14 +24,14 @@ def get_amap_api_key() -> str:
 
 
 async def maps_regeocode(args: Dict[str, Any]) -> str:
-    """将经纬度坐标转换为地址信息.
+    """Convert latitude and longitude coordinates to address information.
     
     Args:
-        args: 包含以下参数的字典
-            - location: 经纬度坐标（格式：经度,纬度）
+        args: A dictionary containing the following parameters
+            - location: Latitude and longitude coordinates (format: longitude,latitude)
             
     Returns:
-        str: JSON格式的地址信息
+        str: Address information in JSON format
     """
     try:
         location = args["location"]
@@ -49,7 +49,7 @@ async def maps_regeocode(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"逆地理编码失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"Reverse geocoding failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
@@ -63,29 +63,29 @@ async def maps_regeocode(args: Dict[str, Any]) -> str:
             }
         }
         
-        logger.info(f"[AmapTools] 逆地理编码成功: {location}")
+        logger.info(f"[AmapTools] Reverse geocoding successful: {location}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"逆地理编码失败: {str(e)}"
+        error_msg = f"Reverse geocoding failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def maps_geo(args: Dict[str, Any]) -> str:
-    """将地址转换为经纬度坐标.
+    """Convert address to latitude and longitude coordinates.
     
     Args:
-        args: 包含以下参数的字典
-            - address: 待解析的地址
-            - city: 指定查询的城市（可选）
+        args: A dictionary containing the following parameters
+            - address: The address to be parsed
+            - city: Specify the city for the query (optional)
             
     Returns:
-        str: JSON格式的坐标信息
+        str: Coordinate information in JSON format
     """
     try:
         address = args["address"]
@@ -106,7 +106,7 @@ async def maps_geo(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"地理编码失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"Geocoding failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
@@ -133,28 +133,28 @@ async def maps_geo(args: Dict[str, Any]) -> str:
             "data": result_data
         }
         
-        logger.info(f"[AmapTools] 地理编码成功: {address}")
+        logger.info(f"[AmapTools] Geocoding successful: {address}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"地理编码失败: {str(e)}"
+        error_msg = f"Geocoding failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def maps_ip_location(args: Dict[str, Any]) -> str:
-    """根据IP地址获取位置信息.
+    """Get location information based on IP address.
     
     Args:
-        args: 包含以下参数的字典
-            - ip: IP地址
+        args: A dictionary containing the following parameters
+            - ip: IP address
             
     Returns:
-        str: JSON格式的位置信息
+        str: Location information in JSON format
     """
     try:
         ip = args["ip"]
@@ -172,7 +172,7 @@ async def maps_ip_location(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"IP定位失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"IP location failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
@@ -186,28 +186,28 @@ async def maps_ip_location(args: Dict[str, Any]) -> str:
             }
         }
         
-        logger.info(f"[AmapTools] IP定位成功: {ip}")
+        logger.info(f"[AmapTools] IP location successful: {ip}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"IP定位失败: {str(e)}"
+        error_msg = f"IP location failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def maps_weather(args: Dict[str, Any]) -> str:
-    """查询城市天气信息.
+    """Query city weather information.
     
     Args:
-        args: 包含以下参数的字典
-            - city: 城市名称或adcode
+        args: A dictionary containing the following parameters
+            - city: City name or adcode
             
     Returns:
-        str: JSON格式的天气信息
+        str: Weather information in JSON format
     """
     try:
         city = args["city"]
@@ -226,13 +226,13 @@ async def maps_weather(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"天气查询失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"Weather query failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
         forecasts = data.get("forecasts", [])
         if not forecasts:
-            error_msg = "未找到天气数据"
+            error_msg = "Weather data not found"
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
         forecast = forecasts[0]
@@ -245,29 +245,29 @@ async def maps_weather(args: Dict[str, Any]) -> str:
             }
         }
         
-        logger.info(f"[AmapTools] 天气查询成功: {city}")
+        logger.info(f"[AmapTools] Weather query successful: {city}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"天气查询失败: {str(e)}"
+        error_msg = f"Weather query failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def maps_direction_walking(args: Dict[str, Any]) -> str:
-    """步行路径规划.
+    """Walking route planning.
     
     Args:
-        args: 包含以下参数的字典
-            - origin: 出发点经纬度（格式：经度,纬度）
-            - destination: 目的地经纬度（格式：经度,纬度）
+        args: A dictionary containing the following parameters
+            - origin: Origin coordinates (format: longitude,latitude)
+            - destination: Destination coordinates (format: longitude,latitude)
             
     Returns:
-        str: JSON格式的步行路径信息
+        str: Walking route information in JSON format
     """
     try:
         origin = args["origin"]
@@ -287,7 +287,7 @@ async def maps_direction_walking(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"步行路径规划失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"Walking route planning failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
@@ -321,29 +321,29 @@ async def maps_direction_walking(args: Dict[str, Any]) -> str:
             }
         }
         
-        logger.info(f"[AmapTools] 步行路径规划成功: {origin} -> {destination}")
+        logger.info(f"[AmapTools] Walking route planning successful: {origin} -> {destination}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"步行路径规划失败: {str(e)}"
+        error_msg = f"Walking route planning failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def maps_direction_driving(args: Dict[str, Any]) -> str:
-    """驾车路径规划.
+    """Driving route planning.
     
     Args:
-        args: 包含以下参数的字典
-            - origin: 出发点经纬度（格式：经度,纬度）
-            - destination: 目的地经纬度（格式：经度,纬度）
+        args: A dictionary containing the following parameters
+            - origin: Origin coordinates (format: longitude,latitude)
+            - destination: Destination coordinates (format: longitude,latitude)
             
     Returns:
-        str: JSON格式的驾车路径信息
+        str: Driving route information in JSON format
     """
     try:
         origin = args["origin"]
@@ -363,7 +363,7 @@ async def maps_direction_driving(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"驾车路径规划失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"Driving route planning failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
@@ -400,30 +400,30 @@ async def maps_direction_driving(args: Dict[str, Any]) -> str:
             }
         }
         
-        logger.info(f"[AmapTools] 驾车路径规划成功: {origin} -> {destination}")
+        logger.info(f"[AmapTools] Driving route planning successful: {origin} -> {destination}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"驾车路径规划失败: {str(e)}"
+        error_msg = f"Driving route planning failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def maps_text_search(args: Dict[str, Any]) -> str:
-    """关键词搜索POI.
+    """Keyword search for POI.
     
     Args:
-        args: 包含以下参数的字典
-            - keywords: 搜索关键词
-            - city: 查询城市（可选）
-            - types: POI类型（可选）
+        args: A dictionary containing the following parameters
+            - keywords: Search keywords
+            - city: Query city (optional)
+            - types: POI type (optional)
             
     Returns:
-        str: JSON格式的搜索结果
+        str: Search results in JSON format
     """
     try:
         keywords = args["keywords"]
@@ -448,7 +448,7 @@ async def maps_text_search(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"搜索失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"Search failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
@@ -475,30 +475,30 @@ async def maps_text_search(args: Dict[str, Any]) -> str:
             }
         }
         
-        logger.info(f"[AmapTools] 搜索成功: {keywords}, 结果数量: {len(result_pois)}")
+        logger.info(f"[AmapTools] Search successful: {keywords}, number of results: {len(result_pois)}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"搜索失败: {str(e)}"
+        error_msg = f"Search failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def maps_around_search(args: Dict[str, Any]) -> str:
-    """周边搜索POI.
+    """Nearby search for POI.
     
     Args:
-        args: 包含以下参数的字典
-            - location: 中心点经纬度（格式：经度,纬度）
-            - keywords: 搜索关键词（可选）
-            - radius: 搜索半径，单位米（可选，默认1000）
+        args: A dictionary containing the following parameters
+            - location: Center point coordinates (format: longitude,latitude)
+            - keywords: Search keywords (optional)
+            - radius: Search radius in meters (optional, default 1000)
             
     Returns:
-        str: JSON格式的周边搜索结果
+        str: Nearby search results in JSON format
     """
     try:
         location = args["location"]
@@ -521,7 +521,7 @@ async def maps_around_search(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"周边搜索失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"Nearby search failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
@@ -548,28 +548,28 @@ async def maps_around_search(args: Dict[str, Any]) -> str:
             }
         }
         
-        logger.info(f"[AmapTools] 周边搜索成功: {location}, 结果数量: {len(result_pois)}")
+        logger.info(f"[AmapTools] Nearby search successful: {location}, number of results: {len(result_pois)}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"周边搜索失败: {str(e)}"
+        error_msg = f"Nearby search failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def maps_search_detail(args: Dict[str, Any]) -> str:
-    """查询POI详细信息.
+    """Query POI details.
     
     Args:
-        args: 包含以下参数的字典
-            - id: POI的ID
+        args: A dictionary containing the following parameters
+            - id: POI ID
             
     Returns:
-        str: JSON格式的详细信息
+        str: Detailed information in JSON format
     """
     try:
         poi_id = args["id"]
@@ -587,13 +587,13 @@ async def maps_search_detail(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"POI详情查询失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"POI detail query failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
         pois = data.get("pois", [])
         if not pois:
-            error_msg = "未找到POI详情"
+            error_msg = "POI details not found"
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
         poi = pois[0]
@@ -620,30 +620,30 @@ async def maps_search_detail(args: Dict[str, Any]) -> str:
             }
         }
         
-        logger.info(f"[AmapTools] POI详情查询成功: {poi_id}")
+        logger.info(f"[AmapTools] POI detail query successful: {poi_id}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"POI详情查询失败: {str(e)}"
+        error_msg = f"POI detail query failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def maps_distance(args: Dict[str, Any]) -> str:
-    """距离测量.
+    """Distance measurement.
     
     Args:
-        args: 包含以下参数的字典
-            - origins: 起点经纬度，可多个，用分号分隔
-            - destination: 终点经纬度
-            - type: 距离测量类型（可选，默认1：驾车距离，0：直线距离，3：步行距离）
+        args: A dictionary containing the following parameters
+            - origins: Origin coordinates, multiple allowed, separated by semicolons
+            - destination: Destination coordinates
+            - type: Distance measurement type (optional, default 1: driving, 0: straight line, 3: walking)
             
     Returns:
-        str: JSON格式的距离信息
+        str: Distance information in JSON format
     """
     try:
         origins = args["origins"]
@@ -665,7 +665,7 @@ async def maps_distance(args: Dict[str, Any]) -> str:
                 data = await response.json()
                 
         if data.get("status") != "1":
-            error_msg = f"距离测量失败: {data.get('info', data.get('infocode'))}"
+            error_msg = f"Distance measurement failed: {data.get('info', data.get('infocode'))}"
             logger.error(f"[AmapTools] {error_msg}")
             return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
             
@@ -687,14 +687,14 @@ async def maps_distance(args: Dict[str, Any]) -> str:
             }
         }
         
-        logger.info(f"[AmapTools] 距离测量成功: {origins} -> {destination}")
+        logger.info(f"[AmapTools] Distance measurement successful: {origins} -> {destination}")
         return json.dumps(result, ensure_ascii=False, indent=2)
         
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[AmapTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"距离测量失败: {str(e)}"
+        error_msg = f"Distance measurement failed: {str(e)}"
         logger.error(f"[AmapTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
