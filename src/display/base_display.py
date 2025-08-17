@@ -6,7 +6,7 @@ from src.utils.logging_config import get_logger
 
 class BaseDisplay(ABC):
     """
-    显示接口的抽象基类.
+    Abstract base class for display interfaces.
     """
 
     def __init__(self):
@@ -23,53 +23,53 @@ class BaseDisplay(ABC):
         send_text_callback: Optional[Callable] = None,
     ):
         """
-        设置回调函数.
+        Set callback functions.
         """
 
     @abstractmethod
     async def update_button_status(self, text: str):
         """
-        更新按钮状态.
+        Update button status.
         """
 
     @abstractmethod
     async def update_status(self, status: str):
         """
-        更新状态文本.
+        Update status text.
         """
 
     @abstractmethod
     async def update_text(self, text: str):
         """
-        更新TTS文本.
+        Update TTS text.
         """
 
     @abstractmethod
     async def update_emotion(self, emotion_name: str):
         """
-        更新表情.
+        Update emotion.
         """
 
     @abstractmethod
     async def start(self):
         """
-        启动显示.
+        Start display.
         """
 
     @abstractmethod
     async def close(self):
         """
-        关闭显示.
+        Close display.
         """
 
     async def toggle_mode(self):
         """
-        切换模式（在基类中定义接口）
+        Toggle mode (define interface in base class)
         """
-        self.logger.debug("基类中的toggle_mode被调用")
+        self.logger.debug("toggle_mode in base class called")
 
     async def toggle_window_visibility(self):
         """
-        切换窗口可见性（在基类中定义接口）
+        Toggle window visibility (define interface in base class)
         """
-        self.logger.debug("基类中的toggle_window_visibility被调用")
+        self.logger.debug("toggle_window_visibility in base class called")
