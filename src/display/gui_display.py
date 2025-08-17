@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-# 根据不同操作系统处理 pynput 导入
+# Handle pynput import according to different operating systems
 try:
     if platform.system() == "Windows":
         from pynput import keyboard as pynput_keyboard
@@ -31,7 +31,7 @@ from src.display.base_display import BaseDisplay
 from src.utils.resource_finder import find_assets_dir
 
 
-# 创建兼容的元类
+# Create a compatible metaclass
 class CombinedMeta(type(QObject), ABCMeta):
     pass
 
@@ -43,7 +43,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.app = None
         self.root = None
 
-        # UI控件
+        # UI controls
         self.status_label = None
         self.emotion_label = None
         self.tts_text_label = None
@@ -54,18 +54,18 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.text_input = None
         self.send_btn = None
 
-        # 表情管理
+        # Emotion management
         self.emotion_movie = None
         self._emotion_cache = {}
         self._last_emotion_name = None
 
-        # 状态管理
+        # Status management
         self.auto_mode = False
         self._running = True
         self.current_status = ""
         self.is_connected = True
 
-        # 回调函数
+        # Callback functions
         self.button_press_callback = None
         self.button_release_callback = None
         self.mode_callback = None
@@ -73,7 +73,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.abort_callback = None
         self.send_text_callback = None
 
-        # 系统托盘组件
+        # System tray component
         self.system_tray = None
 
     async def set_callbacks(
@@ -86,7 +86,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         send_text_callback: Optional[Callable] = None,
     ):
         """
-        设置回调函数.
+        Set callback functions.
         """
         self.button_press_callback = press_callback
         self.button_release_callback = release_callback
@@ -95,43 +95,43 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.abort_callback = abort_callback
         self.send_text_callback = send_text_callback
 
-        # 不再注册状态监听回调，由update_status直接处理所有逻辑
+        # No longer register status listening callback, all logic is handled directly by update_status
 
     def _on_manual_button_press(self):
         """
-        手动模式按钮按下事件处理.
+        Manual mode button press event handler.
         """
         if self.manual_btn and self.manual_btn.isVisible():
-            self.manual_btn.setText("松开以停止")
+            self.manual_btn.setText("Release to stop")
         if self.button_press_callback:
             self.button_press_callback()
 
     def _on_manual_button_release(self):
         """
-        手动模式按钮释放事件处理.
+        Manual mode button release event handler.
         """
         if self.manual_btn and self.manual_btn.isVisible():
-            self.manual_btn.setText("按住后说话")
+            self.manual_btn.setText("Hold to talk")
         if self.button_release_callback:
             self.button_release_callback()
 
     def _on_auto_button_click(self):
         """
-        自动模式按钮点击事件处理.
+        Auto mode button click event handler.
         """
         if self.auto_callback:
             self.auto_callback()
 
     def _on_abort_button_click(self):
         """
-        处理中止按钮点击事件.
+        Handle abort button click event.
         """
         if self.abort_callback:
             self.abort_callback()
 
     def _on_mode_button_click(self):
         """
-        对话模式切换按钮点击事件.
+        Conversation mode switch button click event.
         """
         if self.mode_callback:
             if not self.mode_callback():
@@ -140,15 +140,15 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.auto_mode = not self.auto_mode
 
         if self.auto_mode:
-            self._update_mode_button_status("自动对话")
+            self._update_mode_button_status("Auto Conversation")
             self._switch_to_auto_mode()
         else:
-            self._update_mode_button_status("手动对话")
+            self._update_mode_button_status("Manual Conversation")
             self._switch_to_manual_mode()
 
     def _switch_to_auto_mode(self):
         """
-        切换到自动模式的UI更新.
+        UI update for switching to auto mode.
         """
         if self.manual_btn and self.auto_btn:
             self.manual_btn.hide()
@@ -156,7 +156,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
     def _switch_to_manual_mode(self):
         """
-        切换到手动模式的UI更新.
+        UI update for switching to manual mode.
         """
         if self.manual_btn and self.auto_btn:
             self.auto_btn.hide()
@@ -164,29 +164,29 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
     async def update_status(self, status: str):
         """
-        更新状态文本并处理相关逻辑.
+        Update status text and handle related logic.
         """
-        full_status_text = f"状态: {status}"
+        full_status_text = f"Status: {status}"
         self._safe_update_label(self.status_label, full_status_text)
 
         if status != self.current_status:
             self.current_status = status
 
-            # 根据状态更新连接状态
+            # Update connection status based on status
             self._update_connection_status(status)
 
-            # 更新系统托盘
+            # Update system tray
             self._update_system_tray(status)
 
     async def update_text(self, text: str):
         """
-        更新TTS文本.
+        Update TTS text.
         """
         self._safe_update_label(self.tts_text_label, text)
 
     async def update_emotion(self, emotion_name: str):
         """
-        更新表情显示.
+        Update emotion display.
         """
         if emotion_name == self._last_emotion_name:
             return
@@ -198,11 +198,11 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             try:
                 self._set_emotion_gif(self.emotion_label, gif_path)
             except Exception as e:
-                self.logger.error(f"设置表情GIF时发生错误: {str(e)}")
+                self.logger.error(f"Error setting emotion GIF: {str(e)}")
 
     def _get_emotion_gif_path(self, emotion_name: str) -> str:
         """
-        获取表情GIF文件路径.
+        Get emotion GIF file path.
         """
         if emotion_name in self._emotion_cache:
             return self._emotion_cache[emotion_name]
@@ -226,18 +226,18 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
     def _set_emotion_gif(self, label, gif_path):
         """
-        设置表情GIF动画.
+        Set emotion GIF animation.
         """
         if not label:
             return
 
-        # 如果是emoji字符串，直接设置文本
+        # If it is an emoji string, set the text directly
         if not gif_path.endswith(".gif"):
             label.setText(gif_path)
             return
 
         try:
-            # 检查缓存中是否有该GIF
+            # Check if the GIF is in the cache
             if hasattr(self, "_gif_movies") and gif_path in self._gif_movies:
                 movie = self._gif_movies[gif_path]
             else:
@@ -252,35 +252,35 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
                     self._gif_movies = {}
                 self._gif_movies[gif_path] = movie
 
-            # 保存动画对象
+            # Save the animation object
             self.emotion_movie = movie
 
-            # 设置标签属性
+            # Set label properties
             label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             label.setAlignment(Qt.AlignCenter)
             label.setMovie(movie)
 
-            # 设置动画速度并开始播放
+            # Set animation speed and start playing
             movie.setSpeed(105)
             movie.start()
 
         except Exception as e:
-            self.logger.error(f"设置GIF动画失败: {e}")
+            self.logger.error(f"Failed to set GIF animation: {e}")
             label.setText("😊")
 
     def _safe_update_label(self, label, text):
         """
-        安全地更新标签文本.
+        Safely update label text.
         """
         if label:
             try:
                 label.setText(text)
             except RuntimeError as e:
-                self.logger.error(f"更新标签失败: {e}")
+                self.logger.error(f"Failed to update label: {e}")
 
     async def close(self):
         """
-        关闭窗口处理.
+        Handle window closing.
         """
         self._running = False
         if self.system_tray:
@@ -290,48 +290,48 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
     async def start(self):
         """
-        启动GUI.
+        Start GUI.
         """
         try:
-            # 设置Qt环境变量
+            # Set Qt environment variables
             os.environ.setdefault("QT_LOGGING_RULES", "qt.qpa.fonts.debug=false")
 
             self.app = QApplication.instance()
             if self.app is None:
-                raise RuntimeError("QApplication未找到，请确保在qasync环境中运行")
+                raise RuntimeError("QApplication not found, please make sure to run in a qasync environment")
 
-            # 设置默认字体
+            # Set default font
             default_font = QFont()
             default_font.setPointSize(12)
             self.app.setFont(default_font)
 
-            # 加载UI
+            # Load UI
             from PyQt5 import uic
 
             self.root = QWidget()
             ui_path = Path(__file__).parent / "gui_display.ui"
             uic.loadUi(str(ui_path), self.root)
 
-            # 获取控件并连接事件
+            # Get controls and connect events
             self._init_ui_controls()
             self._connect_events()
 
-            # 初始化系统托盘
+            # Initialize system tray
             self._setup_system_tray()
 
-            # 设置默认表情
+            # Set default emotion
             await self._set_default_emotion()
 
-            # 显示窗口
+            # Show window
             self.root.show()
 
         except Exception as e:
-            self.logger.error(f"GUI启动失败: {e}", exc_info=True)
+            self.logger.error(f"GUI startup failed: {e}", exc_info=True)
             raise
 
     def _init_ui_controls(self):
         """
-        初始化UI控件.
+        Initialize UI controls.
         """
         self.status_label = self.root.findChild(QLabel, "status_label")
         self.emotion_label = self.root.findChild(QLabel, "emotion_label")
@@ -345,7 +345,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
     def _connect_events(self):
         """
-        连接事件.
+        Connect events.
         """
         if self.manual_btn:
             self.manual_btn.pressed.connect(self._on_manual_button_press)
@@ -361,12 +361,12 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             self.send_btn.clicked.connect(self._on_send_button_click)
             self.text_input.returnPressed.connect(self._on_send_button_click)
 
-        # 设置窗口关闭事件
+        # Set window close event
         self.root.closeEvent = self._closeEvent
 
     def _setup_system_tray(self):
         """
-        设置系统托盘.
+        Set up system tray.
         """
         try:
             from src.views.components.system_tray import SystemTray
@@ -377,27 +377,27 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             self.system_tray.quit_requested.connect(self._quit_application)
 
         except Exception as e:
-            self.logger.error(f"初始化系统托盘组件失败: {e}", exc_info=True)
+            self.logger.error(f"Failed to initialize system tray component: {e}", exc_info=True)
 
     async def _set_default_emotion(self):
         """
-        设置默认表情.
+        Set default emotion.
         """
         try:
             await self.update_emotion("neutral")
         except Exception as e:
-            self.logger.error(f"设置默认表情失败: {e}", exc_info=True)
+            self.logger.error(f"Failed to set default emotion: {e}", exc_info=True)
 
     def _update_system_tray(self, status):
         """
-        更新系统托盘状态.
+        Update system tray status.
         """
         if self.system_tray:
             self.system_tray.update_status(status, self.is_connected)
 
     def _show_main_window(self):
         """
-        显示主窗口.
+        Show main window.
         """
         if self.root:
             if self.root.isMinimized():
@@ -409,9 +409,9 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
     def _quit_application(self):
         """
-        退出应用程序.
+        Exit application.
         """
-        self.logger.info("开始退出应用程序...")
+        self.logger.info("Starting to exit application...")
         self._running = False
 
         if self.system_tray:
@@ -422,57 +422,57 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
             app = Application.get_instance()
             if app:
-                # 异步启动关闭流程，但设置超时
+                # Asynchronously start the shutdown process, but set a timeout
                 import asyncio
 
                 from PyQt5.QtCore import QTimer
 
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
-                    # 创建关闭任务，但不等待
+                    # Create a shutdown task, but do not wait
                     shutdown_task = asyncio.create_task(app.shutdown())
 
-                    # 设置超时后强制退出
+                    # Force quit after timeout
                     def force_quit():
                         if not shutdown_task.done():
-                            self.logger.warning("关闭超时，强制退出")
+                            self.logger.warning("Shutdown timed out, forcing quit")
                             shutdown_task.cancel()
                         QApplication.quit()
 
-                    # 3秒后强制退出
+                    # Force quit after 3 seconds
                     QTimer.singleShot(3000, force_quit)
 
-                    # 当shutdown完成时正常退出
+                    # Quit normally when shutdown is complete
                     def on_shutdown_complete(task):
                         if not task.cancelled():
                             if task.exception():
                                 self.logger.error(
-                                    f"应用程序关闭异常: {task.exception()}"
+                                    f"Application shutdown exception: {task.exception()}"
                                 )
                             else:
-                                self.logger.info("应用程序正常关闭")
+                                self.logger.info("Application closed normally")
                         QApplication.quit()
 
                     shutdown_task.add_done_callback(on_shutdown_complete)
                 else:
-                    # 如果事件循环未运行，直接退出
+                    # If the event loop is not running, quit directly
                     QApplication.quit()
             else:
                 QApplication.quit()
 
         except Exception as e:
-            self.logger.error(f"关闭应用程序失败: {e}")
-            # 异常情况下直接退出
+            self.logger.error(f"Failed to close application: {e}")
+            # Quit directly in case of exception
             QApplication.quit()
 
     def _closeEvent(self, event):
         """
-        处理窗口关闭事件.
+        Handle window close event.
         """
         if self.system_tray and self.system_tray.is_visible():
             self.root.hide()
             self.system_tray.show_message(
-                "小智AI助手", "程序仍在运行中，点击托盘图标可以重新打开窗口。"
+                "Xiaozhi AI Assistant", "The program is still running, click the tray icon to reopen the window."
             )
             event.ignore()
         else:
@@ -481,21 +481,21 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
     def _update_mode_button_status(self, text: str):
         """
-        更新模式按钮状态.
+        Update mode button status.
         """
         if self.mode_btn:
             self.mode_btn.setText(text)
 
     async def update_button_status(self, text: str):
         """
-        更新按钮状态.
+        Update button status.
         """
         if self.auto_mode and self.auto_btn:
             self.auto_btn.setText(text)
 
     def _on_send_button_click(self):
         """
-        处理发送文本按钮点击事件.
+        Handle send text button click event.
         """
         if not self.text_input or not self.send_text_callback:
             return
@@ -511,11 +511,11 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
             asyncio.create_task(self.send_text_callback(text))
         except Exception as e:
-            self.logger.error(f"发送文本时出错: {e}")
+            self.logger.error(f"Error sending text: {e}")
 
     def _on_settings_button_click(self):
         """
-        处理设置按钮点击事件.
+        Handle settings button click event.
         """
         try:
             from src.views.settings import SettingsWindow
@@ -524,16 +524,16 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             settings_window.exec_()
 
         except Exception as e:
-            self.logger.error(f"打开设置窗口失败: {e}", exc_info=True)
+            self.logger.error(f"Failed to open settings window: {e}", exc_info=True)
 
     def _update_connection_status(self, status: str):
         """
-        根据状态更新连接状态.
+        Update connection status based on status.
         """
-        if status in ["连接中...", "聆听中...", "说话中..."]:
+        if status in ["Connecting...", "Listening...", "Speaking..."]:
             self.is_connected = True
-        elif status == "待命":
-            # 对于待命状态，需要检查音频通道是否真的开启
+        elif status == "Standby":
+            # For standby status, need to check if the audio channel is really open
             from src.application import Application
 
             app = Application.get_instance()
@@ -542,28 +542,28 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             else:
                 self.is_connected = False
         else:
-            # 其他状态（如错误状态）设为未连接
+            # Other statuses (such as error status) are set to not connected
             self.is_connected = False
 
     async def toggle_mode(self):
         """
-        切换模式.
+        Toggle mode.
         """
-        # 调用现有的模式切换功能
+        # Call existing mode switching function
         if hasattr(self, "mode_callback") and self.mode_callback:
             self._on_mode_button_click()
-            self.logger.debug("通过快捷键切换了对话模式")
+            self.logger.debug("Switched conversation mode via shortcut key")
 
     async def toggle_window_visibility(self):
         """
-        切换窗口可见性.
+        Toggle window visibility.
         """
         if self.root:
             if self.root.isVisible():
-                self.logger.debug("通过快捷键隐藏窗口")
+                self.logger.debug("Hide window via shortcut key")
                 self.root.hide()
             else:
-                self.logger.debug("通过快捷键显示窗口")
+                self.logger.debug("Show window via shortcut key")
                 self.root.show()
                 self.root.activateWindow()
                 self.root.raise_()
