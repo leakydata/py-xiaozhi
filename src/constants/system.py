@@ -1,33 +1,35 @@
-# 系统常量定义
+# System constant definitions
 from enum import Enum
 
 
 class InitializationStage(Enum):
     """
-    初始化阶段枚举.
+    Initialization stage enumeration.
     """
 
-    DEVICE_FINGERPRINT = "第一阶段：设备身份准备"
-    CONFIG_MANAGEMENT = "第二阶段：配置管理初始化"
-    OTA_CONFIG = "第三阶段：OTA获取配置"
-    ACTIVATION = "第四阶段：激活流程"
+
+
+    DEVICE_FINGERPRINT = "Stage 1: Device Identity Preparation"
+    CONFIG_MANAGEMENT = "Stage 2: Configuration Management Initialization"
+    OTA_CONFIG = "Stage 3: OTA Configuration Retrieval"
+    ACTIVATION = "Stage 4: Activation Process"
 
 
 class SystemConstants:
     """
-    系统常量.
+    System constants.
     """
 
-    # 应用信息
+    # Application information
     APP_NAME = "py-xiaozhi"
     APP_VERSION = "2.0.0"
     BOARD_TYPE = "bread-compact-wifi"
 
-    # 默认超时设置
+    # Default timeout settings
     DEFAULT_TIMEOUT = 10
     ACTIVATION_MAX_RETRIES = 60
     ACTIVATION_RETRY_INTERVAL = 5
 
-    # 文件名常量
+    # Filename constants
     CONFIG_FILE = "config.json"
     EFUSE_FILE = "efuse.json"

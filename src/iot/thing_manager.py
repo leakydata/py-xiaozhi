@@ -19,21 +19,21 @@ class ThingManager:
 
     def __init__(self):
         self.things = []
-        self.last_states = {}  # 添加状态缓存字典，存储上一次的状态
+        self.last_states = {}  # Add a state cache dictionary to store the last state
 
     async def initialize_iot_devices(self, config):
-        """初始化物联网设备.
+        """Initialize IoT devices.
 
-        注意：倒计时器功能已迁移到MCP工具中，提供更好的AI集成和状态反馈。
+        Note: The countdown timer function has been migrated to MCP tools to provide better AI integration and status feedback.
         """
         # from src.iot.things.CameraVL.Camera import Camera
-        # from src.iot.things.countdown_timer import CountdownTimer  # 已迁移到MCP
+        # from src.iot.things.countdown_timer import CountdownTimer  # Migrated to MCP
         # from src.iot.things.lamp import Lamp
 
         # from src.iot.things.music_player import MusicPlayer
         # from src.iot.things.speaker import Speaker
-        # 添加设备
-        # self.add_thing(CountdownTimer())  # 已迁移到MCP工具
+        # Add devices
+        # self.add_thing(CountdownTimer())  # Migrated to MCP tools
         # self.add_thing(Lamp())
         # self.add_thing(Speaker())
         # self.add_thing(MusicPlayer())
@@ -44,21 +44,21 @@ class ThingManager:
 
     async def get_descriptors_json(self) -> str:
         """
-        获取所有设备的描述符JSON.
+        Get the descriptor JSON for all devices.
         """
-        # 由于get_descriptor_json()是同步方法（返回静态数据），
-        # 这里保持简单的同步调用即可
+        # Since get_descriptor_json() is a synchronous method (returns static data),
+        # a simple synchronous call is sufficient here.
         descriptors = [thing.get_descriptor_json() for thing in self.things]
         return json.dumps(descriptors)
 
     async def get_states_json(self, delta=False) -> Tuple[bool, str]:
-        """获取所有设备的状态JSON.
+        """Get the state JSON for all devices.
 
         Args:
-            delta: 是否只返回变化的部分，True表示只返回变化的部分
+            delta: Whether to return only the changed parts. True means only return the changed parts.
 
         Returns:
-            Tuple[bool, str]: 返回是否有状态变化的布尔值和JSON字符串
+            Tuple[bool, str]: A boolean indicating if there was a state change and the JSON string.
         """
         if not delta:
             self.last_states.clear()
@@ -73,7 +73,7 @@ class ThingManager:
             state_json = states_results[i]
 
             if delta:
-                # 检查状态是否变化
+                # Check if the state has changed
                 is_same = (
                     thing.name in self.last_states
                     and self.last_states[thing.name] == state_json
@@ -83,35 +83,35 @@ class ThingManager:
                 changed = True
                 self.last_states[thing.name] = state_json
 
-            # 检查state_json是否已经是字典对象
+            # Check if state_json is already a dictionary object
             if isinstance(state_json, dict):
                 states.append(state_json)
             else:
-                states.append(json.loads(state_json))  # 转换JSON字符串为字典
+                states.append(json.loads(state_json))  # Convert JSON string to dictionary
 
         return changed, json.dumps(states)
 
     async def get_states_json_str(self) -> str:
         """
-        为了兼容旧代码，保留原来的方法名和返回值类型.
+        For compatibility with old code, keep the original method name and return value type.
         """
         _, json_str = await self.get_states_json(delta=False)
         return json_str
 
     async def invoke(self, command: Dict) -> Optional[Any]:
-        """调用设备方法.
+        """Invoke a device method.
 
         Args:
-            command: 包含name和method等信息的命令字典
+            command: A command dictionary containing name, method, etc.
 
         Returns:
-            Optional[Any]: 如果找到设备并调用成功，返回调用结果；否则抛出异常
+            Optional[Any]: Returns the result of the call if the device is found and the call is successful; otherwise, raises an exception.
         """
         thing_name = command.get("name")
         for thing in self.things:
             if thing.name == thing_name:
                 return await thing.invoke(command)
 
-        # 记录错误日志
-        logger.error(f"设备不存在: {thing_name}")
-        raise ValueError(f"设备不存在: {thing_name}")
+        # Log an error
+        logger.error(f"Device not found: {thing_name}")
+        raise ValueError(f"Device not found: {thing_name}")
