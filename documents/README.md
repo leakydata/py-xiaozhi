@@ -1,74 +1,74 @@
-# py-xiaozhi 文档
+# py-xiaozhi Documentation
 
-这是 py-xiaozhi 项目的文档网站，基于 VitePress 构建。
+This is the documentation website for the py-xiaozhi project, built with VitePress.
 
-## 功能
+## Features
 
-- 项目指南：提供项目的详细使用说明和开发文档
-- 赞助商页面：展示并感谢项目的所有赞助者
-- 贡献指南：说明如何为项目贡献代码
-- 贡献者名单：展示所有为项目做出贡献的开发者
-- 响应式设计：适配桌面和移动设备
+- Project Guide: Provides detailed instructions and development documentation for the project.
+- Sponsors Page: Displays and thanks all project sponsors.
+- Contribution Guide: Explains how to contribute code to the project.
+- List of Contributors: Shows all developers who have contributed to the project.
+- Responsive Design: Adapts to desktop and mobile devices.
 
-## 本地开发
+## Local Development
 
 ```bash
-# 安装依赖
+# Install dependencies
 pnpm install
 
-# 启动开发服务器
+# Start development server
 pnpm docs:dev
 
-# 构建静态文件
+# Build static files
 pnpm docs:build
 
-# 预览构建结果
+# Preview build results
 pnpm docs:preview
 ```
 
-## 目录结构
+## Directory Structure
 
 ```
 documents/
-├── docs/                  # 文档源文件
-│   ├── .vitepress/        # VitePress 配置
-│   ├── guide/             # 指南文档
-│   ├── sponsors/          # 赞助商页面
-│   ├── contributing.md    # 贡献指南
-│   ├── contributors.md    # 贡献者名单
-│   └── index.md           # 首页
-├── package.json           # 项目配置
-└── README.md              # 项目说明
+├── docs/                  # Documentation source files
+│   ├── .vitepress/        # VitePress configuration
+│   ├── guide/             # Guide documentation
+│   ├── sponsors/          # Sponsors page
+│   ├── contributing.md    # Contribution guide
+│   ├── contributors.md    # List of contributors
+│   └── index.md           # Home page
+├── package.json           # Project configuration
+└── README.md              # Project description
 ```
 
-## 赞助商页面
+## Sponsors Page
 
-赞助商页面通过以下方式实现：
+The sponsors page is implemented as follows:
 
-1. `/sponsors/` 目录包含了赞助商相关的内容
-2. `data.json` 文件存储赞助商数据
-3. 使用 Vue 组件在客户端动态渲染赞助商列表
-4. 提供成为赞助者的详细说明和支付方式
+1. The `/sponsors/` directory contains content related to sponsors.
+2. The `data.json` file stores sponsor data.
+3. Use Vue components to dynamically render the list of sponsors on the client side.
+4. Provides detailed instructions and payment methods for becoming a sponsor.
 
-## 贡献指南
+## Contribution Guide
 
-贡献指南页面提供了以下内容：
+The contribution guide page provides the following content:
 
-1. 开发环境准备指南
-2. 代码贡献流程说明
-3. 编码规范和提交规范
-4. Pull Request 创建和审核流程
-5. 文档贡献指南
+1. Development environment preparation guide.
+2. Description of the code contribution process.
+3. Coding standards and submission specifications.
+4. Pull Request creation and review process.
+5. Documentation contribution guide.
 
-## 贡献者名单
+## List of Contributors
 
-贡献者名单页面展示了所有为项目做出贡献的开发者，包括：
+The list of contributors page shows all developers who have contributed to the project, including:
 
-1. 核心开发团队成员
-2. 代码贡献者
-3. 文档贡献者
-4. 测试和反馈提供者
+1. Core development team members.
+2. Code contributors.
+3. Documentation contributors.
+4. Testers and feedback providers.
 
-## 部署
+## Deployment
 
-文档网站通过 GitHub Actions 自动部署到 GitHub Pages。 
+The documentation website is automatically deployed to GitHub Pages via GitHub Actions.
