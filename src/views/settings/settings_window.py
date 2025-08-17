@@ -21,7 +21,7 @@ from src.views.settings.components.shortcuts_settings import ShortcutsSettingsWi
 
 class SettingsWindow(QDialog):
     """
-    参数配置窗口.
+    Parameter Configuration Window.
     """
 
     def __init__(self, parent=None):
@@ -29,20 +29,20 @@ class SettingsWindow(QDialog):
         self.logger = get_logger(__name__)
         self.config_manager = ConfigManager.get_instance()
 
-        # UI控件
+        # UI Controls
         self.ui_controls = {}
 
-        # 快捷键设置组件
+        # Shortcut Settings Component
         self.shortcuts_tab = None
 
-        # 初始化UI
+        # Initialize UI
         self._setup_ui()
         self._connect_events()
         self._load_config_values()
 
     def _setup_ui(self):
         """
-        设置UI界面.
+        Set up UI.
         """
         try:
             from PyQt5 import uic
@@ -50,52 +50,52 @@ class SettingsWindow(QDialog):
             ui_path = Path(__file__).parent / "settings_window.ui"
             uic.loadUi(str(ui_path), self)
 
-            # 获取所有UI控件的引用
+            # Get references to all UI controls
             self._get_ui_controls()
 
-            # 添加快捷键设置选项卡
+            # Add shortcut settings tab
             self._add_shortcuts_tab()
 
         except Exception as e:
-            self.logger.error(f"设置UI失败: {e}", exc_info=True)
+            self.logger.error(f"Failed to set up UI: {e}", exc_info=True)
             raise
 
     def _add_shortcuts_tab(self):
         """
-        添加快捷键设置选项卡.
+        Add shortcut settings tab.
         """
         try:
-            # 获取TabWidget
+            # Get TabWidget
             tab_widget = self.findChild(QTabWidget, "tabWidget")
             if not tab_widget:
-                self.logger.error("未找到TabWidget控件")
+                self.logger.error("TabWidget control not found")
                 return
 
-            # 创建快捷键设置组件
+            # Create shortcut settings component
             self.shortcuts_tab = ShortcutsSettingsWidget()
 
-            # 添加到选项卡
-            tab_widget.addTab(self.shortcuts_tab, "快捷键")
+            # Add to tab
+            tab_widget.addTab(self.shortcuts_tab, "Shortcuts")
 
-            # 连接信号
+            # Connect signals
             self.shortcuts_tab.settings_changed.connect(self._on_settings_changed)
 
-            self.logger.debug("成功添加快捷键设置选项卡")
+            self.logger.debug("Successfully added shortcut settings tab")
 
         except Exception as e:
-            self.logger.error(f"添加快捷键设置选项卡失败: {e}", exc_info=True)
+            self.logger.error(f"Failed to add shortcut settings tab: {e}", exc_info=True)
 
     def _on_settings_changed(self):
         """
-        设置变更回调.
+        Settings change callback.
         """
-        # 可以在此添加一些提示或者其他逻辑
+        # You can add some tips or other logic here
 
     def _get_ui_controls(self):
         """
-        获取UI控件引用.
+        Get UI control references.
         """
-        # 系统选项控件
+        # System option controls
         self.ui_controls.update(
             {
                 "client_id_edit": self.findChild(QLineEdit, "client_id_edit"),
@@ -114,7 +114,7 @@ class SettingsWindow(QDialog):
             }
         )
 
-        # MQTT配置控件
+        # MQTT configuration controls
         self.ui_controls.update(
             {
                 "mqtt_endpoint_edit": self.findChild(QLineEdit, "mqtt_endpoint_edit"),
@@ -130,7 +130,7 @@ class SettingsWindow(QDialog):
             }
         )
 
-        # 唤醒词配置控件
+        # Wake word configuration controls
         self.ui_controls.update(
             {
                 "use_wake_word_check": self.findChild(QCheckBox, "use_wake_word_check"),
@@ -140,7 +140,7 @@ class SettingsWindow(QDialog):
             }
         )
 
-        # 摄像头配置控件
+        # Camera configuration controls
         self.ui_controls.update(
             {
                 "camera_index_spin": self.findChild(QSpinBox, "camera_index_spin"),
@@ -153,7 +153,7 @@ class SettingsWindow(QDialog):
             }
         )
 
-        # 按钮控件
+        # Button controls
         self.ui_controls.update(
             {
                 "save_btn": self.findChild(QPushButton, "save_btn"),
@@ -164,7 +164,7 @@ class SettingsWindow(QDialog):
 
     def _connect_events(self):
         """
-        连接事件处理.
+        Connect event handlers.
         """
         if self.ui_controls["save_btn"]:
             self.ui_controls["save_btn"].clicked.connect(self._on_save_clicked)
@@ -182,10 +182,10 @@ class SettingsWindow(QDialog):
 
     def _load_config_values(self):
         """
-        从配置文件加载值到UI控件.
+        Load values from configuration file to UI controls.
         """
         try:
-            # 系统选项
+            # System Options
             client_id = self.config_manager.get_config("SYSTEM_OPTIONS.CLIENT_ID", "")
             self._set_text_value("client_id_edit", client_id)
 
@@ -212,7 +212,7 @@ class SettingsWindow(QDialog):
             )
             self._set_text_value("authorization_url_edit", auth_url)
 
-            # 激活版本
+            # Activation Version
             activation_version = self.config_manager.get_config(
                 "SYSTEM_OPTIONS.NETWORK.ACTIVATION_VERSION", "v1"
             )
@@ -220,7 +220,7 @@ class SettingsWindow(QDialog):
                 combo = self.ui_controls["activation_version_combo"]
                 combo.setCurrentText(activation_version)
 
-            # MQTT配置
+            # MQTT Configuration
             mqtt_info = self.config_manager.get_config(
                 "SYSTEM_OPTIONS.NETWORK.MQTT_INFO", {}
             )
@@ -244,7 +244,7 @@ class SettingsWindow(QDialog):
                     "mqtt_subscribe_topic_edit", mqtt_info.get("subscribe_topic", "")
                 )
 
-            # 唤醒词配置
+            # Wake Word Configuration
             use_wake_word = self.config_manager.get_config(
                 "WAKE_WORD_OPTIONS.USE_WAKE_WORD", False
             )
@@ -256,7 +256,7 @@ class SettingsWindow(QDialog):
                 self.config_manager.get_config("WAKE_WORD_OPTIONS.MODEL_PATH", ""),
             )
 
-            # 唤醒词列表
+            # Wake Word List
             wake_words = self.config_manager.get_config(
                 "WAKE_WORD_OPTIONS.WAKE_WORDS", []
             )
@@ -264,7 +264,7 @@ class SettingsWindow(QDialog):
             if self.ui_controls["wake_words_edit"]:
                 self.ui_controls["wake_words_edit"].setPlainText(wake_words_text)
 
-            # 摄像头配置
+            # Camera Configuration
             camera_config = self.config_manager.get_config("CAMERA", {})
             self._set_spin_value(
                 "camera_index_spin", camera_config.get("camera_index", 0)
@@ -283,11 +283,11 @@ class SettingsWindow(QDialog):
             self._set_text_value("models_edit", camera_config.get("models", ""))
 
         except Exception as e:
-            self.logger.error(f"加载配置值失败: {e}", exc_info=True)
+            self.logger.error(f"Failed to load configuration values: {e}", exc_info=True)
 
     def _set_text_value(self, control_name: str, value: str):
         """
-        设置文本控件的值.
+        Set the value of a text control.
         """
         control = self.ui_controls.get(control_name)
         if control and hasattr(control, "setText"):
@@ -295,7 +295,7 @@ class SettingsWindow(QDialog):
 
     def _set_spin_value(self, control_name: str, value: int):
         """
-        设置数字控件的值.
+        Set the value of a numeric control.
         """
         control = self.ui_controls.get(control_name)
         if control and hasattr(control, "setValue"):
@@ -303,7 +303,7 @@ class SettingsWindow(QDialog):
 
     def _get_text_value(self, control_name: str) -> str:
         """
-        获取文本控件的值.
+        Get the value of a text control.
         """
         control = self.ui_controls.get(control_name)
         if control and hasattr(control, "text"):
@@ -312,7 +312,7 @@ class SettingsWindow(QDialog):
 
     def _get_spin_value(self, control_name: str) -> int:
         """
-        获取数字控件的值.
+        Get the value of a numeric control.
         """
         control = self.ui_controls.get(control_name)
         if control and hasattr(control, "value"):
@@ -321,18 +321,18 @@ class SettingsWindow(QDialog):
 
     def _on_save_clicked(self):
         """
-        保存按钮点击事件.
+        Save button click event.
         """
         try:
-            # 收集所有配置数据
+            # Collect all configuration data
             success = self._save_all_config()
 
             if success:
-                # 显示保存成功并提示重启
+                # Show save success and prompt for restart
                 reply = QMessageBox.question(
                     self,
-                    "配置保存成功",
-                    "配置已保存成功！\n\n为了使配置生效，建议重启软件。\n是否现在重启？",
+                    "Configuration Saved Successfully",
+                    "Configuration saved successfully!\n\nTo make the configuration effective, it is recommended to restart the software.\nRestart now?",
                     QMessageBox.Yes | QMessageBox.No,
                     QMessageBox.Yes,
                 )
@@ -342,18 +342,18 @@ class SettingsWindow(QDialog):
                 else:
                     self.accept()
             else:
-                QMessageBox.warning(self, "错误", "配置保存失败，请检查输入的值。")
+                QMessageBox.warning(self, "Error", "Failed to save configuration, please check the input values.")
 
         except Exception as e:
-            self.logger.error(f"保存配置失败: {e}", exc_info=True)
-            QMessageBox.critical(self, "错误", f"保存配置时发生错误: {str(e)}")
+            self.logger.error(f"Failed to save configuration: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"An error occurred while saving the configuration: {str(e)}")
 
     def _save_all_config(self) -> bool:
         """
-        保存所有配置.
+        Save all configurations.
         """
         try:
-            # 系统选项 - 网络配置
+            # System Options - Network Configuration
             ota_url = self._get_text_value("ota_url_edit")
             if ota_url:
                 self.config_manager.update_config(
@@ -378,7 +378,7 @@ class SettingsWindow(QDialog):
                     "SYSTEM_OPTIONS.NETWORK.AUTHORIZATION_URL", authorization_url
                 )
 
-            # 激活版本
+            # Activation Version
             if self.ui_controls["activation_version_combo"]:
                 activation_version = self.ui_controls[
                     "activation_version_combo"
@@ -387,7 +387,7 @@ class SettingsWindow(QDialog):
                     "SYSTEM_OPTIONS.NETWORK.ACTIVATION_VERSION", activation_version
                 )
 
-            # MQTT配置
+            # MQTT Configuration
             mqtt_config = {}
             mqtt_endpoint = self._get_text_value("mqtt_endpoint_edit")
             if mqtt_endpoint:
@@ -414,7 +414,7 @@ class SettingsWindow(QDialog):
                 mqtt_config["subscribe_topic"] = mqtt_subscribe_topic
 
             if mqtt_config:
-                # 获取现有的MQTT配置并更新
+                # Get existing MQTT configuration and update
                 existing_mqtt = self.config_manager.get_config(
                     "SYSTEM_OPTIONS.NETWORK.MQTT_INFO", {}
                 )
@@ -423,7 +423,7 @@ class SettingsWindow(QDialog):
                     "SYSTEM_OPTIONS.NETWORK.MQTT_INFO", existing_mqtt
                 )
 
-            # 唤醒词配置
+            # Wake Word Configuration
             if self.ui_controls["use_wake_word_check"]:
                 use_wake_word = self.ui_controls["use_wake_word_check"].isChecked()
                 self.config_manager.update_config(
@@ -436,7 +436,7 @@ class SettingsWindow(QDialog):
                     "WAKE_WORD_OPTIONS.MODEL_PATH", model_path
                 )
 
-            # 唤醒词列表
+            # Wake Word List
             if self.ui_controls["wake_words_edit"]:
                 wake_words_text = (
                     self.ui_controls["wake_words_edit"].toPlainText().strip()
@@ -448,7 +448,7 @@ class SettingsWindow(QDialog):
                     "WAKE_WORD_OPTIONS.WAKE_WORDS", wake_words
                 )
 
-            # 摄像头配置
+            # Camera Configuration
             camera_config = {}
             camera_config["camera_index"] = self._get_spin_value("camera_index_spin")
             camera_config["frame_width"] = self._get_spin_value("frame_width_spin")
@@ -467,26 +467,26 @@ class SettingsWindow(QDialog):
             if models:
                 camera_config["models"] = models
 
-            # 获取现有的摄像头配置并更新
+            # Get existing camera configuration and update
             existing_camera = self.config_manager.get_config("CAMERA", {})
             existing_camera.update(camera_config)
             self.config_manager.update_config("CAMERA", existing_camera)
 
-            self.logger.info("配置保存成功")
+            self.logger.info("Configuration saved successfully")
             return True
 
         except Exception as e:
-            self.logger.error(f"保存配置时出错: {e}", exc_info=True)
+            self.logger.error(f"Error saving configuration: {e}", exc_info=True)
             return False
 
     def _on_reset_clicked(self):
         """
-        重置按钮点击事件.
+        Reset button click event.
         """
         reply = QMessageBox.question(
             self,
-            "确认重置",
-            "确定要重置所有配置为默认值吗？\n这将清除当前的所有设置。",
+            "Confirm Reset",
+            "Are you sure you want to reset all configurations to their default values?\nThis will clear all current settings.",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
         )
@@ -496,13 +496,13 @@ class SettingsWindow(QDialog):
 
     def _reset_to_defaults(self):
         """
-        重置为默认值.
+        Reset to default values.
         """
         try:
-            # 获取默认配置
+            # Get default configuration
             default_config = ConfigManager.DEFAULT_CONFIG
 
-            # 系统选项
+            # System Options
             self._set_text_value(
                 "ota_url_edit",
                 default_config["SYSTEM_OPTIONS"]["NETWORK"]["OTA_VERSION_URL"],
@@ -519,7 +519,7 @@ class SettingsWindow(QDialog):
                     default_config["SYSTEM_OPTIONS"]["NETWORK"]["ACTIVATION_VERSION"]
                 )
 
-            # 清空MQTT配置
+            # Clear MQTT configuration
             self._set_text_value("mqtt_endpoint_edit", "")
             self._set_text_value("mqtt_client_id_edit", "")
             self._set_text_value("mqtt_username_edit", "")
@@ -527,7 +527,7 @@ class SettingsWindow(QDialog):
             self._set_text_value("mqtt_publish_topic_edit", "")
             self._set_text_value("mqtt_subscribe_topic_edit", "")
 
-            # 唤醒词配置
+            # Wake Word Configuration
             wake_word_config = default_config["WAKE_WORD_OPTIONS"]
             if self.ui_controls["use_wake_word_check"]:
                 self.ui_controls["use_wake_word_check"].setChecked(
@@ -540,7 +540,7 @@ class SettingsWindow(QDialog):
                 wake_words_text = "\n".join(wake_word_config["WAKE_WORDS"])
                 self.ui_controls["wake_words_edit"].setPlainText(wake_words_text)
 
-            # 摄像头配置
+            # Camera Configuration
             camera_config = default_config["CAMERA"]
             self._set_spin_value("camera_index_spin", camera_config["camera_index"])
             self._set_spin_value("frame_width_spin", camera_config["frame_width"])
@@ -550,93 +550,93 @@ class SettingsWindow(QDialog):
             self._set_text_value("vl_api_key_edit", camera_config["VLapi_key"])
             self._set_text_value("models_edit", camera_config["models"])
 
-            self.logger.info("配置已重置为默认值")
+            self.logger.info("Configuration has been reset to default values")
 
         except Exception as e:
-            self.logger.error(f"重置配置失败: {e}", exc_info=True)
-            QMessageBox.critical(self, "错误", f"重置配置时发生错误: {str(e)}")
+            self.logger.error(f"Failed to reset configuration: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"An error occurred while resetting the configuration: {str(e)}")
 
     def _on_model_path_browse(self):
         """
-        浏览模型路径.
+        Browse model path.
         """
         try:
             current_path = self._get_text_value("model_path_edit")
             if not current_path:
-                # 使用resource_finder查找默认models目录
+                # Use resource_finder to find the default models directory
                 models_dir = resource_finder.find_models_dir()
                 if models_dir:
                     current_path = str(models_dir)
                 else:
-                    # 如果找不到，使用项目根目录下的models
+                    # If not found, use models in the project root directory
                     project_root = resource_finder.get_project_root()
                     current_path = str(project_root / "models")
 
             selected_path = QFileDialog.getExistingDirectory(
-                self, "选择模型目录", current_path
+                self, "Select Model Directory", current_path
             )
 
             if selected_path:
                 self._set_text_value("model_path_edit", selected_path)
-                self.logger.info(f"已选择模型路径: {selected_path}")
+                self.logger.info(f"Selected model path: {selected_path}")
 
         except Exception as e:
-            self.logger.error(f"浏览模型路径失败: {e}", exc_info=True)
-            QMessageBox.warning(self, "错误", f"浏览模型路径时发生错误: {str(e)}")
+            self.logger.error(f"Failed to browse model path: {e}", exc_info=True)
+            QMessageBox.warning(self, "Error", f"An error occurred while browsing the model path: {str(e)}")
 
     def _restart_application(self):
         """
-        重启应用程序.
+        Restart application.
         """
         try:
-            self.logger.info("用户选择重启应用程序")
+            self.logger.info("User chose to restart the application")
 
-            # 关闭设置窗口
+            # Close settings window
             self.accept()
 
-            # 直接重启程序
+            # Restart the program directly
             self._direct_restart()
 
         except Exception as e:
-            self.logger.error(f"重启应用程序失败: {e}", exc_info=True)
+            self.logger.error(f"Restart application failed: {e}", exc_info=True)
             QMessageBox.warning(
-                self, "重启失败", "自动重启失败，请手动重启软件以使配置生效。"
+                self, "Restart Failed", "Automatic restart failed, please restart the software manually for the configuration to take effect."
             )
 
     def _direct_restart(self):
         """
-        直接重启程序.
+        Restart the program directly.
         """
         try:
             import os
             import sys
 
-            # 获取当前执行的程序路径和参数
+            # Get the current program path and parameters
             python = sys.executable
             script = sys.argv[0]
             args = sys.argv[1:]
 
-            self.logger.info(f"重启命令: {python} {script} {' '.join(args)}")
+            self.logger.info(f"Restart command: {python} {script} {' '.join(args)}")
 
-            # 关闭当前应用
+            # Close current application
             from PyQt5.QtWidgets import QApplication
 
             QApplication.quit()
 
-            # 启动新实例
+            # Start new instance
             if getattr(sys, "frozen", False):
-                # 打包环境
+                # Packaged environment
                 os.execv(sys.executable, [sys.executable] + args)
             else:
-                # 开发环境
+                # Development environment
                 os.execv(python, [python, script] + args)
 
         except Exception as e:
-            self.logger.error(f"直接重启失败: {e}", exc_info=True)
+            self.logger.error(f"Direct restart failed: {e}", exc_info=True)
 
     def closeEvent(self, event):
         """
-        窗口关闭事件.
+        Window close event.
         """
-        self.logger.debug("设置窗口已关闭")
+        self.logger.debug("Settings window closed")
         super().closeEvent(event)
