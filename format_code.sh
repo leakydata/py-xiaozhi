@@ -1,33 +1,33 @@
 #!/bin/bash
 
-echo "🧹 开始代码格式化..."
+echo "🧹 Starting code formatting..."
 
-# 定义要格式化的目标文件夹和文件
+# Define target folders and files to format
 TARGETS="src/ scripts/ hooks/ main.py"
 
-echo "📁 格式化目标: $TARGETS"
+echo "📁 Formatting targets: $TARGETS"
 echo ""
 
-# 删除未使用导入和变量（非侵入但有效）
-echo "1️⃣ 删除未使用的导入和变量..."
+# Remove unused imports and variables (non-intrusive but effective)
+echo "1️⃣ Removing unused imports and variables..."
 autoflake -r --in-place --remove-unused-variables --remove-all-unused-imports --ignore-init-module-imports $TARGETS
 
-# 修复 docstring 的标点、首字母等格式
-echo "2️⃣ 格式化文档字符串..."
+# Fix punctuation, capitalization, etc. in docstrings
+echo "2️⃣ Formatting docstrings..."
 docformatter -r -i --wrap-summaries=88 --wrap-descriptions=88 --make-summary-multi-line $TARGETS
 
-# 自动排序导入
-echo "3️⃣ 排序导入语句..."
+# Automatically sort imports
+echo "3️⃣ Sorting import statements..."
 isort $TARGETS
 
-# 自动格式化（处理长行、函数参数、f字符串等）
-echo "4️⃣ 格式化代码..."
+# Automatically format (handle long lines, function arguments, f-strings, etc.)
+echo "4️⃣ Formatting code..."
 black $TARGETS
 
-# 最后静态检查（非修复）
-echo "5️⃣ 静态代码检查..."
+# Finally, static check (non-fixing)
+echo "5️⃣ Static code analysis..."
 flake8 $TARGETS
 
 echo ""
-echo "✅ 代码格式化完成！"
-echo "📊 已处理的目标: $TARGETS"
+echo "✅ Code formatting complete!"
+echo "📊 Processed targets: $TARGETS"
