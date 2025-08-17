@@ -1,5 +1,5 @@
 """
-设备状态管理模块 - 提供基本的系统设备状态信息
+Device status management module - provides basic system device status information
 """
 
 import datetime
@@ -16,12 +16,12 @@ logger = get_logger(__name__)
 
 def get_device_status() -> Dict[str, Any]:
     """
-    获取当前主机的整体设备状态.
+    Get the overall device status of the current host.
     """
     try:
         status = {}
 
-        # 系统基本信息（<1ms）
+        # System basic information (<1ms)
         uname = platform.uname()
         status["system"] = {
             "os": uname.system,
@@ -35,15 +35,15 @@ def get_device_status() -> Dict[str, Any]:
             "timestamp": datetime.datetime.now().isoformat(),
         }
 
-        # CPU 信息（优化：减少阻塞时间）
+        # CPU information (optimization: reduce blocking time)
         status["cpu"] = {
             "physical_cores": psutil.cpu_count(logical=False),
             "logical_cores": psutil.cpu_count(logical=True),
-            "usage_percent": psutil.cpu_percent(interval=0.1),  # 从1秒减少到0.1秒
+            "usage_percent": psutil.cpu_percent(interval=0.1),  # Reduced from 1 second to 0.1 seconds
             "per_core_usage": psutil.cpu_percent(interval=0.1, percpu=True),
         }
 
-        # 内存信息（~1ms）
+        # Memory information (~1ms)
         virtual_mem = psutil.virtual_memory()
         status["memory"] = {
             "total": virtual_mem.total,
@@ -52,7 +52,7 @@ def get_device_status() -> Dict[str, Any]:
             "percent": virtual_mem.percent,
         }
 
-        # 磁盘信息（~5ms）
+        # Disk information (~5ms)
         disk = psutil.disk_usage("/")
         status["disk"] = {
             "total": disk.total,
@@ -61,7 +61,7 @@ def get_device_status() -> Dict[str, Any]:
             "percent": disk.percent,
         }
 
-        # 电池状态（<1ms）
+        # Battery status (<1ms)
         battery = psutil.sensors_battery()
         if battery:
             status["battery"] = {
@@ -72,17 +72,17 @@ def get_device_status() -> Dict[str, Any]:
         else:
             status["battery"] = None
 
-        logger.info("[DeviceStatus] 设备状态获取成功")
+        logger.info("[DeviceStatus] Device status obtained successfully")
         return status
 
     except Exception as e:
-        logger.error(f"[DeviceStatus] 获取设备状态失败: {e}", exc_info=True)
+        logger.error(f"[DeviceStatus] Failed to get device status: {e}", exc_info=True)
         return {"error": str(e), "timestamp": datetime.datetime.now().isoformat()}
 
 
 def _get_local_ip() -> str:
     """
-    获取本地IP地址.
+    Get the local IP address.
     """
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

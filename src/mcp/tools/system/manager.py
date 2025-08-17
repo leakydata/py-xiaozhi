@@ -1,6 +1,6 @@
-"""系统工具管理器.
+"""System tools manager.
 
-负责系统工具的初始化、配置和MCP工具注册
+Responsible for system tool initialization, configuration, and MCP tool registration.
 """
 
 from typing import Any, Dict
@@ -17,56 +17,56 @@ logger = get_logger(__name__)
 
 class SystemToolsManager:
     """
-    系统工具管理器.
+    System tools manager.
     """
 
     def __init__(self):
         """
-        初始化系统工具管理器.
+        Initialize the system tools manager.
         """
         self._initialized = False
-        logger.info("[SystemManager] 系统工具管理器初始化")
+        logger.info("[SystemManager] Initializing system tools manager")
 
     def init_tools(self, add_tool, PropertyList, Property, PropertyType):
         """
-        初始化并注册所有系统工具.
+        Initialize and register all system tools.
         """
         try:
-            logger.info("[SystemManager] 开始注册系统工具")
+            logger.info("[SystemManager] Starting to register system tools")
 
-            # 注册获取设备状态工具
+            # Register the tool to get device status
             self._register_device_status_tool(add_tool, PropertyList)
 
-            # 注册音量控制工具
+            # Register the volume control tool
             self._register_volume_control_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册应用程序启动工具
+            # Register the application launcher tool
             self._register_app_launcher_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册应用程序扫描工具
+            # Register the application scanner tool
             self._register_app_scanner_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册应用程序关闭工具
+            # Register the application killer tools
             self._register_app_killer_tools(
                 add_tool, PropertyList, Property, PropertyType
             )
 
             self._initialized = True
-            logger.info("[SystemManager] 系统工具注册完成")
+            logger.info("[SystemManager] System tools registration complete")
 
         except Exception as e:
-            logger.error(f"[SystemManager] 系统工具注册失败: {e}", exc_info=True)
+            logger.error(f"[SystemManager] System tools registration failed: {e}", exc_info=True)
             raise
 
     def _register_device_status_tool(self, add_tool, PropertyList):
         """
-        注册设备状态查询工具.
+        Register the device status query tool.
         """
         add_tool(
             (
@@ -83,13 +83,13 @@ class SystemToolsManager:
                 get_system_status,
             )
         )
-        logger.debug("[SystemManager] 注册设备状态工具成功")
+        logger.debug("[SystemManager] Registered device status tool successfully")
 
     def _register_volume_control_tool(
         self, add_tool, PropertyList, Property, PropertyType
     ):
         """
-        注册音量控制工具.
+        Register the volume control tool.
         """
         volume_props = PropertyList(
             [Property("volume", PropertyType.INTEGER, min_value=0, max_value=100)]
@@ -104,13 +104,13 @@ class SystemToolsManager:
                 set_volume,
             )
         )
-        logger.debug("[SystemManager] 注册音量控制工具成功")
+        logger.debug("[SystemManager] Registered volume control tool successfully")
 
     def _register_app_launcher_tool(
         self, add_tool, PropertyList, Property, PropertyType
     ):
         """
-        注册应用程序启动工具.
+        Register the application launcher tool.
         """
         app_props = PropertyList([Property("app_name", PropertyType.STRING)])
         add_tool(
@@ -137,13 +137,13 @@ class SystemToolsManager:
                 launch_application,
             )
         )
-        logger.debug("[SystemManager] 注册应用程序启动工具成功")
+        logger.debug("[SystemManager] Registered application launcher tool successfully")
 
     def _register_app_scanner_tool(
         self, add_tool, PropertyList, Property, PropertyType
     ):
         """
-        注册应用程序扫描工具.
+        Register the application scanner tool.
         """
         scanner_props = PropertyList(
             [Property("force_refresh", PropertyType.BOOLEAN, default_value=False)]
@@ -170,15 +170,15 @@ class SystemToolsManager:
                 scan_installed_applications,
             )
         )
-        logger.debug("[SystemManager] 注册应用程序扫描工具成功")
+        logger.debug("[SystemManager] Registered application scanner tool successfully")
 
     def _register_app_killer_tools(
         self, add_tool, PropertyList, Property, PropertyType
     ):
         """
-        注册应用程序关闭工具.
+        Register the application killer tools.
         """
-        # 注册应用程序关闭工具
+        # Register the application killer tool
         killer_props = PropertyList(
             [
                 Property("app_name", PropertyType.STRING),
@@ -207,7 +207,7 @@ class SystemToolsManager:
             )
         )
 
-        # 注册运行中应用程序列表工具
+        # Register the running applications list tool
         list_props = PropertyList(
             [Property("filter_name", PropertyType.STRING, default_value="")]
         )
@@ -230,21 +230,21 @@ class SystemToolsManager:
                 list_running_applications,
             )
         )
-        logger.debug("[SystemManager] 注册应用程序关闭工具成功")
+        logger.debug("[SystemManager] Registered application killer tools successfully")
 
     def is_initialized(self) -> bool:
         """
-        检查管理器是否已初始化.
+        Check if the manager is initialized.
         """
         return self._initialized
 
     def get_status(self) -> Dict[str, Any]:
         """
-        获取管理器状态.
+        Get the manager status.
         """
         return {
             "initialized": self._initialized,
-            "tools_count": 6,  # 当前注册的工具数量
+            "tools_count": 6,  # Number of currently registered tools
             "available_tools": [
                 "get_device_status",
                 "set_volume",
@@ -256,16 +256,16 @@ class SystemToolsManager:
         }
 
 
-# 全局管理器实例
+# Global manager instance
 _system_tools_manager = None
 
 
 def get_system_tools_manager() -> SystemToolsManager:
     """
-    获取系统工具管理器单例.
+    Get the system tools manager singleton.
     """
     global _system_tools_manager
     if _system_tools_manager is None:
         _system_tools_manager = SystemToolsManager()
-        logger.debug("[SystemManager] 创建系统工具管理器实例")
+        logger.debug("[SystemManager] Created system tools manager instance")
     return _system_tools_manager
