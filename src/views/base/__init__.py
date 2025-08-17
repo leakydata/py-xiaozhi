@@ -1,4 +1,4 @@
-# 基础组件包
+# Base components package
 from .async_mixins import AsyncMixin
 from .base_window import BaseWindow
 

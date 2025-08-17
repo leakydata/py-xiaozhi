@@ -383,11 +383,11 @@ class McpServer:
         """
         Handle initialization request.
         """
-        # 解析capabilities
+        # Parse capabilities
         capabilities = params.get("capabilities", {})
         await self._parse_capabilities(capabilities)
 
-        # 返回服务器信息
+        # Return server information
         result = {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
