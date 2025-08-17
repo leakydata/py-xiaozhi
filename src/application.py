@@ -53,7 +53,7 @@ except Exception as e:
 
 class Application:
     """
-    Application architecture based purely on asyncio.
+    Application architecture based on pure asyncio.
     """
 
     _instance = None
@@ -102,7 +102,7 @@ class Application:
         # Task cancellation event - initialized when the event loop is running
         self._shutdown_event = None
 
-        # Save the main thread's event loop (will be set later in the run method)
+        # Save the event loop of the main thread (set later in the run method)
         self._main_loop = None
 
         # MCP server
@@ -154,17 +154,17 @@ class Application:
             # Check if a QApplication instance already exists
             app = QApplication.instance()
             if app is None:
-                logger.info("Creating new QApplication instance")
+                logger.info("Creating a new QApplication instance")
                 app = QApplication(sys.argv)
             else:
-                logger.info("Using existing QApplication instance")
+                logger.info("Using an existing QApplication instance")
 
-            # Ensure previous event loop is cleaned up
+            # Ensure previous event loops are cleaned up
             try:
                 current_loop = asyncio.get_event_loop()
                 if current_loop and not current_loop.is_closed():
-                    logger.debug("Found existing event loop, preparing to close")
-                    # Do not force close, let it complete naturally
+                    logger.debug("Found an existing event loop, preparing to close")
+                    # Do not force close, let it finish naturally
             except RuntimeError:
                 # No existing loop, this is normal
                 pass
@@ -182,7 +182,7 @@ class Application:
                 except RuntimeError as e:
                     error_msg = "Event loop stopped before Future completed"
                     if error_msg in str(e):
-                        # Normal exit, event loop was stopped by QApplication.quit()
+                        # Normal exit case, the event loop was stopped by QApplication.quit()
                         logger.info("GUI application exited normally")
                         return 0
                     else:
@@ -225,7 +225,7 @@ class Application:
         try:
             self.running = True
 
-            # Save the main thread's event loop
+            # Save the event loop of the main thread
             self._main_loop = asyncio.get_running_loop()
 
             # Initialize asynchronous objects - must be created after the event loop is running
@@ -260,7 +260,7 @@ class Application:
             try:
                 await self.shutdown()
             except Exception as e:
-                logger.error(f"Error shutting down application: {e}")
+                logger.error(f"Error during application shutdown: {e}")
 
     async def _initialize_components(self, mode: str, protocol: str):
         """
@@ -268,7 +268,7 @@ class Application:
         """
         logger.info("Initializing application components...")
 
-        # Set display type (must be before device state is set)
+        # Set display type (must be done before setting device state)
         self._set_display_type(mode)
 
         # Initialize MCP server
@@ -305,7 +305,7 @@ class Application:
 
     async def _initialize_audio(self):
         """
-        Initialize audio device and codec.
+        Initialize audio devices and codecs.
         """
         try:
             logger.debug("Starting to initialize audio codec")
@@ -326,7 +326,7 @@ class Application:
 
     def _on_encoded_audio(self, encoded_data: bytes):
         """
-        Handle encoded audio data callback.
+        Callback for handling encoded audio data.
         
         Note: This callback is called in the audio driver thread and needs to be thread-safely scheduled to the main event loop.
         """
@@ -351,7 +351,7 @@ class Application:
         Schedule audio sending task in the main event loop.
         """
         try:
-            # Check state again (state may have changed during scheduling)
+            # Check the state again (it might have changed during scheduling)
             if (self.device_state == DeviceState.LISTENING 
                     and self.protocol 
                     and self.protocol.is_audio_channel_opened()):
@@ -389,13 +389,13 @@ class Application:
 
     def _create_async_callback(self, coro_func, *args):
         """
-        Helper method to create asynchronous callback functions.
+        Helper method to create an asynchronous callback function.
         """
         return lambda: asyncio.create_task(coro_func(*args))
 
     def _setup_gui_callbacks(self):
         """
-        Set up GUI callback functions.
+        Set up GUI callbacks.
         """
         asyncio.create_task(
             self.display.set_callbacks(
@@ -412,7 +412,7 @@ class Application:
 
     def _setup_cli_callbacks(self):
         """
-        Set up CLI callback functions.
+        Set up CLI callbacks.
         """
         asyncio.create_task(
             self.display.set_callbacks(
@@ -426,7 +426,7 @@ class Application:
 
     def _setup_protocol_callbacks(self):
         """
-        Set up protocol callback functions.
+        Set up protocol callbacks.
         """
         self.protocol.on_network_error(self._on_network_error)
         self.protocol.on_incoming_audio(self._on_incoming_audio)
@@ -445,7 +445,7 @@ class Application:
 
     def _create_task(self, coro, name: str) -> asyncio.Task:
         """
-        Create and manage tasks.
+        Create and manage a task.
         """
         task = asyncio.create_task(coro, name=name)
         self._main_tasks.add(task)
@@ -565,7 +565,7 @@ class Application:
 
     async def _start_listening_impl(self):
         """
-        Implementation of starting to listen.
+        Implementation for starting to listen.
         """
         success = await self._start_listening_common(ListeningMode.MANUAL, False)
 
@@ -581,7 +581,7 @@ class Application:
 
     async def _stop_listening_impl(self):
         """
-        Implementation of stopping to listen.
+        Implementation for stopping listening.
         """
         if self.device_state == DeviceState.LISTENING:
             await self.protocol.send_stop_listening()
@@ -589,13 +589,13 @@ class Application:
 
     async def toggle_chat_state(self):
         """
-        Toggle chat state.
+        Toggle the chat state.
         """
         await self.schedule_command(self._toggle_chat_state_impl)
 
     async def _toggle_chat_state_impl(self):
         """
-        Implementation of toggling chat state.
+        Implementation for toggling the chat state.
         """
         if self.device_state == DeviceState.IDLE:
             await self._start_listening_common(ListeningMode.AUTO_STOP, True)
@@ -636,13 +636,13 @@ class Application:
 
     async def _set_device_state(self, state):
         """
-        Set device state - ensure sequential execution via queue.
+        Set the device state - ensure sequential execution via the queue.
         """
         await self.schedule_command(lambda: self._set_device_state_impl(state))
 
     def _update_display_async(self, update_func, *args):
         """
-        Helper method for asynchronous display updates.
+        Helper method for asynchronously updating the display.
         """
         if self.display:
             asyncio.create_task(update_func(*args))
@@ -655,10 +655,10 @@ class Application:
             if self.device_state == state:
                 return
 
-            logger.debug(f"Device state change: {self.device_state} -> {state}")
+            logger.debug(f"Device state changed: {self.device_state} -> {state}")
             self.device_state = state
 
-            # Perform corresponding actions and update display based on state
+            # Perform corresponding actions and update the display based on the state
             if state == DeviceState.IDLE:
                 await self._handle_idle_state()
             elif state == DeviceState.CONNECTING:
@@ -670,9 +670,9 @@ class Application:
 
     async def _handle_idle_state(self):
         """
-        Handle idle state.
+        Handle the idle state.
         """
-        # UI update is asynchronous
+        # Asynchronously execute UI updates
         self._update_display_async(self.display.update_status, "Standby")
 
         # Set emotion
@@ -680,15 +680,15 @@ class Application:
 
     async def _handle_listening_state(self):
         """
-        Handle listening state.
+        Handle the listening state.
         """
-        # UI update is asynchronous
+        # Asynchronously execute UI updates
         self._update_display_async(self.display.update_status, "Listening...")
 
         # Set emotion
         self.set_emotion("neutral")
 
-        # Update IoT state
+        # Update IoT states
         await self._update_iot_states(True)
 
     async def _send_text_tts(self, text):
@@ -702,13 +702,13 @@ class Application:
 
     def set_chat_message(self, role, message):
         """
-        Set chat message.
+        Set a chat message.
         """
         self._update_display_async(self.display.update_text, message)
 
     def set_emotion(self, emotion):
         """
-        Set emotion.
+        Set an emotion.
         """
         self._update_display_async(self.display.update_emotion, emotion)
 
@@ -724,7 +724,7 @@ class Application:
 
     async def _handle_network_error(self):
         """
-        Handle network error.
+        Handle a network error.
         """
         self.keep_listening = False
         await self._set_device_state(DeviceState.IDLE)
@@ -734,29 +734,29 @@ class Application:
 
     def _on_incoming_audio(self, data):
         """
-        Incoming audio data callback.
+        Callback for receiving audio data.
         """
         if self.device_state == DeviceState.SPEAKING and self.audio_codec:
             try:
-                # Audio data processing needs real-time performance, create a task directly but add exception handling
+                # Audio data processing requires real-time performance, so create a task directly but add exception handling
                 task = asyncio.create_task(self.audio_codec.write_audio(data))
                 task.add_done_callback(
                     lambda t: (
                         logger.error(
-                            f"Audio write task exception: {t.exception()}", exc_info=True
+                            f"Audio writing task exception: {t.exception()}", exc_info=True
                         )
                         if not t.cancelled() and t.exception()
                         else None
                     )
                 )
             except RuntimeError as e:
-                logger.error(f"Unable to create audio write task: {e}")
+                logger.error(f"Unable to create audio writing task: {e}")
             except Exception as e:
-                logger.error(f"Failed to create audio write task: {e}", exc_info=True)
+                logger.error(f"Failed to create audio writing task: {e}", exc_info=True)
 
     def _on_incoming_json(self, json_data):
         """
-        Incoming JSON data callback.
+        Callback for receiving JSON data.
         """
         asyncio.create_task(
             self.schedule_command(lambda: self._handle_incoming_json(json_data))
@@ -764,7 +764,7 @@ class Application:
 
     async def _handle_incoming_json(self, json_data):
         """
-        Handle JSON message.
+        Handle a JSON message.
         """
         try:
             if not json_data:
@@ -780,14 +780,14 @@ class Application:
             if handler:
                 await handler(data)
             else:
-                logger.warning(f"Received unknown message type: {msg_type}")
+                logger.warning(f"Received a message of unknown type: {msg_type}")
 
         except Exception as e:
-            logger.error(f"Error processing JSON message: {e}", exc_info=True)
+            logger.error(f"Error while handling JSON message: {e}", exc_info=True)
 
     async def _handle_tts_message(self, data):
         """
-        Handle TTS message.
+        Handle a TTS message.
         """
         state = data.get("state", "")
         if state == "start":
@@ -808,7 +808,7 @@ class Application:
 
     async def _handle_tts_start(self):
         """
-        Handle TTS start event.
+        Handle the TTS start event.
         """
         logger.info(f"TTS started, current state: {self.device_state}")
 
@@ -820,18 +820,18 @@ class Application:
 
     async def _handle_tts_stop(self):
         """
-        Handle TTS stop event.
+        Handle the TTS stop event.
         """
         if self.device_state == DeviceState.SPEAKING:
-            # Wait for audio playback to complete (improvement: increase wait time and remove premature clearing)
+            # Wait for audio playback to complete (improvement: add wait time and remove premature clearing)
             if self.audio_codec:
                 logger.debug("Waiting for TTS audio playback to complete...")
                 await self.audio_codec.wait_for_audio_complete()
                 logger.debug("TTS audio playback complete")
 
-            # Only wait a short time for the buffer to stabilize if not interrupted
+            # Only wait for a short period for the buffer to stabilize if not interrupted
             if not self.aborted:
-                await asyncio.sleep(0.2)  # Extra 200ms to ensure the tail is played completely
+                await asyncio.sleep(0.2)  # Extra 200ms to ensure the tail end of the audio is played completely
 
             # State transition
             if self.keep_listening:
@@ -842,7 +842,7 @@ class Application:
 
     async def _handle_stt_message(self, data):
         """
-        Handle STT message.
+        Handle an STT message.
         """
         text = data.get("text", "")
         if text:
@@ -851,7 +851,7 @@ class Application:
 
     async def _handle_llm_message(self, data):
         """
-        Handle LLM message.
+        Handle an LLM message.
         """
         emotion = data.get("emotion", "")
         if emotion:
@@ -861,7 +861,7 @@ class Application:
         """
         Audio channel opened callback.
         """
-        logger.info("Audio channel opened")
+        logger.info("Audio channel has been opened")
 
         if self.audio_codec:
             await self.audio_codec.start_streams()
@@ -878,13 +878,13 @@ class Application:
         """
         Audio channel closed callback.
         """
-        logger.info("Audio channel closed")
+        logger.info("Audio channel has been closed")
         await self._set_device_state(DeviceState.IDLE)
         self.keep_listening = False
 
     async def _initialize_wake_word_detector(self):
         """
-        Initialize wake word detector.
+        Initialize the wake word detector.
         """
         try:
             from src.audio_processing.wake_word_detect import WakeWordDetector
@@ -924,7 +924,7 @@ class Application:
         """
         try:
             if not await self.protocol.connect():
-                logger.error("Failed to connect to server")
+                logger.error("Failed to connect to the server")
                 await self._set_device_state(DeviceState.IDLE)
                 return
 
@@ -944,7 +944,7 @@ class Application:
 
     def _handle_wake_word_error(self, error):
         """
-        Handle wake word detector error.
+        Handle wake word detector errors.
         """
         logger.error(f"Wake word detection error: {error}")
 
@@ -957,11 +957,11 @@ class Application:
         thing_manager = ThingManager.get_instance()
 
         await thing_manager.initialize_iot_devices(self.config)
-        logger.info("IoT devices initialized")
+        logger.info("IoT devices initialized successfully")
 
     async def _handle_iot_message(self, data):
         """
-        Handle IoT message.
+        Handle an IoT message.
         """
         from src.iot.thing_manager import ThingManager
 
@@ -971,7 +971,7 @@ class Application:
         for command in commands:
             try:
                 result = await thing_manager.invoke(command)
-                logger.info(f"IoT command execution result: {result}")
+                logger.info(f"Result of executing IoT command: {result}")
             except Exception as e:
                 logger.error(f"Failed to execute IoT command: {e}")
 
@@ -998,68 +998,38 @@ class Application:
 
     def _on_mode_changed(self):
         """
-        Callback for mode change.
+        Handle chat mode changes.
         """
-        # This method is called when the mode is changed in the GUI
-        # You can add logic here to handle the mode change, e.g., switch between different listening modes
-        pass
-
-    async def _initialize_mcp_server(self):
-        """
-        Initialize the MCP server.
-        """
+        # Note: This is a synchronous method used in a GUI callback
+        # A temporary task needs to be created to perform asynchronous lock operations
         try:
-            await self.mcp_server.start()
-            logger.info("MCP server started successfully")
+            # Quickly check the current state to avoid complex asynchronous operations in the GUI thread
+            if self.device_state != DeviceState.IDLE:
+                return False
+
+            self.keep_listening = not self.keep_listening
+            return True
         except Exception as e:
-            logger.error(f"Failed to start MCP server: {e}", exc_info=True)
+            logger.error(f"Mode change check failed: {e}")
+            return False
 
-    async def _handle_mcp_message(self, data):
+    async def _safe_close_resource(
+        self, resource, resource_name: str, close_method: str = "close"
+    ):
         """
-        Handle MCP message.
+        Helper method to safely close a resource.
         """
-        # This method is called when an MCP message is received from the server
-        # The message is then passed to the MCP server for processing
-        await self.mcp_server.handle_message(data)
-
-    async def _start_calendar_reminder_service(self):
-        """
-        Start the calendar reminder service.
-        """
-        try:
-            from src.services.calendar_service import CalendarReminderService
-
-            calendar_service = CalendarReminderService.get_instance()
-            await calendar_service.start()
-            logger.info("Calendar reminder service started successfully")
-        except Exception as e:
-            logger.error(f"Failed to start calendar reminder service: {e}", exc_info=True)
-
-    async def _start_timer_service(self):
-        """
-        Start the timer service.
-        """
-        try:
-            from src.services.timer_service import TimerService
-
-            timer_service = TimerService.get_instance()
-            await timer_service.start()
-            logger.info("Timer service started successfully")
-        except Exception as e:
-            logger.error(f"Failed to start timer service: {e}", exc_info=True)
-
-    async def _initialize_shortcuts(self):
-        """
-        Initialize global shortcuts.
-        """
-        try:
-            from src.services.shortcut_manager import ShortcutManager
-
-            shortcut_manager = ShortcutManager.get_instance()
-            await shortcut_manager.initialize_shortcuts()
-            logger.info("Global shortcuts initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize global shortcuts: {e}", exc_info=True)
+        if resource:
+            try:
+                close_func = getattr(resource, close_method, None)
+                if close_func:
+                    if asyncio.iscoroutinefunction(close_func):
+                        await close_func()
+                    else:
+                        close_func()
+                logger.info(f"{resource_name} has been closed")
+            except Exception as e:
+                logger.error(f"Failed to close {resource_name}: {e}")
 
     async def shutdown(self):
         """
@@ -1071,42 +1041,138 @@ class Application:
         logger.info("Shutting down the application...")
         self.running = False
 
-        # Set the shutdown event to signal all tasks to stop
-        if self._shutdown_event:
+        # Set the shutdown event
+        if self._shutdown_event is not None:
             self._shutdown_event.set()
 
-        # Stop the MCP server
-        if self.mcp_server:
-            await self.mcp_server.stop()
+        try:
+            # 2. Close the wake word detector
+            await self._safe_close_resource(
+                self.wake_word_detector, "Wake Word Detector", "stop"
+            )
 
-        # Stop the audio codec
-        if self.audio_codec:
-            await self.audio_codec.stop_streams()
+            # 3. Cancel all long-running tasks
+            if self._main_tasks:
+                logger.info(f"Cancelling {len(self._main_tasks)} main tasks")
+                tasks = list(self._main_tasks)
+                for task in tasks:
+                    if not task.done():
+                        task.cancel()
 
-        # Close the protocol connection
-        if self.protocol:
-            await self.protocol.close_audio_channel()
+                try:
+                    # Wait for tasks to complete cancellation
+                    await asyncio.wait(tasks, timeout=2.0)
+                except asyncio.TimeoutError:
+                    logger.warning("Some tasks timed out during cancellation")
+                except Exception as e:
+                    logger.warning(f"Error while waiting for tasks to complete: {e}")
 
-        # Stop the wake word detector
-        if self.wake_word_detector:
-            await self.wake_word_detector.stop()
+                self._main_tasks.clear()
 
-        # Cancel all running tasks
-        for task in list(self._main_tasks):
-            if not task.done():
-                task.cancel()
-        
-        # Wait for tasks to be cancelled
-        if self._main_tasks:
-            await asyncio.gather(*self._main_tasks, return_exceptions=True)
+            # 4. Close the protocol connection
+            if self.protocol:
+                try:
+                    await self.protocol.close_audio_channel()
+                    logger.info("Protocol connection has been closed")
+                except Exception as e:
+                    logger.error(f"Failed to close protocol connection: {e}")
 
-        # Stop the display
-        if self.display:
-            await self.display.stop()
+            # 5. Close the audio device
+            await self._safe_close_resource(self.audio_codec, "Audio Device")
 
-        logger.info("Application shut down successfully")
+            # 6. Close the MCP server
+            await self._safe_close_resource(self.mcp_server, "MCP Server")
 
-        # In GUI mode, quit the QApplication
-        if isinstance(asyncio.get_event_loop(), qasync.QEventLoop):
-            from PyQt5.QtWidgets import QApplication
-            QApplication.instance().quit()
+            # 7. Clear the queues
+            try:
+                for q in [
+                    self.command_queue,
+                ]:
+                    while not q.empty():
+                        try:
+                            q.get_nowait()
+                        except asyncio.QueueEmpty:
+                            break
+                logger.info("Queues have been cleared")
+            except Exception as e:
+                logger.error(f"Failed to clear queues: {e}")
+
+            # 8. Finally, stop the UI display
+            await self._safe_close_resource(self.display, "Display Interface")
+
+            logger.info("Application shutdown complete")
+
+        except Exception as e:
+            logger.error(f"Error during application shutdown: {e}", exc_info=True)
+
+    def _initialize_mcp_server(self):
+        """
+        Initialize the MCP server.
+        """
+        logger.info("Initializing MCP server")
+        # Set the send callback
+        self.mcp_server.set_send_callback(
+            lambda msg: self.protocol.send_mcp_message(msg)
+        )
+        # Add common tools
+        self.mcp_server.add_common_tools()
+
+    async def _handle_mcp_message(self, data):
+        """
+        Handle an MCP message.
+        """
+        payload = data.get("payload")
+        if payload:
+            await self.mcp_server.parse_message(payload)
+
+    async def _start_calendar_reminder_service(self):
+        """
+        Start the calendar reminder service.
+        """
+        try:
+            logger.info("Starting calendar reminder service")
+            from src.mcp.tools.calendar import get_reminder_service
+
+            # Get the reminder service instance (via singleton pattern)
+            reminder_service = get_reminder_service()
+
+            # Start the reminder service (the service will handle initialization and schedule checking internally)
+            await reminder_service.start()
+
+            logger.info("Calendar reminder service has been started")
+
+        except Exception as e:
+            logger.error(f"Failed to start calendar reminder service: {e}", exc_info=True)
+
+    async def _start_timer_service(self):
+        """
+        Start the timer service.
+        """
+        try:
+            logger.info("Starting timer service")
+            from src.mcp.tools.timer.timer_service import get_timer_service
+
+            # Get the timer service instance (via singleton pattern)
+            get_timer_service()
+
+            logger.info("Timer service has been started and registered with the resource manager")
+
+        except Exception as e:
+            logger.error(f"Failed to start timer service: {e}", exc_info=True)
+
+    async def _initialize_shortcuts(self):
+        """
+        Initialize the shortcut manager.
+        """
+        try:
+            from src.views.components.shortcut_manager import (
+                start_global_shortcuts_async,
+            )
+
+            shortcut_manager = await start_global_shortcuts_async(logger)
+            if shortcut_manager:
+                logger.info("Shortcut manager initialized successfully")
+            else:
+                logger.warning("Shortcut manager initialization failed")
+        except Exception as e:
+            logger.error(f"Failed to initialize shortcut manager: {e}", exc_info=True)
