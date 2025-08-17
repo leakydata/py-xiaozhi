@@ -5,7 +5,7 @@ from typing import Callable, Optional
 
 from src.display.base_display import BaseDisplay
 
-# 根据不同操作系统处理 pynput 导入
+# Handle pynput import according to different operating systems
 try:
     if platform.system() == "Windows":
         from pynput import keyboard as pynput_keyboard
@@ -22,13 +22,13 @@ class CliDisplay(BaseDisplay):
         super().__init__()
         self.running = True
 
-        # 回调函数
+        # Callback functions
         self.auto_callback = None
         self.abort_callback = None
         self.send_text_callback = None
         self.mode_callback = None
 
-        # 异步队列用于处理命令
+        # Asynchronous queue for processing commands
         self.command_queue = asyncio.Queue()
 
     async def set_callbacks(
@@ -41,7 +41,7 @@ class CliDisplay(BaseDisplay):
         send_text_callback: Optional[Callable] = None,
     ):
         """
-        设置回调函数.
+        Set callback functions.
         """
         self.auto_callback = auto_callback
         self.abort_callback = abort_callback
@@ -50,43 +50,43 @@ class CliDisplay(BaseDisplay):
 
     async def update_button_status(self, text: str):
         """
-        更新按钮状态.
+        Update button status.
         """
-        print(f"按钮状态: {text}")
+        print(f"Button status: {text}")
 
     async def update_status(self, status: str):
         """
-        更新状态文本.
+        Update status text.
         """
-        print(f"\r状态: {status}        ", end="", flush=True)
+        print(f"\rStatus: {status}        ", end="", flush=True)
 
     async def update_text(self, text: str):
         """
-        更新TTS文本.
+        Update TTS text.
         """
         if text and text.strip():
-            print(f"\n文本: {text}")
+            print(f"\nText: {text}")
 
     async def update_emotion(self, emotion_name: str):
         """
-        更新表情显示.
+        Update emotion display.
         """
-        print(f"表情: {emotion_name}")
+        print(f"Emotion: {emotion_name}")
 
     async def start(self):
         """
-        启动异步CLI显示.
+        Start asynchronous CLI display.
         """
-        print("\n=== 小智Ai命令行控制 ===")
-        print("可用命令：")
-        print("  r     - 开始/停止对话")
-        print("  x     - 打断当前对话")
-        print("  q     - 退出程序")
-        print("  h     - 显示此帮助信息")
-        print("  其他  - 发送文本消息")
+        print("\n=== Xiaozhi AI Command Line Control ===")
+        print("Available commands:")
+        print("  r     - Start/stop conversation")
+        print("  x     - Interrupt current conversation")
+        print("  q     - Exit program")
+        print("  h     - Show this help message")
+        print("  other - Send text message")
         print("============================\n")
 
-        # 启动命令处理任务
+        # Start command processing task
         command_task = asyncio.create_task(self._command_processor())
         input_task = asyncio.create_task(self._keyboard_input_loop())
 
@@ -97,7 +97,7 @@ class CliDisplay(BaseDisplay):
 
     async def _command_processor(self):
         """
-        命令处理器.
+        Command processor.
         """
         while self.running:
             try:
@@ -111,11 +111,11 @@ class CliDisplay(BaseDisplay):
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                self.logger.error(f"命令处理错误: {e}")
+                self.logger.error(f"Command processing error: {e}")
 
     async def _keyboard_input_loop(self):
         """
-        键盘输入循环.
+        Keyboard input loop.
         """
         try:
             while self.running:
@@ -126,7 +126,7 @@ class CliDisplay(BaseDisplay):
 
     async def _handle_command(self, cmd: str):
         """
-        处理命令.
+        Handle command.
         """
         if cmd == "q":
             await self.close()
@@ -144,32 +144,32 @@ class CliDisplay(BaseDisplay):
 
     async def close(self):
         """
-        关闭CLI显示.
+        Close CLI display.
         """
         self.running = False
-        print("\n正在关闭应用...")
+        print("\nClosing application...")
 
     def _print_help(self):
         """
-        打印帮助信息.
+        Print help message.
         """
-        print("\n=== 小智Ai命令行控制 ===")
-        print("可用命令：")
-        print("  r     - 开始/停止对话")
-        print("  x     - 打断当前对话")
-        print("  q     - 退出程序")
-        print("  h     - 显示此帮助信息")
-        print("  其他  - 发送文本消息")
+        print("\n=== Xiaozhi AI Command Line Control ===")
+        print("Available commands:")
+        print("  r     - Start/stop conversation")
+        print("  x     - Interrupt current conversation")
+        print("  q     - Exit program")
+        print("  h     - Show this help message")
+        print("  other - Send text message")
         print("============================\n")
 
     async def toggle_mode(self):
         """
-        CLI模式下的模式切换（无操作）
+        Mode switching in CLI mode (no operation)
         """
-        self.logger.debug("CLI模式下不支持模式切换")
+        self.logger.debug("Mode switching is not supported in CLI mode")
 
     async def toggle_window_visibility(self):
         """
-        CLI模式下的窗口切换（无操作）
+        Window switching in CLI mode (no operation)
         """
-        self.logger.debug("CLI模式下不支持窗口切换")
+        self.logger.debug("Window switching is not supported in CLI mode")
