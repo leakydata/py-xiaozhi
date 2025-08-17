@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>小智Ai客户端</string>
+   <string>Xiaozhi AI Client</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
 
@@ -52,7 +52,7 @@ QLabel {
          </string>
         </property>
         <property name="text">
-         <string>状态: 未连接</string>
+         <string>Status: Not Connected</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -103,7 +103,7 @@ QLabel {
          </string>
         </property>
         <property name="text">
-         <string>待命</string>
+         <string>Standby</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -139,7 +139,7 @@ QLabel {
         </size>
        </property>
        <property name="text">
-        <string>按住后说话</string>
+        <string>Hold to Talk</string>
        </property>
       </widget>
      </item>
@@ -152,7 +152,7 @@ QLabel {
         </size>
        </property>
        <property name="text">
-        <string>打断对话</string>
+        <string>Interrupt</string>
        </property>
       </widget>
      </item>
@@ -170,7 +170,7 @@ QLabel {
           </size>
          </property>
          <property name="placeholderText">
-          <string>输入文字...</string>
+          <string>Enter text...</string>
          </property>
         </widget>
        </item>
@@ -183,7 +183,7 @@ QLabel {
           </size>
          </property>
          <property name="text">
-          <string>发送</string>
+          <string>Send</string>
          </property>
         </widget>
        </item>
@@ -198,7 +198,7 @@ QLabel {
         </size>
        </property>
        <property name="text">
-        <string>开始对话</string>
+        <string>Start Conversation</string>
        </property>
       </widget>
      </item>
@@ -211,7 +211,7 @@ QLabel {
         </size>
        </property>
        <property name="text">
-        <string>手动对话</string>
+        <string>Manual Conversation</string>
        </property>
       </widget>
      </item>
