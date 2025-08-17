@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-CLI模式设备激活流程 提供与GUI激活窗口相同的功能，但使用纯终端输出.
+CLI mode device activation process. Provides the same functionality as the GUI activation window, but using pure terminal output.
 """
 
 from datetime import datetime
@@ -15,15 +15,15 @@ logger = get_logger(__name__)
 
 class CLIActivation:
     """
-    CLI模式设备激活处理器.
+    CLI mode device activation handler.
     """
 
     def __init__(self, system_initializer: Optional[SystemInitializer] = None):
-        # 组件实例
+        # Component instances
         self.system_initializer = system_initializer
         self.device_activator: Optional[DeviceActivator] = None
 
-        # 状态管理
+        # State management
         self.current_stage = None
         self.activation_data = None
         self.is_activated = False
@@ -31,69 +31,69 @@ class CLIActivation:
         self.logger = logger
 
     async def run_activation_process(self) -> bool:
-        """运行完整的CLI激活流程.
+        """Run the complete CLI activation process.
 
         Returns:
-            bool: 激活是否成功
+            bool: Whether the activation was successful
         """
         try:
             self._print_header()
 
-            # 如果已经提供了SystemInitializer实例，直接使用
+            # If a SystemInitializer instance is already provided, use it directly
             if self.system_initializer:
-                self._log_and_print("使用已初始化的系统")
+                self._log_and_print("Using an initialized system")
                 self._update_device_info()
                 return await self._start_activation_process()
             else:
-                # 否则创建新的实例并运行初始化
-                self._log_and_print("开始系统初始化流程")
+                # Otherwise, create a new instance and run initialization
+                self._log_and_print("Starting system initialization process")
                 self.system_initializer = SystemInitializer()
 
-                # 运行初始化流程
+                # Run the initialization process
                 init_result = await self.system_initializer.run_initialization()
 
                 if init_result.get("success", False):
                     self._update_device_info()
 
-                    # 显示状态消息
+                    # Display status message
                     status_message = init_result.get("status_message", "")
                     if status_message:
                         self._log_and_print(status_message)
 
-                    # 检查是否需要激活
+                    # Check if activation is needed
                     if init_result.get("need_activation_ui", True):
                         return await self._start_activation_process()
                     else:
-                        # 无需激活，直接完成
+                        # No activation needed, complete directly
                         self.is_activated = True
-                        self._log_and_print("设备已激活，无需进一步操作")
+                        self._log_and_print("Device is already activated, no further action needed")
                         return True
                 else:
-                    error_msg = init_result.get("error", "初始化失败")
-                    self._log_and_print(f"错误: {error_msg}")
+                    error_msg = init_result.get("error", "Initialization failed")
+                    self._log_and_print(f"Error: {error_msg}")
                     return False
 
         except KeyboardInterrupt:
-            self._log_and_print("\n用户中断激活流程")
+            self._log_and_print("\nUser interrupted the activation process")
             return False
         except Exception as e:
-            self.logger.error(f"CLI激活过程异常: {e}", exc_info=True)
-            self._log_and_print(f"激活异常: {e}")
+            self.logger.error(f"CLI activation process exception: {e}", exc_info=True)
+            self._log_and_print(f"Activation exception: {e}")
             return False
 
     def _print_header(self):
         """
-        打印CLI激活流程头部信息.
+        Print the CLI activation process header information.
         """
         print("\n" + "=" * 60)
-        print("小智AI客户端 - 设备激活流程")
+        print("Xiaozhi AI Client - Device Activation Process")
         print("=" * 60)
-        print("正在初始化设备，请稍候...")
+        print("Initializing device, please wait...")
         print()
 
     def _update_device_info(self):
         """
-        更新设备信息显示.
+        Update device information display.
         """
         if (
             not self.system_initializer
@@ -103,139 +103,139 @@ class CLIActivation:
 
         device_fp = self.system_initializer.device_fingerprint
 
-        # 获取设备信息
+        # Get device information
         serial_number = device_fp.get_serial_number()
         mac_address = device_fp.get_mac_address_from_efuse()
 
-        # 获取激活状态
+        # Get activation status
         activation_status = self.system_initializer.get_activation_status()
         local_activated = activation_status.get("local_activated", False)
         server_activated = activation_status.get("server_activated", False)
         status_consistent = activation_status.get("status_consistent", True)
 
-        # 更新激活状态
+        # Update activation status
         self.is_activated = local_activated
 
-        # 显示设备信息
-        print("📱 设备信息:")
-        print(f"   序列号: {serial_number if serial_number else '--'}")
-        print(f"   MAC地址: {mac_address if mac_address else '--'}")
+        # Display device information
+        print("📱 Device Information:")
+        print(f"   Serial Number: {serial_number if serial_number else '--'}")
+        print(f"   MAC Address: {mac_address if mac_address else '--'}")
 
-        # 显示激活状态
+        # Display activation status
         if not status_consistent:
             if local_activated and not server_activated:
-                status_text = "状态不一致(需重新激活)"
+                status_text = "Status inconsistent (reactivation required)"
             else:
-                status_text = "状态不一致(已自动修复)"
+                status_text = "Status inconsistent (automatically repaired)"
         else:
-            status_text = "已激活" if local_activated else "未激活"
+            status_text = "Activated" if local_activated else "Not Activated"
 
-        print(f"   激活状态: {status_text}")
+        print(f"   Activation Status: {status_text}")
 
     async def _start_activation_process(self) -> bool:
         """
-        开始激活流程.
+        Start the activation process.
         """
         try:
-            # 获取激活数据
+            # Get activation data
             activation_data = self.system_initializer.get_activation_data()
 
             if not activation_data:
-                self._log_and_print("\n未获取到激活数据")
-                print("错误: 未获取到激活数据，请检查网络连接")
+                self._log_and_print("\nFailed to get activation data")
+                print("Error: Failed to get activation data, please check your network connection")
                 return False
 
             self.activation_data = activation_data
 
-            # 显示激活信息
+            # Display activation information
             self._show_activation_info(activation_data)
 
-            # 初始化设备激活器
+            # Initialize device activator
             config_manager = self.system_initializer.get_config_manager()
             self.device_activator = DeviceActivator(config_manager)
 
-            # 开始激活流程
-            self._log_and_print("\n开始设备激活流程...")
-            print("正在连接激活服务器，请保持网络连接...")
+            # Start the activation process
+            self._log_and_print("\nStarting device activation process...")
+            print("Connecting to activation server, please maintain network connection...")
 
             activation_success = await self.device_activator.process_activation(
                 activation_data
             )
 
             if activation_success:
-                self._log_and_print("\n设备激活成功！")
+                self._log_and_print("\nDevice activation successful!")
                 self._print_activation_success()
                 return True
             else:
-                self._log_and_print("\n设备激活失败")
+                self._log_and_print("\nDevice activation failed")
                 self._print_activation_failure()
                 return False
 
         except Exception as e:
-            self.logger.error(f"激活流程异常: {e}", exc_info=True)
-            self._log_and_print(f"\n激活异常: {e}")
+            self.logger.error(f"Activation process exception: {e}", exc_info=True)
+            self._log_and_print(f"\nActivation exception: {e}")
             return False
 
     def _show_activation_info(self, activation_data: dict):
         """
-        显示激活信息.
+        Show activation information.
         """
         code = activation_data.get("code", "------")
-        message = activation_data.get("message", "请访问xiaozhi.me输入验证码")
+        message = activation_data.get("message", "Please visit xiaozhi.me and enter the verification code")
 
         print("\n" + "=" * 60)
-        print("设备激活信息")
+        print("Device Activation Information")
         print("=" * 60)
-        print(f"激活验证码: {code}")
-        print(f"激活说明: {message}")
+        print(f"Activation Code: {code}")
+        print(f"Activation Instructions: {message}")
         print("=" * 60)
 
-        # 格式化显示验证码（每个字符间加空格）
+        # Format and display the verification code (with spaces between characters)
         formatted_code = " ".join(code)
-        print(f"\n验证码（请在网站输入）: {formatted_code}")
-        print("\n请按以下步骤完成激活:")
-        print("1. 打开浏览器访问 xiaozhi.me")
-        print("2. 登录您的账户")
-        print("3. 选择添加设备")
-        print(f"4. 输入验证码: {formatted_code}")
-        print("5. 确认添加设备")
-        print("\n等待激活确认中，请在网站完成操作...")
+        print(f"\nVerification Code (please enter on the website): {formatted_code}")
+        print("\nPlease follow the steps below to complete activation:")
+        print("1. Open a browser and visit xiaozhi.me")
+        print("2. Log in to your account")
+        print("3. Select 'Add Device'")
+        print(f"4. Enter the verification code: {formatted_code}")
+        print("5. Confirm adding the device")
+        print("\nWaiting for activation confirmation, please complete the operation on the website...")
 
-        self._log_and_print(f"激活验证码: {code}")
-        self._log_and_print(f"激活说明: {message}")
+        self._log_and_print(f"Activation Code: {code}")
+        self._log_and_print(f"Activation Instructions: {message}")
 
     def _print_activation_success(self):
         """
-        打印激活成功信息.
+        Print activation success message.
         """
         print("\n" + "=" * 60)
-        print("设备激活成功！")
+        print("Device activation successful!")
         print("=" * 60)
-        print("设备已成功添加到您的账户")
-        print("配置已自动更新")
-        print("准备启动小智AI客户端...")
+        print("The device has been successfully added to your account")
+        print("Configuration has been updated automatically")
+        print("Preparing to launch Xiaozhi AI Client...")
         print("=" * 60)
 
     def _print_activation_failure(self):
         """
-        打印激活失败信息.
+        Print activation failure message.
         """
         print("\n" + "=" * 60)
-        print("设备激活失败")
+        print("Device activation failed")
         print("=" * 60)
-        print("可能的原因:")
-        print("• 网络连接不稳定")
-        print("• 验证码输入错误或已过期")
-        print("• 服务器暂时不可用")
-        print("\n解决方案:")
-        print("• 检查网络连接")
-        print("• 重新运行程序获取新验证码")
-        print("• 确保在网站正确输入验证码")
+        print("Possible reasons:")
+        print("• Unstable network connection")
+        print("• Incorrect or expired verification code")
+        print("• Server is temporarily unavailable")
+        print("\nSolutions:")
+        print("• Check your network connection")
+        print("• Rerun the program to get a new verification code")
+        print("• Ensure the verification code is entered correctly on the website")
         print("=" * 60)
 
     def _log_and_print(self, message: str):
         """
-        同时记录日志和打印到终端.
+        Log the message and print it to the terminal.
         """
         timestamp = datetime.now().strftime("%H:%M:%S")
         log_message = f"[{timestamp}] {message}"
@@ -244,7 +244,7 @@ class CLIActivation:
 
     def get_activation_result(self) -> dict:
         """
-        获取激活结果.
+        Get the activation result.
         """
         device_fingerprint = None
         config_manager = None
