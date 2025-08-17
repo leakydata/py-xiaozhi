@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-设备激活窗口 显示激活流程、设备信息和激活进度.
+Device activation window, displays the activation process, device information, and activation progress.
 """
 
 from pathlib import Path
@@ -22,12 +22,12 @@ logger = get_logger(__name__)
 
 class ActivationWindow(BaseWindow, AsyncMixin):
     """
-    设备激活窗口.
+    Device Activation Window.
     """
 
-    # 自定义信号
-    activation_completed = pyqtSignal(bool)  # 激活完成信号
-    window_closed = pyqtSignal()  # 窗口关闭信号
+    # Custom signals
+    activation_completed = pyqtSignal(bool)  # Activation completed signal
+    window_closed = pyqtSignal()  # Window closed signal
 
     def __init__(
         self,
@@ -36,87 +36,87 @@ class ActivationWindow(BaseWindow, AsyncMixin):
     ):
         super().__init__(parent)
 
-        # 组件实例
+        # Component instances
         self.system_initializer = system_initializer
         self.device_activator: Optional[DeviceActivator] = None
 
-        # 状态管理
+        # State management
         self.current_stage = None
         self.activation_data = None
         self.is_activated = False
         self.initialization_started = False
         self.status_message = ""
 
-        # 异步信号发射器
+        # Async signal emitter
         self.signal_emitter = AsyncSignalEmitter()
         self._setup_signal_connections()
 
-        # 延迟启动初始化（等事件循环运行后）
-        self.start_update_timer(100)  # 100ms后开始初始化
+        # Delayed start of initialization (after event loop starts)
+        self.start_update_timer(100)  # Start initialization after 100ms
 
     def _setup_ui(self):
         """
-        设置UI.
+        Set up UI.
         """
         ui_file = Path(__file__).parent / "activation_window.ui"
         uic.loadUi(str(ui_file), self)
 
-        # 设置窗口属性和自适应尺寸
-        self.setWindowTitle("设备激活 - py-xiaozhi")
+        # Set window properties and adaptive size
+        self.setWindowTitle("Device Activation - py-xiaozhi")
         self._setup_adaptive_size()
 
-        # 隐藏日志区域
+        # Hide log area
         if hasattr(self, "log_text"):
             self.log_text.hide()
 
-        self.logger.info("激活窗口UI加载完成")
+        self.logger.info("Activation window UI loaded successfully")
 
     def _setup_adaptive_size(self):
         """
-        设置自适应窗口尺寸.
+        Set adaptive window size.
         """
-        # 获取屏幕尺寸
+        # Get screen size
         screen = QApplication.primaryScreen()
         screen_size = screen.size()
         screen_width = screen_size.width()
         screen_height = screen_size.height()
 
-        self.logger.info(f"检测到屏幕分辨率: {screen_width}x{screen_height}")
+        self.logger.info(f"Detected screen resolution: {screen_width}x{screen_height}")
 
-        # 根据屏幕尺寸选择合适的窗口大小
+        # Select appropriate window size based on screen size
         if screen_width <= 480 or screen_height <= 320:
-            # 极小屏幕 (如3.5寸480x320)
+            # Very small screen (e.g., 3.5 inch 480x320)
             window_width, window_height = 450, 250
             self.setMinimumSize(QSize(450, 250))
             self._apply_compact_styles()
         elif screen_width <= 800 or screen_height <= 480:
-            # 小屏幕 (如7寸800x480)
+            # Small screen (e.g., 7 inch 800x480)
             window_width, window_height = 480, 280
             self.setMinimumSize(QSize(480, 280))
             self._apply_small_screen_styles()
         elif screen_width <= 1024 or screen_height <= 600:
-            # 中等屏幕
+            # Medium screen
             window_width, window_height = 520, 300
             self.setMinimumSize(QSize(520, 300))
         else:
-            # 大屏幕 (PC显示器)
+            # Large screen (PC monitor)
             window_width, window_height = 550, 320
             self.setMinimumSize(QSize(550, 320))
 
-        # 确保窗口不超过屏幕尺寸
+        # Ensure the window does not exceed the screen size
         max_width = min(window_width, screen_width - 50)
         max_height = min(window_height, screen_height - 50)
 
         self.resize(max_width, max_height)
 
-        # 居中显示
+        # Center display
         self.move((screen_width - max_width) // 2, (screen_height - max_height) // 2)
 
-        self.logger.info(f"设置窗口尺寸: {max_width}x{max_height}")
+        self.logger.info(f"Set window size: {max_width}x{max_height}")
 
     def _apply_compact_styles(self):
-        """应用紧凑样式 - 适用于极小屏幕"""
-        # 调整字体大小
+        """Apply compact styles - suitable for very small screens"""
+        # Adjust font size
         self.setStyleSheet(
             """
             QLabel { font-size: 10px; }
@@ -127,9 +127,9 @@ class ActivationWindow(BaseWindow, AsyncMixin):
 
     def _apply_small_screen_styles(self):
         """
-        应用小屏幕样式.
+        Apply small screen styles.
         """
-        # 调整字体大小
+        # Adjust font size
         self.setStyleSheet(
             """
             QLabel { font-size: 11px; }
@@ -140,18 +140,18 @@ class ActivationWindow(BaseWindow, AsyncMixin):
 
     def _setup_connections(self):
         """
-        设置信号连接.
+        Set up signal connections.
         """
-        # 按钮连接
+        # Button connections
         self.close_btn.clicked.connect(self.close)
         self.retry_btn.clicked.connect(self._on_retry_clicked)
         self.copy_code_btn.clicked.connect(self._on_copy_code_clicked)
 
-        self.logger.debug("信号连接设置完成")
+        self.logger.debug("Signal connections set up successfully")
 
     def _setup_signal_connections(self):
         """
-        设置异步信号连接.
+        Set up async signal connections.
         """
         self.signal_emitter.status_changed.connect(self._on_status_changed)
         self.signal_emitter.error_occurred.connect(self._on_error_occurred)
@@ -159,66 +159,66 @@ class ActivationWindow(BaseWindow, AsyncMixin):
 
     def _setup_styles(self):
         """
-        设置样式.
+        Set up styles.
         """
-        # 基础样式已在UI文件中定义
+        # Basic styles are defined in the UI file
 
     def _on_timer_update(self):
-        """定时器更新回调 - 启动初始化"""
+        """Timer update callback - start initialization"""
         if not self.initialization_started:
             self.initialization_started = True
-            self.stop_update_timer()  # 停止定时器
+            self.stop_update_timer()  # Stop timer
 
-            # 现在事件循环应该正在运行，可以创建异步任务
+            # The event loop should be running now, async tasks can be created
             try:
                 self.create_task(self._start_initialization(), "initialization")
             except RuntimeError as e:
-                self.logger.error(f"创建初始化任务失败: {e}")
-                # 如果还是失败，再试一次
+                self.logger.error(f"Failed to create initialization task: {e}")
+                # If it fails again, try again
                 self.start_update_timer(500)
 
     async def _start_initialization(self):
         """
-        开始系统初始化流程.
+        Start system initialization process.
         """
         try:
-            # 如果已经提供了SystemInitializer实例，直接使用
+            # If a SystemInitializer instance is already provided, use it directly
             if self.system_initializer:
                 self._update_device_info()
                 await self._start_activation_process()
             else:
-                # 否则创建新的实例并运行初始化
+                # Otherwise, create a new instance and run initialization
                 self.system_initializer = SystemInitializer()
 
-                # 运行初始化流程
+                # Run initialization process
                 init_result = await self.system_initializer.run_initialization()
 
                 if init_result.get("success", False):
                     self._update_device_info()
 
-                    # 显示状态消息
+                    # Show status message
                     self.status_message = init_result.get("status_message", "")
                     if self.status_message:
                         self.signal_emitter.emit_status(self.status_message)
 
-                    # 检查是否需要激活
+                    # Check if activation is needed
                     if init_result.get("need_activation_ui", True):
                         await self._start_activation_process()
                     else:
-                        # 无需激活，直接完成
+                        # No activation needed, complete directly
                         self.is_activated = True
                         self.activation_completed.emit(True)
                 else:
-                    error_msg = init_result.get("error", "初始化失败")
+                    error_msg = init_result.get("error", "Initialization failed")
                     self.signal_emitter.emit_error(error_msg)
 
         except Exception as e:
-            self.logger.error(f"初始化过程异常: {e}", exc_info=True)
-            self.signal_emitter.emit_error(f"初始化异常: {e}")
+            self.logger.error(f"Exception during initialization process: {e}", exc_info=True)
+            self.signal_emitter.emit_error(f"Initialization exception: {e}")
 
     def _update_device_info(self):
         """
-        更新设备信息显示.
+        Update device information display.
         """
         if (
             not self.system_initializer
@@ -228,169 +228,169 @@ class ActivationWindow(BaseWindow, AsyncMixin):
 
         device_fp = self.system_initializer.device_fingerprint
 
-        # 更新序列号
+        # Update serial number
         serial_number = device_fp.get_serial_number()
         self.serial_value.setText(serial_number if serial_number else "--")
 
-        # 更新MAC地址
+        # Update MAC address
         mac_address = device_fp.get_mac_address_from_efuse()
         self.mac_value.setText(mac_address if mac_address else "--")
 
-        # 获取激活状态
+        # Get activation status
         activation_status = self.system_initializer.get_activation_status()
         local_activated = activation_status.get("local_activated", False)
         server_activated = activation_status.get("server_activated", False)
         status_consistent = activation_status.get("status_consistent", True)
 
-        # 更新激活状态显示
+        # Update activation status display
         self.is_activated = local_activated
 
         if not status_consistent:
             if local_activated and not server_activated:
-                status_text = "状态不一致(需重新激活)"
-                status_style = "color: #ff9900;"  # 橙色警告
+                status_text = "Status inconsistent (reactivation required)"
+                status_style = "color: #ff9900;"  # Orange warning
             else:
-                status_text = "状态不一致(已修复)"
-                status_style = "color: #28a745;"  # 绿色
+                status_text = "Status inconsistent (fixed)"
+                status_style = "color: #28a745;"  # Green
         else:
-            status_text = "已激活" if local_activated else "未激活"
+            status_text = "Activated" if local_activated else "Not Activated"
             status_style = "color: #28a745;" if local_activated else "color: #dc3545;"
 
         self.status_value.setText(status_text)
         self.status_value.setStyleSheet(status_style)
 
-        # 初始化激活码显示
+        # Initialize activation code display
         self.activation_code_value.setText("--")
 
     async def _start_activation_process(self):
         """
-        开始激活流程.
+        Start activation process.
         """
         try:
-            # 获取激活数据
+            # Get activation data
             activation_data = self.system_initializer.get_activation_data()
 
             if not activation_data:
-                self.signal_emitter.emit_error("未获取到激活数据，请检查网络连接")
+                self.signal_emitter.emit_error("Failed to get activation data, please check network connection")
                 return
 
             self.activation_data = activation_data
 
-            # 显示激活信息
+            # Show activation information
             self._show_activation_info(activation_data)
 
-            # 初始化设备激活器
+            # Initialize device activator
             config_manager = self.system_initializer.get_config_manager()
             self.device_activator = DeviceActivator(config_manager)
 
-            # 开始激活流程
-            self.signal_emitter.emit_status("开始设备激活流程...")
+            # Start activation process
+            self.signal_emitter.emit_status("Starting device activation process...")
             activation_success = await self.device_activator.process_activation(
                 activation_data
             )
 
-            # 检查是否是因为窗口关闭而取消
+            # Check if it was cancelled due to window closing
             if self.is_shutdown_requested():
-                self.signal_emitter.emit_status("激活流程已取消")
+                self.signal_emitter.emit_status("Activation process cancelled")
                 return
 
             if activation_success:
-                self.signal_emitter.emit_status("设备激活成功！")
+                self.signal_emitter.emit_status("Device activated successfully!")
                 self._on_activation_success()
             else:
-                self.signal_emitter.emit_status("设备激活失败")
-                self.signal_emitter.emit_error("设备激活失败，请重试")
+                self.signal_emitter.emit_status("Device activation failed")
+                self.signal_emitter.emit_error("Device activation failed, please try again")
 
         except Exception as e:
-            self.logger.error(f"激活流程异常: {e}", exc_info=True)
-            self.signal_emitter.emit_error(f"激活异常: {e}")
+            self.logger.error(f"Exception in activation process: {e}", exc_info=True)
+            self.signal_emitter.emit_error(f"Activation exception: {e}")
 
     def _show_activation_info(self, activation_data: dict):
         """
-        显示激活信息.
+        Show activation information.
         """
         code = activation_data.get("code", "------")
 
-        # 更新设备信息中的激活码
+        # Update activation code in device information
         self.activation_code_value.setText(code)
 
-        # 信息已在UI界面显示，仅记录简要日志
-        self.logger.info(f"获取激活验证码: {code}")
+        # Information is already displayed on the UI, only a brief log is recorded
+        self.logger.info(f"Get activation code: {code}")
 
     def _on_activation_success(self):
         """
-        激活成功处理.
+        Handle activation success.
         """
-        # 更新状态显示
-        self.status_value.setText("已激活")
+        # Update status display
+        self.status_value.setText("Activated")
         self.status_value.setStyleSheet("color: #28a745;")
 
-        # 清除激活码显示
+        # Clear activation code display
         self.activation_code_value.setText("--")
 
-        # 发射完成信号
+        # Emit completion signal
         self.activation_completed.emit(True)
         self.is_activated = True
 
     def _on_status_changed(self, status: str):
         """
-        状态变化处理.
+        Handle status change.
         """
         self.update_status(status)
 
     def _on_error_occurred(self, error_message: str):
         """
-        错误处理.
+        Handle error.
         """
-        self.logger.error(f"错误: {error_message}")
-        self.update_status(f"错误: {error_message}")
+        self.logger.error(f"Error: {error_message}")
+        self.update_status(f"Error: {error_message}")
 
     def _on_data_ready(self, data):
         """
-        数据就绪处理.
+        Handle data ready.
         """
-        self.logger.debug(f"收到数据: {data}")
+        self.logger.debug(f"Received data: {data}")
 
     def _on_retry_clicked(self):
         """
-        重新激活按钮点击.
+        Retry button clicked.
         """
-        self.logger.info("用户请求重新激活")
+        self.logger.info("User requested reactivation")
 
-        # 检查是否已经关闭
+        # Check if already closed
         if self.is_shutdown_requested():
             return
 
-        # 重置状态
+        # Reset status
         self.activation_code_value.setText("--")
 
-        # 重新开始初始化
+        # Restart initialization
         self.create_task(self._start_initialization(), "retry_initialization")
 
     def _on_copy_code_clicked(self):
         """
-        复制验证码按钮点击.
+        Copy code button clicked.
         """
         if self.activation_data:
             code = self.activation_data.get("code", "")
             if code:
                 clipboard = QApplication.clipboard()
                 clipboard.setText(code)
-                self.update_status(f"验证码已复制到剪贴板: {code}")
+                self.update_status(f"Verification code copied to clipboard: {code}")
 
     def update_status(self, message: str):
         """
-        更新状态信息.
+        Update status information.
         """
         self.logger.info(message)
 
-        # 如果有状态标签，更新它
+        # If there is a status label, update it
         if hasattr(self, "status_label"):
             self.status_label.setText(message)
 
     def get_activation_result(self) -> dict:
         """
-        获取激活结果.
+        Get activation result.
         """
         device_fingerprint = None
         config_manager = None
@@ -407,25 +407,25 @@ class ActivationWindow(BaseWindow, AsyncMixin):
 
     async def shutdown_async(self):
         """
-        异步关闭.
+        Async shutdown.
         """
-        self.logger.info("正在关闭激活窗口...")
+        self.logger.info("Closing activation window...")
 
-        # 取消激活流程（如果正在进行）
+        # Cancel activation process (if in progress)
         if self.device_activator:
             self.device_activator.cancel_activation()
-            self.logger.info("已发送激活取消信号")
+            self.logger.info("Activation cancellation signal sent")
 
-        # 先清理异步任务
+        # Clean up async tasks first
         await self.cleanup_async_tasks()
 
-        # 然后调用父类关闭
+        # Then call parent class close
         await super().shutdown_async()
 
     def closeEvent(self, event):
         """
-        窗口关闭事件处理.
+        Handle window close event.
         """
-        self.logger.info("激活窗口关闭事件触发")
+        self.logger.info("Activation window close event triggered")
         self.window_closed.emit()
         event.accept()
