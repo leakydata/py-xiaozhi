@@ -11,180 +11,180 @@ logger = get_logger(__name__)
 
 def parse_args():
     """
-    解析命令行参数.
+    Parse command line arguments.
     """
-    parser = argparse.ArgumentParser(description="小智Ai客户端")
+    parser = argparse.ArgumentParser(description="Xiaozhi AI Client")
     parser.add_argument(
         "--mode",
         choices=["gui", "cli"],
         default="gui",
-        help="运行模式：gui(图形界面) 或 cli(命令行)",
+        help="Running mode: gui (graphical interface) or cli (command line)",
     )
     parser.add_argument(
         "--protocol",
         choices=["mqtt", "websocket"],
         default="websocket",
-        help="通信协议：mqtt 或 websocket",
+        help="Communication protocol: mqtt or websocket",
     )
     parser.add_argument(
         "--skip-activation",
         action="store_true",
-        help="跳过激活流程，直接启动应用（仅用于调试）",
+        help="Skip the activation process and start the application directly (for debugging only)",
     )
     return parser.parse_args()
 
 
 async def handle_activation(mode: str) -> bool:
-    """处理设备激活流程.
+    """Handle device activation process.
 
     Args:
-        mode: 运行模式，"gui"或"cli"
+        mode: Running mode, "gui" or "cli"
 
     Returns:
-        bool: 激活是否成功
+        bool: Whether the activation is successful
     """
     try:
         from src.core.system_initializer import SystemInitializer
 
-        logger.info("开始设备激活流程检查...")
+        logger.info("Start device activation process check...")
 
-        # 创建SystemInitializer实例
+        # Create SystemInitializer instance
         system_initializer = SystemInitializer()
 
-        # 运行初始化流程
+        # Run initialization process
         init_result = await system_initializer.run_initialization()
 
-        # 检查初始化是否成功
+        # Check if initialization is successful
         if not init_result.get("success", False):
-            logger.error(f"系统初始化失败: {init_result.get('error', '未知错误')}")
+            logger.error(f"System initialization failed: {init_result.get('error', 'Unknown error')}")
             return False
 
-        # 获取激活版本
+        # Get activation version
         activation_version = init_result.get("activation_version", "v1")
-        logger.info(f"当前激活版本: {activation_version}")
+        logger.info(f"Current activation version: {activation_version}")
 
-        # 如果是v1协议，直接返回成功
+        # If it is v1 protocol, return success directly
         if activation_version == "v1":
-            logger.info("v1协议：系统初始化完成，无需激活流程")
+            logger.info("v1 protocol: System initialization is complete, no activation process is required")
             return True
 
-        # 如果是v2协议，检查是否需要激活界面
+        # If it is v2 protocol, check if activation interface is needed
         if not init_result.get("need_activation_ui", False):
-            logger.info("v2协议：无需显示激活界面，设备已激活")
+            logger.info("v2 protocol: No need to display the activation interface, the device is already activated")
             return True
 
-        logger.info("v2协议：需要显示激活界面，准备激活流程")
+        logger.info("v2 protocol: Need to display the activation interface, prepare for the activation process")
 
-        # 需要激活界面，根据模式处理
+        # Need activation interface, process according to mode
         if mode == "gui":
-            # GUI模式需要先创建QApplication
+            # GUI mode needs to create QApplication first
             try:
-                # 导入必要的库
+                # Import necessary libraries
                 import qasync
                 from PyQt5.QtCore import QTimer
                 from PyQt5.QtWidgets import QApplication
 
-                # 创建临时QApplication实例
-                logger.info("创建临时QApplication实例用于激活流程")
+                # Create a temporary QApplication instance
+                logger.info("Create a temporary QApplication instance for the activation process")
                 temp_app = QApplication(sys.argv)
 
-                # 创建事件循环
+                # Create event loop
                 loop = qasync.QEventLoop(temp_app)
                 asyncio.set_event_loop(loop)
 
-                # 创建Future来等待激活完成（使用新的事件循环）
+                # Create a Future to wait for activation to complete (using a new event loop)
                 activation_future = loop.create_future()
 
-                # 创建激活窗口
+                # Create activation window
                 from src.views.activation.activation_window import ActivationWindow
 
                 activation_window = ActivationWindow(system_initializer)
 
-                # 设置激活完成回调
+                # Set activation completion callback
                 def on_activation_completed(success: bool):
-                    logger.info(f"激活完成，结果: {success}")
+                    logger.info(f"Activation completed, result: {success}")
                     if not activation_future.done():
                         activation_future.set_result(success)
 
-                # 设置窗口关闭回调
+                # Set window closing callback
                 def on_window_closed():
-                    logger.info("激活窗口被关闭")
+                    logger.info("Activation window was closed")
                     if not activation_future.done():
                         activation_future.set_result(False)
 
-                # 连接信号
+                # Connect signal
                 activation_window.activation_completed.connect(on_activation_completed)
                 activation_window.window_closed.connect(on_window_closed)
 
-                # 显示激活窗口
+                # Show activation window
                 activation_window.show()
-                logger.info("激活窗口已显示")
+                logger.info("Activation window has been displayed")
 
-                # 确保窗口显示出来
-                QTimer.singleShot(100, lambda: logger.info("激活窗口显示确认"))
+                # Make sure the window is displayed
+                QTimer.singleShot(100, lambda: logger.info("Activation window display confirmation"))
 
-                # 等待激活完成
+                # Start waiting for activation to complete
                 try:
-                    logger.info("开始等待激活完成")
+                    logger.info("Start waiting for activation to complete")
                     activation_success = loop.run_until_complete(activation_future)
-                    logger.info(f"激活流程完成，结果: {activation_success}")
+                    logger.info(f"Activation process completed, result: {activation_success}")
                 except Exception as e:
-                    logger.error(f"激活流程异常: {e}")
+                    logger.error(f"Activation process exception: {e}")
                     activation_success = False
 
-                # 关闭窗口
+                # Close window
                 activation_window.close()
 
-                # 销毁临时QApplication
-                logger.info("激活流程完成，销毁临时QApplication实例")
+                # Destroy temporary QApplication
+                logger.info("Activation process is complete, destroy the temporary QApplication instance")
                 activation_window = None
                 temp_app = None
 
-                # 强制垃圾回收，确保QApplication被销毁
+                # Force garbage collection to ensure QApplication is destroyed
                 import gc
 
                 gc.collect()
 
-                # 等待一小段时间确保资源释放（使用同步sleep）
-                logger.info("等待资源释放...")
+                # Wait for a short period of time to ensure that resources are released (using synchronous sleep)
+                logger.info("Waiting for resource release...")
                 time.sleep(0.5)
 
                 return activation_success
 
             except ImportError as e:
-                logger.error(f"GUI模式需要qasync和PyQt5库: {e}")
+                logger.error(f"GUI mode requires qasync and PyQt5 libraries: {e}")
                 return False
         else:
-            # CLI模式
+            # CLI mode
             from src.views.activation.cli_activation import CLIActivation
 
             cli_activation = CLIActivation(system_initializer)
             return await cli_activation.run_activation_process()
 
     except Exception as e:
-        logger.error(f"激活流程异常: {e}", exc_info=True)
+        logger.error(f"Activation process exception: {e}", exc_info=True)
         return False
 
 
 async def main():
     """
-    主函数.
+    Main function.
     """
     setup_logging()
     args = parse_args()
 
-    logger.info("启动小智AI客户端")
+    logger.info("Start Xiaozhi AI client")
 
-    # 处理激活流程
+    # Handle activation process
     if not args.skip_activation:
         activation_success = await handle_activation(args.mode)
         if not activation_success:
-            logger.error("设备激活失败，程序退出")
+            logger.error("Device activation failed, program exits")
             return 1
     else:
-        logger.warning("跳过激活流程（调试模式）")
+        logger.warning("Skip activation process (debug mode)")
 
-    # 创建并启动应用程序
+    # Create and start the application
     app = Application.get_instance()
     return await app.run(mode=args.mode, protocol=args.protocol)
 
@@ -193,8 +193,8 @@ if __name__ == "__main__":
     try:
         sys.exit(asyncio.run(main()))
     except KeyboardInterrupt:
-        logger.info("程序被用户中断")
+        logger.info("Program was interrupted by the user")
         sys.exit(0)
     except Exception as e:
-        logger.error(f"程序异常退出: {e}", exc_info=True)
+        logger.error(f"Program exited abnormally: {e}", exc_info=True)
         sys.exit(1)
