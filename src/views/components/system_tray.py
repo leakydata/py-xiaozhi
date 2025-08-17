@@ -1,5 +1,5 @@
 """
-系统托盘组件模块 提供系统托盘图标、菜单和状态指示功能.
+System tray component module. Provides system tray icon, menu and status indication functions.
 """
 
 from typing import Optional
@@ -13,10 +13,10 @@ from src.utils.logging_config import get_logger
 
 class SystemTray(QObject):
     """
-    系统托盘组件.
+    System tray component.
     """
 
-    # 定义信号
+    # Define signals
     show_window_requested = pyqtSignal()
     settings_requested = pyqtSignal()
     quit_requested = pyqtSignal()
@@ -27,105 +27,105 @@ class SystemTray(QObject):
         self.logger = get_logger("SystemTray")
         self.parent_widget = parent
 
-        # 托盘相关组件
+        # Tray related components
         self.tray_icon = None
         self.tray_menu = None
 
-        # 状态相关
+        # Status related
         self.current_status = ""
         self.is_connected = True
 
-        # 初始化托盘
+        # Initialize tray
         self._setup_tray()
 
     def _setup_tray(self):
         """
-        设置系统托盘图标.
+        Set up the system tray icon.
         """
         try:
-            # 检查系统是否支持系统托盘
+            # Check if the system supports system tray
             if not QSystemTrayIcon.isSystemTrayAvailable():
-                self.logger.warning("系统不支持系统托盘功能")
+                self.logger.warning("System does not support system tray function")
                 return
 
-            # 创建托盘菜单
+            # Create tray menu
             self._create_tray_menu()
 
-            # 创建系统托盘图标
+            # Create system tray icon
             self.tray_icon = QSystemTrayIcon(self.parent_widget)
             self.tray_icon.setContextMenu(self.tray_menu)
 
-            # 连接托盘图标的事件
+            # Connect tray icon events
             self.tray_icon.activated.connect(self._on_tray_activated)
 
-            # 设置初始图标
-            self.update_status("待命", connected=True)
+            # Set initial icon
+            self.update_status("Standby", connected=True)
 
-            # 显示系统托盘图标
+            # Show system tray icon
             self.tray_icon.show()
-            self.logger.info("系统托盘图标已初始化")
+            self.logger.info("System tray icon has been initialized")
 
         except Exception as e:
-            self.logger.error(f"初始化系统托盘图标失败: {e}", exc_info=True)
+            self.logger.error(f"Failed to initialize system tray icon: {e}", exc_info=True)
 
     def _create_tray_menu(self):
         """
-        创建托盘右键菜单.
+        Create tray context menu.
         """
         self.tray_menu = QMenu()
 
-        # 添加显示主窗口菜单项
-        show_action = QAction("显示主窗口", self.parent_widget)
+        # Add show main window menu item
+        show_action = QAction("Show Main Window", self.parent_widget)
         show_action.triggered.connect(self._on_show_window)
         self.tray_menu.addAction(show_action)
 
-        # 添加分隔线
+        # Add separator
         self.tray_menu.addSeparator()
 
-        # 添加设置菜单项
-        settings_action = QAction("参数配置", self.parent_widget)
+        # Add settings menu item
+        settings_action = QAction("Settings", self.parent_widget)
         settings_action.triggered.connect(self._on_settings)
         self.tray_menu.addAction(settings_action)
 
-        # 添加分隔线
+        # Add separator
         self.tray_menu.addSeparator()
 
-        # 添加退出菜单项
-        quit_action = QAction("退出程序", self.parent_widget)
+        # Add exit menu item
+        quit_action = QAction("Exit", self.parent_widget)
         quit_action.triggered.connect(self._on_quit)
         self.tray_menu.addAction(quit_action)
 
     def _on_tray_activated(self, reason):
         """
-        处理托盘图标点击事件.
+        Handle tray icon click event.
         """
-        if reason == QSystemTrayIcon.Trigger:  # 单击
+        if reason == QSystemTrayIcon.Trigger:  # Single click
             self.show_window_requested.emit()
 
     def _on_show_window(self):
         """
-        处理显示窗口菜单项点击.
+        Handle show window menu item click.
         """
         self.show_window_requested.emit()
 
     def _on_settings(self):
         """
-        处理设置菜单项点击.
+        Handle settings menu item click.
         """
         self.settings_requested.emit()
 
     def _on_quit(self):
         """
-        处理退出菜单项点击.
+        Handle exit menu item click.
         """
         self.quit_requested.emit()
 
     def update_status(self, status: str, connected: bool = True):
-        """更新托盘图标状态.
+        """Update tray icon status.
 
         Args:
-            status: 状态文本
-            connected: 连接状态
+            status: status text
+            connected: connection status
         """
         if not self.tray_icon:
             return
@@ -136,48 +136,48 @@ class SystemTray(QObject):
         try:
             icon_color = self._get_status_color(status, connected)
 
-            # 创建指定颜色的图标
+            # Create an icon of the specified color
             pixmap = QPixmap(16, 16)
-            pixmap.fill(QColor(0, 0, 0, 0))  # 透明背景
+            pixmap.fill(QColor(0, 0, 0, 0))  # transparent background
 
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setBrush(QBrush(icon_color))
-            painter.setPen(QColor(0, 0, 0, 0))  # 透明边框
+            painter.setPen(QColor(0, 0, 0, 0))  # transparent border
             painter.drawEllipse(2, 2, 12, 12)
             painter.end()
 
-            # 设置图标
+            # Set icon
             self.tray_icon.setIcon(QIcon(pixmap))
 
-            # 设置提示文本
-            tooltip = f"小智AI助手 - {status}"
+            # Set tooltip text
+            tooltip = f"Xiaozhi AI Assistant - {status}"
             self.tray_icon.setToolTip(tooltip)
 
         except Exception as e:
-            self.logger.error(f"更新系统托盘图标失败: {e}")
+            self.logger.error(f"Failed to update system tray icon: {e}")
 
     def _get_status_color(self, status: str, connected: bool) -> QColor:
-        """根据状态返回对应的颜色.
+        """Return the corresponding color according to the status.
 
         Args:
-            status: 状态文本
-            connected: 连接状态
+            status: status text
+            connected: connection status
 
         Returns:
-            QColor: 对应的颜色
+            QColor: corresponding color
         """
         if not connected:
-            return QColor(128, 128, 128)  # 灰色 - 未连接
+            return QColor(128, 128, 128)  # Gray - Not connected
 
-        if "错误" in status:
-            return QColor(255, 0, 0)  # 红色 - 错误状态
-        elif "聆听中" in status:
-            return QColor(255, 200, 0)  # 黄色 - 聆听中状态
-        elif "说话中" in status:
-            return QColor(0, 120, 255)  # 蓝色 - 说话中状态
+        if "Error" in status:
+            return QColor(255, 0, 0)  # Red - Error status
+        elif "Listening" in status:
+            return QColor(255, 200, 0)  # Yellow - Listening status
+        elif "Speaking" in status:
+            return QColor(0, 120, 255)  # Blue - Speaking status
         else:
-            return QColor(0, 180, 0)  # 绿色 - 待命/已启动状态
+            return QColor(0, 180, 0)  # Green - Standby/Started status
 
     def show_message(
         self,
@@ -186,32 +186,32 @@ class SystemTray(QObject):
         icon_type=QSystemTrayIcon.Information,
         duration: int = 2000,
     ):
-        """显示托盘通知消息.
+        """Show tray notification message.
 
         Args:
-            title: 通知标题
-            message: 通知内容
-            icon_type: 图标类型
-            duration: 显示时间(毫秒)
+            title: Notification title
+            message: Notification message
+            icon_type: Icon type
+            duration: Display time (milliseconds)
         """
         if self.tray_icon and self.tray_icon.isVisible():
             self.tray_icon.showMessage(title, message, icon_type, duration)
 
     def hide(self):
         """
-        隐藏托盘图标.
+        Hide tray icon.
         """
         if self.tray_icon:
             self.tray_icon.hide()
 
     def is_visible(self) -> bool:
         """
-        检查托盘图标是否可见.
+        Check if the tray icon is visible.
         """
         return self.tray_icon and self.tray_icon.isVisible()
 
     def is_available(self) -> bool:
         """
-        检查系统托盘是否可用.
+        Check if the system tray is available.
         """
         return QSystemTrayIcon.isSystemTrayAvailable()

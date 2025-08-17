@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-异步操作的Mixin类 提供Qt组件与异步操作的桥接功能.
+Mixin class for asynchronous operations. Provides bridging functionality between Qt components and asynchronous operations.
 """
 
 import asyncio
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 class AsyncMixin:
     """
-    异步操作Mixin类.
+    Mixin class for asynchronous operations.
     """
 
     def __init__(self, *args, **kwargs):
@@ -24,7 +24,7 @@ class AsyncMixin:
 
     def run_async(self, coro, callback=None, error_callback=None):
         """
-        在Qt环境中运行异步协程.
+        Run asynchronous coroutine in Qt environment.
         """
         task = asyncio.create_task(coro)
         self._async_tasks.add(task)
@@ -36,7 +36,7 @@ class AsyncMixin:
                 if callback:
                     callback(result)
             except Exception as e:
-                self.logger.error(f"异步任务执行失败: {e}", exc_info=True)
+                self.logger.error(f"Asynchronous task execution failed: {e}", exc_info=True)
                 if error_callback:
                     error_callback(e)
 
@@ -45,7 +45,7 @@ class AsyncMixin:
 
     async def cleanup_async_tasks(self):
         """
-        清理所有异步任务.
+        Clean up all asynchronous tasks.
         """
         if self._async_tasks:
             for task in self._async_tasks.copy():
@@ -58,10 +58,10 @@ class AsyncMixin:
 
 class AsyncSignalEmitter(QObject):
     """
-    异步信号发射器.
+    Asynchronous signal emitter.
     """
 
-    # 定义通用信号
+    # Define general signals
     data_ready = pyqtSignal(object)
     error_occurred = pyqtSignal(str)
     progress_updated = pyqtSignal(int)
@@ -73,24 +73,24 @@ class AsyncSignalEmitter(QObject):
 
     def emit_data(self, data):
         """
-        发射数据信号.
+        Emit data signal.
         """
         self.data_ready.emit(data)
 
     def emit_error(self, error_message: str):
         """
-        发射错误信号.
+        Emit error signal.
         """
         self.error_occurred.emit(error_message)
 
     def emit_progress(self, progress: int):
         """
-        发射进度信号.
+        Emit progress signal.
         """
         self.progress_updated.emit(progress)
 
     def emit_status(self, status: str):
         """
-        发射状态信号.
+        Emit status signal.
         """
         self.status_changed.emit(status)

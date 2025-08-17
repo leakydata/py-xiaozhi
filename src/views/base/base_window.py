@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-基础窗口类 - 所有PyQt窗口的基类
-支持异步操作和qasync集成
+Base window class - base class for all PyQt windows
+Supports asynchronous operations and qasync integration
 """
 
 import asyncio
@@ -17,10 +17,10 @@ logger = get_logger(__name__)
 
 class BaseWindow(QMainWindow):
     """
-    所有窗口的基类，提供异步支持.
+    Base class for all windows, providing asynchronous support.
     """
 
-    # 定义信号
+    # Define signals
     window_closed = pyqtSignal()
     status_updated = pyqtSignal(str)
 
@@ -28,50 +28,50 @@ class BaseWindow(QMainWindow):
         super().__init__(parent)
         self.logger = get_logger(self.__class__.__name__)
 
-        # 异步任务管理
+        # Asynchronous task management
         self._tasks = set()
         self._shutdown_event = asyncio.Event()
 
-        # 定时器用于定期更新UI（与异步操作配合）
+        # Timer for periodic UI updates (in conjunction with asynchronous operations)
         self._update_timer = QTimer()
         self._update_timer.timeout.connect(self._on_timer_update)
 
-        # 初始化UI
+        # Initialize UI
         self._setup_ui()
         self._setup_connections()
         self._setup_styles()
 
-        self.logger.debug(f"{self.__class__.__name__} 初始化完成")
+        self.logger.debug(f"{self.__class__.__name__} initialization complete")
 
     def _setup_ui(self):
-        """设置UI - 子类重写"""
+        """Set up UI - subclass override"""
 
     def _setup_connections(self):
-        """设置信号连接 - 子类重写"""
+        """Set up signal connections - subclass override"""
 
     def _setup_styles(self):
-        """设置样式 - 子类重写"""
+        """Set up styles - subclass override"""
 
     def _on_timer_update(self):
-        """定时器更新回调 - 子类重写"""
+        """Timer update callback - subclass override"""
 
     def start_update_timer(self, interval_ms: int = 1000):
         """
-        启动定时更新.
+        Start timed updates.
         """
         self._update_timer.start(interval_ms)
-        self.logger.debug(f"启动定时更新，间隔: {interval_ms}ms")
+        self.logger.debug(f"Started timed updates, interval: {interval_ms}ms")
 
     def stop_update_timer(self):
         """
-        停止定时更新.
+        Stop timed updates.
         """
         self._update_timer.stop()
-        self.logger.debug("停止定时更新")
+        self.logger.debug("Stopped timed updates")
 
     def create_task(self, coro, name: str = None):
         """
-        创建异步任务并管理.
+        Create and manage asynchronous tasks.
         """
         task = asyncio.create_task(coro, name=name)
         self._tasks.add(task)
@@ -79,73 +79,73 @@ class BaseWindow(QMainWindow):
         def done_callback(t):
             self._tasks.discard(t)
             if not t.cancelled() and t.exception():
-                self.logger.error(f"异步任务异常: {t.exception()}", exc_info=True)
+                self.logger.error(f"Asynchronous task exception: {t.exception()}", exc_info=True)
 
         task.add_done_callback(done_callback)
         return task
 
     async def shutdown_async(self):
         """
-        异步关闭窗口.
+        Asynchronously close the window.
         """
-        self.logger.info("开始异步关闭窗口")
+        self.logger.info("Starting to close the window asynchronously")
 
-        # 设置关闭事件
+        # Set shutdown event
         self._shutdown_event.set()
 
-        # 停止定时器
+        # Stop timer
         self.stop_update_timer()
 
-        # 取消所有任务
+        # Cancel all tasks
         for task in self._tasks.copy():
             if not task.done():
                 task.cancel()
 
-        # 等待任务完成
+        # Wait for tasks to complete
         if self._tasks:
             await asyncio.gather(*self._tasks, return_exceptions=True)
 
-        self.logger.info("窗口异步关闭完成")
+        self.logger.info("Window closed asynchronously")
 
     def closeEvent(self, event):
         """
-        窗口关闭事件.
+        Window close event.
         """
-        self.logger.info("窗口关闭事件触发")
+        self.logger.info("Window close event triggered")
 
-        # 设置关闭事件标志
+        # Set shutdown event flag
         self._shutdown_event.set()
 
-        # 如果是激活窗口，取消激活流程
+        # If it is an activation window, cancel the activation process
         if hasattr(self, "device_activator") and self.device_activator:
             self.device_activator.cancel_activation()
-            self.logger.info("已发送激活取消信号")
+            self.logger.info("Activation cancellation signal sent")
 
-        # 发射关闭信号
+        # Emit close signal
         self.window_closed.emit()
 
-        # 停止定时器
+        # Stop timer
         self.stop_update_timer()
 
-        # 取消所有任务（同步方式）
+        # Cancel all tasks (synchronously)
         for task in self._tasks.copy():
             if not task.done():
                 task.cancel()
 
-        # 接受关闭事件
+        # Accept close event
         event.accept()
 
-        self.logger.info("窗口关闭处理完成")
+        self.logger.info("Window close processing complete")
 
     def update_status(self, message: str):
         """
-        更新状态消息.
+        Update status message.
         """
         self.status_updated.emit(message)
-        self.logger.debug(f"状态更新: {message}")
+        self.logger.debug(f"Status update: {message}")
 
     def is_shutdown_requested(self) -> bool:
         """
-        检查是否请求关闭.
+        Check if shutdown is requested.
         """
         return self._shutdown_event.is_set()
