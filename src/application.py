@@ -17,7 +17,8 @@ from src.utils.opus_loader import setup_opus
 
 # Ignore SIGTRAP signal
 try:
-    signal.signal(signal.SIGTRAP, signal.SIG_IGN)
+    if hasattr(signal, "SIGTRAP"):
+        signal.signal(signal.SIGTRAP, signal.SIG_IGN)
 except (AttributeError, ValueError) as e:
     print(f"Note: Unable to set SIGTRAP handler: {e}")
 
