@@ -1,5 +1,5 @@
 """
-八字命理分析工具模块。
+Bazi numerology analysis tool module.
 """
 
 from .manager import get_bazi_manager

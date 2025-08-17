@@ -1,6 +1,6 @@
-"""高德地图工具管理器.
+"""Amap Tools Manager.
 
-负责高德地图工具的初始化、配置和MCP工具注册
+Responsible for the initialization, configuration, and MCP tool registration of Amap tools
 """
 
 from typing import Any, Dict
@@ -25,81 +25,81 @@ logger = get_logger(__name__)
 
 class AmapToolsManager:
     """
-    高德地图工具管理器.
+    Amap Tools Manager.
     """
 
     def __init__(self):
         """
-        初始化高德地图工具管理器.
+        Initialize the Amap Tools Manager.
         """
         self._initialized = False
-        logger.info("[AmapManager] 高德地图工具管理器初始化")
+        logger.info("[AmapManager] Amap Tools Manager initialized")
 
     def init_tools(self, add_tool, PropertyList, Property, PropertyType):
         """
-        初始化并注册所有高德地图工具.
+        Initialize and register all Amap tools.
         """
         try:
-            logger.info("[AmapManager] 开始注册高德地图工具")
+            logger.info("[AmapManager] Starting to register Amap tools")
 
-            # 注册逆地理编码工具
+            # Register regeocode tool
             self._register_regeocode_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册地理编码工具
+            # Register geocode tool
             self._register_geo_tool(add_tool, PropertyList, Property, PropertyType)
 
-            # 注册IP定位工具
+            # Register IP location tool
             self._register_ip_location_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册天气查询工具
+            # Register weather query tool
             self._register_weather_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册步行导航工具
+            # Register walking navigation tool
             self._register_walking_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册驾车导航工具
+            # Register driving navigation tool
             self._register_driving_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册关键词搜索工具
+            # Register text search tool
             self._register_text_search_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册周边搜索工具
+            # Register around search tool
             self._register_around_search_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册POI详情工具
+            # Register POI detail tool
             self._register_search_detail_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册距离测量工具
+            # Register distance tool
             self._register_distance_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
             self._initialized = True
-            logger.info("[AmapManager] 高德地图工具注册完成")
+            logger.info("[AmapManager] Amap tools registration complete")
 
         except Exception as e:
-            logger.error(f"[AmapManager] 高德地图工具注册失败: {e}", exc_info=True)
+            logger.error(f"[AmapManager] Failed to register Amap tools: {e}", exc_info=True)
             raise
 
     def _register_regeocode_tool(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册逆地理编码工具.
+        Register regeocode tool.
         """
         props = PropertyList(
             [
@@ -113,18 +113,18 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.regeocode",
-                "将经纬度坐标转换为详细地址信息。输入经纬度坐标（格式：经度,纬度），"
-                "返回对应的省市区等地址信息。适用于：已知坐标查地址、位置反查、坐标解析等场景。"
+                "Converts longitude and latitude coordinates to detailed address information. Input longitude and latitude coordinates (format: longitude,latitude), "
+                "and it returns corresponding address information such as province, city, and district. Suitable for scenarios like: finding an address from known coordinates, reverse location lookup, and coordinate parsing."
                 "Convert longitude and latitude coordinates to detailed address information.",
                 props,
                 maps_regeocode,
             )
         )
-        logger.debug("[AmapManager] 注册逆地理编码工具成功")
+        logger.debug("[AmapManager] Successfully registered regeocode tool")
 
     def _register_geo_tool(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册地理编码工具.
+        Register geocode tool.
         """
         props = PropertyList(
             [
@@ -143,19 +143,19 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.geo",
-                "将详细地址转换为经纬度坐标。支持对地标、建筑物名称解析为坐标。"
-                "输入地址信息，可选择指定城市，返回对应的经纬度坐标。"
-                "适用于：地址查坐标、导航起点终点设置、位置标定等场景。"
+                "Converts a detailed address into longitude and latitude coordinates. Supports parsing landmarks and building names into coordinates. "
+                "Input address information, optionally specify a city, and it returns the corresponding longitude and latitude coordinates. "
+                "Suitable for scenarios like: finding coordinates from an address, setting navigation start and end points, and location calibration."
                 "Convert detailed address to longitude and latitude coordinates.",
                 props,
                 maps_geo,
             )
         )
-        logger.debug("[AmapManager] 注册地理编码工具成功")
+        logger.debug("[AmapManager] Successfully registered geocode tool")
 
     def _register_ip_location_tool(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册IP定位工具.
+        Register IP location tool.
         """
         props = PropertyList(
             [
@@ -169,18 +169,18 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.ip_location",
-                "根据IP地址获取位置信息。输入IP地址，返回对应的省市区域信息。"
-                "适用于：IP归属地查询、网络位置分析、地理位置统计等场景。"
+                "Gets location information based on an IP address. Input an IP address, and it returns the corresponding province and city information. "
+                "Suitable for scenarios like: IP geolocation query, network location analysis, and geographical location statistics."
                 "Get location information based on IP address.",
                 props,
                 maps_ip_location,
             )
         )
-        logger.debug("[AmapManager] 注册IP定位工具成功")
+        logger.debug("[AmapManager] Successfully registered IP location tool")
 
     def _register_weather_tool(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册天气查询工具.
+        Register weather query tool.
         """
         props = PropertyList(
             [
@@ -194,18 +194,18 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.weather",
-                "查询指定城市的天气信息。输入城市名称或adcode，返回详细的天气预报信息。"
-                "适用于：天气查询、出行规划、天气预报等场景。"
+                "Queries weather information for a specified city. Input a city name or adcode, and it returns detailed weather forecast information. "
+                "Suitable for scenarios like: weather queries, travel planning, and weather forecasting."
                 "Query weather information for specified city.",
                 props,
                 maps_weather,
             )
         )
-        logger.debug("[AmapManager] 注册天气查询工具成功")
+        logger.debug("[AmapManager] Successfully registered weather query tool")
 
     def _register_walking_tool(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册步行导航工具.
+        Register walking navigation tool.
         """
         props = PropertyList(
             [
@@ -223,19 +223,19 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.direction_walking",
-                "规划步行路径。输入起点和终点的经纬度坐标，返回详细的步行导航方案。"
-                "支持100km以内的步行路径规划，包含距离、时间、详细步骤等信息。"
-                "适用于：步行导航、路径规划、出行方案等场景。"
+                "Plans walking routes. Input the longitude and latitude coordinates of the start and end points, and it returns a detailed walking navigation plan. "
+                "Supports walking route planning within 100km, including information on distance, time, and detailed steps. "
+                "Suitable for scenarios like: walking navigation, route planning, and travel plans."
                 "Plan walking routes with detailed navigation information.",
                 props,
                 maps_direction_walking,
             )
         )
-        logger.debug("[AmapManager] 注册步行导航工具成功")
+        logger.debug("[AmapManager] Successfully registered walking navigation tool")
 
     def _register_driving_tool(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册驾车导航工具.
+        Register driving navigation tool.
         """
         props = PropertyList(
             [
@@ -253,18 +253,18 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.direction_driving",
-                "规划驾车路径。输入起点和终点的经纬度坐标，返回详细的驾车导航方案。"
-                "包含距离、时间、过路费、详细步骤等信息。适用于：驾车导航、路径规划、出行方案等场景。"
+                "Plans driving routes. Input the longitude and latitude coordinates of the start and end points, and it returns a detailed driving navigation plan. "
+                "Includes information on distance, time, tolls, and detailed steps. Suitable for scenarios like: driving navigation, route planning, and travel plans."
                 "Plan driving routes with detailed navigation information.",
                 props,
                 maps_direction_driving,
             )
         )
-        logger.debug("[AmapManager] 注册驾车导航工具成功")
+        logger.debug("[AmapManager] Successfully registered driving navigation tool")
 
     def _register_text_search_tool(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册关键词搜索工具.
+        Register text search tool.
         """
         props = PropertyList(
             [
@@ -288,20 +288,20 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.text_search",
-                "根据关键词搜索POI。输入搜索关键词，可指定城市和POI类型，"
-                "返回相关的地点信息列表。适用于：地点搜索、商家查找、设施查询等场景。"
+                "Searches for POIs by keyword. Input search keywords, and you can specify the city and POI type, "
+                "and it returns a list of relevant location information. Suitable for scenarios like: location search, business lookup, and facility query."
                 "Search POI by keywords with optional city and type filters.",
                 props,
                 maps_text_search,
             )
         )
-        logger.debug("[AmapManager] 注册关键词搜索工具成功")
+        logger.debug("[AmapManager] Successfully registered text search tool")
 
     def _register_around_search_tool(
         self, add_tool, PropertyList, Property, PropertyType
     ):
         """
-        注册周边搜索工具.
+        Register around search tool.
         """
         props = PropertyList(
             [
@@ -325,20 +325,20 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.around_search",
-                "根据坐标搜索周边POI。输入中心点坐标，可指定搜索关键词和半径，"
-                "返回周边的地点信息列表。适用于：附近搜索、周边查找、附近设施查询等场景。"
+                "Searches for nearby POIs by coordinates. Input the center point coordinates, and you can specify search keywords and radius, "
+                "and it returns a list of nearby location information. Suitable for scenarios like: nearby search, finding surrounding places, and querying nearby facilities."
                 "Search nearby POI around given coordinates.",
                 props,
                 maps_around_search,
             )
         )
-        logger.debug("[AmapManager] 注册周边搜索工具成功")
+        logger.debug("[AmapManager] Successfully registered around search tool")
 
     def _register_search_detail_tool(
         self, add_tool, PropertyList, Property, PropertyType
     ):
         """
-        注册POI详情工具.
+        Register POI detail tool.
         """
         props = PropertyList(
             [
@@ -352,19 +352,19 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.search_detail",
-                "查询POI的详细信息。输入POI的ID（通过搜索获得），"
-                "返回详细的地点信息，包括联系方式、营业时间、评分等。"
-                "适用于：地点详情查询、商家信息获取、详细信息查看等场景。"
+                "Queries for detailed information about a POI. Input the POI's ID (obtained through a search), "
+                "and it returns detailed location information, including contact information, business hours, ratings, etc. "
+                "Suitable for scenarios like: location detail query, obtaining business information, and viewing detailed information."
                 "Get detailed information of POI by ID.",
                 props,
                 maps_search_detail,
             )
         )
-        logger.debug("[AmapManager] 注册POI详情工具成功")
+        logger.debug("[AmapManager] Successfully registered POI detail tool")
 
     def _register_distance_tool(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册距离测量工具.
+        Register distance tool.
         """
         props = PropertyList(
             [
@@ -387,29 +387,29 @@ class AmapToolsManager:
         add_tool(
             (
                 "amap.distance",
-                "测量两点间距离。输入起点和终点坐标，可选择测量类型"
-                "（1：驾车距离，0：直线距离，3：步行距离），返回距离和时间信息。"
-                "适用于：距离计算、路程估算、时间预估等场景。"
+                "Measures the distance between two points. Input the coordinates of the start and end points, and you can choose the measurement type "
+                "(1: driving distance, 0: straight-line distance, 3: walking distance), and it returns distance and time information. "
+                "Suitable for scenarios like: distance calculation, route estimation, and time estimation."
                 "Measure distance between coordinates with different travel modes.",
                 props,
                 maps_distance,
             )
         )
-        logger.debug("[AmapManager] 注册距离测量工具成功")
+        logger.debug("[AmapManager] Successfully registered distance tool")
 
     def is_initialized(self) -> bool:
         """
-        检查管理器是否已初始化.
+        Check if the manager is initialized.
         """
         return self._initialized
 
     def get_status(self) -> Dict[str, Any]:
         """
-        获取管理器状态.
+        Get the manager's status.
         """
         return {
             "initialized": self._initialized,
-            "tools_count": 10,  # 当前注册的工具数量
+            "tools_count": 10,  # Number of currently registered tools
             "available_tools": [
                 "regeocode",
                 "geo",
@@ -425,16 +425,16 @@ class AmapToolsManager:
         }
 
 
-# 全局管理器实例
+# Global manager instance
 _amap_tools_manager = None
 
 
 def get_amap_manager() -> AmapToolsManager:
     """
-    获取高德地图工具管理器单例.
+    Get the Amap Tools Manager singleton.
     """
     global _amap_tools_manager
     if _amap_tools_manager is None:
         _amap_tools_manager = AmapToolsManager()
-        logger.debug("[AmapManager] 创建高德地图工具管理器实例")
+        logger.debug("[AmapManager] Created Amap Tools Manager instance")
     return _amap_tools_manager

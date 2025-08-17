@@ -13,7 +13,7 @@ class ImageAnalyzer:
 
     def __new__(cls):
         """
-        确保单例模式.
+        Ensure singleton pattern.
         """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -34,7 +34,7 @@ class ImageAnalyzer:
     @classmethod
     def get_instance(cls):
         """
-        获取摄像头管理器实例（线程安全）
+        Get the camera manager instance (thread-safe)
         """
         with cls._lock:
             if cls._instance is None:
@@ -42,17 +42,17 @@ class ImageAnalyzer:
         return cls._instance
 
     def analyze_image(
-        self, base64_image, prompt="图中描绘的是什么景象,请详细描述，因为用户可能是盲人"
+        self, base64_image, prompt="What scene is depicted in the image? Please describe it in detail, as the user may be blind."
     ) -> str:
         """
-        分析图片并返回结果.
+        Analyze the image and return the result.
         """
         completion = self.client.chat.completions.create(
             model=self.models,
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a helpful assistant.",  # 直接使用字符串，而不是列表
+                    "content": "You are a helpful assistant.",  # Use a string directly, not a list
                 },
                 {
                     "role": "user",

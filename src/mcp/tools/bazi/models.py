@@ -1,18 +1,18 @@
 """
-八字命理数据模型。
+Data models for Bazi numerology.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class HeavenStem:
-    """天干"""
+    """Heavenly Stem"""
 
     name: str
-    element: str  # 五行
-    yin_yang: int  # 阴阳，1=阳，-1=阴
+    element: str  # Five Elements
+    yin_yang: int  # Yin/Yang, 1=Yang, -1=Yin
 
     def __str__(self):
         return self.name
@@ -25,13 +25,13 @@ class HeavenStem:
 
     def get_ten_star(self, other_stem: "HeavenStem") -> str:
         """
-        获取十神关系.
+        Get Ten Gods relationship.
         """
-        # 实现十神逻辑
+        # Implement Ten Gods logic
         return self._calculate_ten_star(other_stem)
 
     def _calculate_ten_star(self, other: "HeavenStem") -> str:
-        """计算十神关系 - 使用专业数据"""
+        """Calculate Ten Gods relationship - using professional data"""
         from .professional_data import get_ten_gods_relation
 
         return get_ten_gods_relation(self.name, other.name)
@@ -39,15 +39,15 @@ class HeavenStem:
 
 @dataclass
 class EarthBranch:
-    """地支"""
+    """Earthly Branch"""
 
     name: str
-    element: str  # 五行
-    yin_yang: int  # 阴阳
-    zodiac: str  # 生肖
-    hide_heaven_main: Optional[str] = None  # 藏干主气
-    hide_heaven_middle: Optional[str] = None  # 藏干中气
-    hide_heaven_residual: Optional[str] = None  # 藏干余气
+    element: str  # Five Elements
+    yin_yang: int  # Yin/Yang
+    zodiac: str  # Zodiac sign
+    hide_heaven_main: Optional[str] = None  # Main hidden heavenly stem
+    hide_heaven_middle: Optional[str] = None  # Middle hidden heavenly stem
+    hide_heaven_residual: Optional[str] = None  # Residual hidden heavenly stem
 
     def __str__(self):
         return self.name
@@ -74,14 +74,14 @@ class EarthBranch:
 @dataclass
 class SixtyCycle:
     """
-    六十甲子.
+    Sixty Jiazi Cycle.
     """
 
     heaven_stem: HeavenStem
     earth_branch: EarthBranch
-    sound: str  # 纳音
-    ten: str  # 旬
-    extra_earth_branches: List[str]  # 空亡
+    sound: str  # Sound element
+    ten: str  # Decade
+    extra_earth_branches: List[str]  # Void branches
 
     def __str__(self):
         return f"{self.heaven_stem.name}{self.earth_branch.name}"
@@ -104,7 +104,7 @@ class SixtyCycle:
 
 @dataclass
 class EightChar:
-    """八字"""
+    """Eight Characters (Bazi)"""
 
     year: SixtyCycle
     month: SixtyCycle
@@ -128,7 +128,7 @@ class EightChar:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典格式，供专业分析使用.
+        Convert to dictionary format for professional analysis.
         """
         return {
             "year": {
@@ -153,7 +153,7 @@ class EightChar:
 @dataclass
 class LunarTime:
     """
-    农历时间.
+    Lunar time.
     """
 
     year: int
@@ -162,17 +162,17 @@ class LunarTime:
     hour: int
     minute: int
     second: int
-    is_leap: bool = False  # 是否闰月
+    is_leap: bool = False  # Is it a leap month
 
     def __str__(self):
-        leap_text = "闰" if self.is_leap else ""
-        return f"农历{self.year}年{leap_text}{self.month}月{self.day}日{self.hour}时{self.minute}分{self.second}秒"
+        leap_text = "Leap " if self.is_leap else ""
+        return f"Lunar {self.year}-{leap_text}{self.month}-{self.day} {self.hour}:{self.minute}:{self.second}"
 
 
 @dataclass
 class SolarTime:
     """
-    公历时间.
+    Solar time.
     """
 
     year: int
@@ -183,7 +183,7 @@ class SolarTime:
     second: int
 
     def __str__(self):
-        return f"{self.year}年{self.month}月{self.day}日{self.hour}时{self.minute}分{self.second}秒"
+        return f"{self.year}-{self.month}-{self.day} {self.hour}:{self.minute}:{self.second}"
 
     def get_year(self):
         return self.year
@@ -207,56 +207,59 @@ class SolarTime:
 @dataclass
 class BaziAnalysis:
     """
-    八字分析结果.
+    Bazi analysis result.
     """
 
-    gender: str  # 性别
-    solar_time: str  # 阳历
-    lunar_time: str  # 农历
-    bazi: str  # 八字
-    zodiac: str  # 生肖
-    day_master: str  # 日主
-    year_pillar: Dict[str, Any]  # 年柱
-    month_pillar: Dict[str, Any]  # 月柱
-    day_pillar: Dict[str, Any]  # 日柱
-    hour_pillar: Dict[str, Any]  # 时柱
-    fetal_origin: str  # 胎元
-    fetal_breath: str  # 胎息
-    own_sign: str  # 命宫
-    body_sign: str  # 身宫
-    gods: Dict[str, List[str]]  # 神煞
-    fortune: Dict[str, Any]  # 大运
-    relations: Dict[str, Any]  # 刑冲合会
+    gender: str  # Gender
+    solar_time: str  # Solar time
+    lunar_time: str  # Lunar time
+    bazi: str  # Eight Characters
+    zodiac: str  # Zodiac sign
+    day_master: str  # Day Master
+    year_pillar: Dict[str, Any]  # Year Pillar
+    month_pillar: Dict[str, Any]  # Month Pillar
+    day_pillar: Dict[str, Any]  # Day Pillar
+    hour_pillar: Dict[str, Any]  # Hour Pillar
+    fetal_origin: str  # Fetal Origin
+    fetal_breath: str  # Fetal Breath
+    own_sign: str  # Own Sign (Ming Gong)
+    body_sign: str  # Body Sign (Shen Gong)
+    gods: Dict[str, List[str]]  # Gods (Shen Sha)
+    fortune: Dict[str, Any]  # Decade Fortune
+    relations: Dict[str, Any]  # Clash, Harm, Combination, Meeting relationships
+    professional_analysis: Optional[Dict[str, Any]] = field(default=None, repr=False)
+    detailed_fortune_text: Optional[str] = field(default=None, repr=False)
+
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to dictionary.
         """
         result = {
-            "性别": self.gender,
-            "阳历": self.solar_time,
-            "农历": self.lunar_time,
-            "八字": self.bazi,
-            "生肖": self.zodiac,
-            "日主": self.day_master,
-            "年柱": self.year_pillar,
-            "月柱": self.month_pillar,
-            "日柱": self.day_pillar,
-            "时柱": self.hour_pillar,
-            "胎元": self.fetal_origin,
-            "胎息": self.fetal_breath,
-            "命宫": self.own_sign,
-            "身宫": self.body_sign,
-            "神煞": self.gods,
-            "大运": self.fortune,
-            "刑冲合会": self.relations,
+            "Gender": self.gender,
+            "Solar Time": self.solar_time,
+            "Lunar Time": self.lunar_time,
+            "Bazi": self.bazi,
+            "Zodiac": self.zodiac,
+            "Day Master": self.day_master,
+            "Year Pillar": self.year_pillar,
+            "Month Pillar": self.month_pillar,
+            "Day Pillar": self.day_pillar,
+            "Hour Pillar": self.hour_pillar,
+            "Fetal Origin": self.fetal_origin,
+            "Fetal Breath": self.fetal_breath,
+            "Own Sign": self.own_sign,
+            "Body Sign": self.body_sign,
+            "Gods": self.gods,
+            "Decade Fortune": self.fortune,
+            "Relationships": self.relations,
         }
 
-        # 添加专业分析结果（如果存在）
-        if hasattr(self, "_professional_analysis"):
-            result["专业分析"] = self._professional_analysis
-        if hasattr(self, "_detailed_fortune_text"):
-            result["详细命理分析"] = self._detailed_fortune_text
+        # Add professional analysis result (if it exists)
+        if self.professional_analysis:
+            result["Professional Analysis"] = self.professional_analysis
+        if self.detailed_fortune_text:
+            result["Detailed Fortune Analysis"] = self.detailed_fortune_text
 
         return result
 
@@ -264,49 +267,49 @@ class BaziAnalysis:
 @dataclass
 class ChineseCalendar:
     """
-    黄历信息.
+    Chinese Almanac information.
     """
 
-    solar_date: str  # 公历
-    lunar_date: str  # 农历
-    gan_zhi: str  # 干支
-    zodiac: str  # 生肖
-    na_yin: str  # 纳音
-    lunar_festival: Optional[str]  # 农历节日
-    solar_festival: Optional[str]  # 公历节日
-    solar_term: str  # 节气
-    twenty_eight_star: str  # 二十八宿
-    pengzu_taboo: str  # 彭祖百忌
-    joy_direction: str  # 喜神方位
-    yang_direction: str  # 阳贵神方位
-    yin_direction: str  # 阴贵神方位
-    mascot_direction: str  # 福神方位
-    wealth_direction: str  # 财神方位
-    clash: str  # 冲煞
-    suitable: str  # 宜
-    avoid: str  # 忌
+    solar_date: str  # Solar date
+    lunar_date: str  # Lunar date
+    gan_zhi: str  # Ganzhi
+    zodiac: str  # Zodiac sign
+    na_yin: str  # Na Yin
+    lunar_festival: Optional[str]  # Lunar festival
+    solar_festival: Optional[str]  # Solar festival
+    solar_term: str  # Solar term
+    twenty_eight_star: str  # 28 Mansions
+    pengzu_taboo: str  # Pengzu's Taboos
+    joy_direction: str  # Direction of Joy God
+    yang_direction: str  # Direction of Yang Nobleman
+    yin_direction: str  # Direction of Yin Nobleman
+    mascot_direction: str  # Direction of Blessing God
+    wealth_direction: str  # Direction of Wealth God
+    clash: str  # Clash
+    suitable: str  # Suitable activities
+    avoid: str  # Unsuitable activities
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to dictionary.
         """
         return {
-            "公历": self.solar_date,
-            "农历": self.lunar_date,
-            "干支": self.gan_zhi,
-            "生肖": self.zodiac,
-            "纳音": self.na_yin,
-            "农历节日": self.lunar_festival,
-            "公历节日": self.solar_festival,
-            "节气": self.solar_term,
-            "二十八宿": self.twenty_eight_star,
-            "彭祖百忌": self.pengzu_taboo,
-            "喜神方位": self.joy_direction,
-            "阳贵神方位": self.yang_direction,
-            "阴贵神方位": self.yin_direction,
-            "福神方位": self.mascot_direction,
-            "财神方位": self.wealth_direction,
-            "冲煞": self.clash,
-            "宜": self.suitable,
-            "忌": self.avoid,
+            "Solar Date": self.solar_date,
+            "Lunar Date": self.lunar_date,
+            "Ganzhi": self.gan_zhi,
+            "Zodiac": self.zodiac,
+            "Na Yin": self.na_yin,
+            "Lunar Festival": self.lunar_festival,
+            "Solar Festival": self.solar_festival,
+            "Solar Term": self.solar_term,
+            "28 Mansions": self.twenty_eight_star,
+            "Pengzu's Taboos": self.pengzu_taboo,
+            "Joy God Direction": self.joy_direction,
+            "Yang Nobleman Direction": self.yang_direction,
+            "Yin Nobleman Direction": self.yin_direction,
+            "Blessing God Direction": self.mascot_direction,
+            "Wealth God Direction": self.wealth_direction,
+            "Clash": self.clash,
+            "Suitable": self.suitable,
+            "Avoid": self.avoid,
         }

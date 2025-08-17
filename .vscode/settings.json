@@ -6,10 +6,11 @@
     "source.fixAll": "explicit"
   },
   "python.formatting.blackArgs": [
-    "--line-length", "88",
-    "--target-version", "py39"
+    "--line-length",
+    "88",
+    "--target-version",
+    "py39"
   ],
-  "python.formatting.blackPath": "/Users/junsen/miniconda3/envs/py-test/bin/black",
   "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
   "python.linting.flake8Args": [
@@ -19,6 +20,9 @@
   "python.sortImports.args": [
     "--profile=black",
     "--line-length=88"
+  ],
+  "python.sortImports.knownThirdParty": [
+    "lunar_python"
   ],
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
@@ -30,5 +34,8 @@
   "autoDocstring.docstringFormat": "google",
   "python.analysis.autoImportCompletions": true,
   "python.linting.pylintEnabled": false,
-  "python.linting.mypyEnabled": false
+  "python.linting.mypyEnabled": false,
+  "python.analysis.extraPaths": [
+    "./src"
+  ]
 }

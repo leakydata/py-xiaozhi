@@ -1,6 +1,6 @@
-"""高德地图MCP工具模块.
+"""Amap MCP tool module.
 
-提供高德地图API功能的MCP工具集，包括地理编码、路径规划、POI搜索、天气查询等
+Provides a set of MCP tools for Amap API functions, including geocoding, route planning, POI search, weather query, etc.
 """
 
 from .manager import get_amap_manager

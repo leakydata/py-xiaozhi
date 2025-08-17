@@ -12,101 +12,101 @@ logger = get_logger(__name__)
 
 class CountdownTimer(Thing):
     """
-    一个用于延迟执行命令的倒计时器设备。
+    A countdown timer device for delayed command execution.
     """
 
     DEFAULT_DELAY = 5  # seconds
 
     def __init__(self):
-        super().__init__("CountdownTimer", "一个用于延迟执行命令的倒计时器")
-        # 使用字典存储活动的计时器，键是 timer_id，值是 asyncio.Task 对象
+        super().__init__("CountdownTimer", "A countdown timer for delayed command execution")
+        # Use a dictionary to store active timers, with timer_id as the key and asyncio.Task object as the value
         self._timers: Dict[int, Task] = {}
         self._next_timer_id = 0
-        # 使用锁来保护对 _timers 和 _next_timer_id 的访问，确保线程安全
+        # Use a lock to protect access to _timers and _next_timer_id, ensuring thread safety
         self._lock = asyncio.Lock()
 
-        # 定义方法 - 使用 Parameter 对象
+        # Define methods - using Parameter objects
         self.add_method(
             "StartCountdown",
-            "启动一个倒计时，结束后执行指定命令",
+            "Starts a countdown, and executes the specified command when it ends",
             [
                 Parameter(
                     "command",
-                    "要执行的IoT命令 (JSON格式字符串"
-                    "{'name': '设备名', 'method': '方法名', "
-                    "'parameters': {'参数名': '参数值'}})",
+                    "The IoT command to execute (JSON format string "
+                    "{'name': 'DeviceName', 'method': 'MethodName', "
+                    "'parameters': {'ParamName': 'ParamValue'}})",
                     "string",
                     required=True,
                 ),
                 Parameter(
-                    "delay", "延迟时间（秒），默认为5秒", "integer", required=False
-                ),  # 使用 required=False 标记可选参数
+                    "delay", "Delay time in seconds, defaults to 5 seconds", "integer", required=False
+                ),  # Use required=False to mark optional parameters
             ],
-            self._start_countdown,  # 直接使用方法引用，不用 lambda
+            self._start_countdown,  # Use method reference directly, no lambda
         )
         self.add_method(
             "CancelCountdown",
-            "取消指定的倒计时",
-            [Parameter("timer_id", "要取消的计时器ID", "integer", required=True)],
-            self._cancel_countdown,  # 直接使用方法引用，不用 lambda
+            "Cancels the specified countdown",
+            [Parameter("timer_id", "The ID of the timer to cancel", "integer", required=True)],
+            self._cancel_countdown,  # Use method reference directly, no lambda
         )
 
     async def _execute_command(self, timer_id: int, command_str: str) -> None:
         """
-        计时器到期时执行的回调函数。
+        Callback function executed when the timer expires.
         """
-        # 首先从活动计时器列表中移除自己
+        # First, remove itself from the list of active timers
         async with self._lock:
             if timer_id not in self._timers:
-                # 可能已经被取消
-                logger.info(f"倒计时 {timer_id} 在执行前已被取消或不存在。")
+                # May have already been canceled
+                logger.info(f"Countdown {timer_id} was canceled or does not exist before execution.")
                 return
             del self._timers[timer_id]
 
-        logger.info(f"倒计时 {timer_id} 结束，准备执行命令: {command_str}")
+        logger.info(f"Countdown {timer_id} finished, preparing to execute command: {command_str}")
 
         try:
-            # 命令应该是 JSON 格式的字符串，代表一个命令字典
+            # The command should be a JSON formatted string representing a command dictionary
             command_dict = json.loads(command_str)
-            # 获取 ThingManager 单例并执行命令
+            # Get the ThingManager singleton and execute the command
             thing_manager = ThingManager.get_instance()
             result = await thing_manager.invoke(command_dict)
-            logger.info(f"倒计时 {timer_id} 执行命令 '{command_str}' 结果: {result}")
+            logger.info(f"Countdown {timer_id} executed command '{command_str}' with result: {result}")
         except json.JSONDecodeError:
             logger.error(
-                f"倒计时 {timer_id}: 命令 '{command_str}' 格式错误，无法解析JSON。"
+                f"Countdown {timer_id}: Command '{command_str}' format error, cannot parse JSON."
             )
         except Exception as e:
             logger.error(
-                f"倒计时 {timer_id} 执行命令 '{command_str}' 时出错: {e}", exc_info=True
+                f"Countdown {timer_id} encountered an error while executing command '{command_str}': {e}", exc_info=True
             )
 
     async def _delayed_execution(
         self, delay: int, timer_id: int, command_str: str
     ) -> None:
         """
-        异步延迟执行函数.
+        Asynchronous delayed execution function.
         """
         try:
             await asyncio.sleep(delay)
             await self._execute_command(timer_id, command_str)
         except asyncio.CancelledError:
-            logger.info(f"倒计时 {timer_id} 被取消")
+            logger.info(f"Countdown {timer_id} was canceled")
         except Exception as e:
-            logger.error(f"倒计时 {timer_id} 执行过程中出错: {e}", exc_info=True)
+            logger.error(f"Countdown {timer_id} encountered an error during execution: {e}", exc_info=True)
 
     async def _start_countdown(
         self, params_dict: Dict[str, Parameter]
     ) -> Dict[str, Any]:
         """
-        处理 StartCountdown 方法调用。注意: params 现在是 Parameter 对象的字典.
+        Handles the StartCountdown method call. Note: params is now a dictionary of Parameter objects.
         """
-        # 从 Parameter 对象字典中获取值
+        # Get values from the Parameter object dictionary
         command_param = params_dict.get("command")
         delay_param = params_dict.get("delay")
 
         command_str = command_param.get_value() if command_param else None
-        # 处理可选参数 delay
+        # Handle the optional parameter delay
         delay = (
             delay_param.get_value()
             if delay_param and delay_param.get_value() is not None
@@ -114,54 +114,54 @@ class CountdownTimer(Thing):
         )
 
         if not command_str:
-            logger.error("启动倒计时失败：缺少 'command' 参数值。")
-            return {"status": "error", "message": "缺少 'command' 参数值"}
+            logger.error("Failed to start countdown: missing 'command' parameter value.")
+            return {"status": "error", "message": "Missing 'command' parameter value"}
 
-        # 验证延迟时间
+        # Validate the delay time
         try:
-            # 确保 delay 是整数类型
+            # Ensure delay is an integer
             if not isinstance(delay, int):
                 delay = int(delay)
 
             if delay <= 0:
                 logger.warning(
-                    f"提供的延迟时间 {delay} 无效，使用默认值 "
-                    f"{self.DEFAULT_DELAY} 秒。"
+                    f"Provided delay time {delay} is invalid, using default value "
+                    f"{self.DEFAULT_DELAY} seconds."
                 )
                 delay = self.DEFAULT_DELAY
         except (ValueError, TypeError):
             logger.warning(
-                f"提供的延迟时间 '{delay}' 无效，使用默认值 "
-                f"{self.DEFAULT_DELAY} 秒。"
+                f"Provided delay time '{delay}' is invalid, using default value "
+                f"{self.DEFAULT_DELAY} seconds."
             )
             delay = self.DEFAULT_DELAY
 
-        # 尝试解析命令字符串以进行早期验证
+        # Try to parse the command string for early validation
         try:
             json.loads(command_str)
         except json.JSONDecodeError:
-            logger.error(f"启动倒计时失败：命令格式错误，无法解析JSON: {command_str}")
+            logger.error(f"Failed to start countdown: command format error, cannot parse JSON: {command_str}")
             return {
                 "status": "error",
-                "message": f"命令格式错误，无法解析JSON: {command_str}",
+                "message": f"Command format error, cannot parse JSON: {command_str}",
             }
 
-        # 获取当前事件循环
+        # Get the current event loop
         loop = asyncio.get_running_loop()
 
         async with self._lock:
             timer_id = self._next_timer_id
             self._next_timer_id += 1
-            # 创建异步任务并确保它在当前事件循环中运行
+            # Create an async task and ensure it runs in the current event loop
             task = loop.create_task(
                 self._delayed_execution(delay, timer_id, command_str)
             )
             self._timers[timer_id] = task
 
-        logger.info(f"启动倒计时 {timer_id}，将在 {delay} 秒后执行命令: {command_str}")
+        logger.info(f"Started countdown {timer_id}, will execute command in {delay} seconds: {command_str}")
         return {
             "status": "success",
-            "message": f"倒计时 {timer_id} 已启动，将在 {delay} 秒后执行。",
+            "message": f"Countdown {timer_id} has started and will execute in {delay} seconds.",
             "timer_id": timer_id,
         }
 
@@ -169,50 +169,50 @@ class CountdownTimer(Thing):
         self, params_dict: Dict[str, Parameter]
     ) -> Dict[str, Any]:
         """
-        处理 CancelCountdown 方法调用。注意: params 现在是 Parameter 对象的字典.
+        Handles the CancelCountdown method call. Note: params is now a dictionary of Parameter objects.
         """
         timer_id_param = params_dict.get("timer_id")
         timer_id = timer_id_param.get_value() if timer_id_param else None
 
         if timer_id is None:
-            logger.error("取消倒计时失败：缺少 'timer_id' 参数值。")
-            return {"status": "error", "message": "缺少 'timer_id' 参数值"}
+            logger.error("Failed to cancel countdown: missing 'timer_id' parameter value.")
+            return {"status": "error", "message": "Missing 'timer_id' parameter value"}
 
         try:
-            # 确保 timer_id 是整数
+            # Ensure timer_id is an integer
             if not isinstance(timer_id, int):
                 timer_id = int(timer_id)
         except (ValueError, TypeError):
-            logger.error(f"取消倒计时失败：无效的 'timer_id' {timer_id}。")
-            return {"status": "error", "message": f"无效的 'timer_id': {timer_id}"}
+            logger.error(f"Failed to cancel countdown: invalid 'timer_id' {timer_id}.")
+            return {"status": "error", "message": f"Invalid 'timer_id': {timer_id}"}
 
         async with self._lock:
             if timer_id in self._timers:
                 task = self._timers.pop(timer_id)
                 task.cancel()
-                logger.info(f"倒计时 {timer_id} 已成功取消。")
-                return {"status": "success", "message": f"倒计时 {timer_id} 已取消"}
+                logger.info(f"Countdown {timer_id} has been successfully canceled.")
+                return {"status": "success", "message": f"Countdown {timer_id} has been canceled"}
             else:
-                logger.warning(f"尝试取消不存在或已完成的倒计时 {timer_id}。")
+                logger.warning(f"Attempted to cancel a non-existent or completed countdown {timer_id}.")
                 return {
                     "status": "error",
-                    "message": f"找不到ID为 {timer_id} 的活动倒计时",
+                    "message": f"Could not find an active countdown with ID {timer_id}",
                 }
 
     async def cleanup(self) -> None:
         """
-        在应用程序关闭时清理所有活动的计时器。
+        Cleans up all active timers when the application is shutting down.
         """
-        logger.info("正在清理倒计时器...")
+        logger.info("Cleaning up countdown timers...")
         async with self._lock:
-            active_timer_ids = list(self._timers.keys())  # 创建键的副本以安全迭代
+            active_timer_ids = list(self._timers.keys())  # Create a copy of keys for safe iteration
             for timer_id in active_timer_ids:
                 if timer_id in self._timers:
                     task = self._timers.pop(timer_id)
                     task.cancel()
-                    logger.info(f"已取消后台计时器 {timer_id}")
-        logger.info("倒计时器清理完成。")
+                    logger.info(f"Canceled background timer {timer_id}")
+        logger.info("Countdown timer cleanup complete.")
 
 
-# 注意：这个 cleanup 方法需要在应用程序关闭时被显式调用。
-# ThingManager 或 Application 类可以负责在 shutdown 过程中调用其管理的 Things 的 cleanup 方法。
+# Note: This cleanup method needs to be explicitly called when the application is shutting down.
+# The ThingManager or Application class can be responsible for calling the cleanup method of its managed Things during the shutdown process.
