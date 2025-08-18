@@ -1,5 +1,5 @@
 """
-菜谱管理器 - 负责菜谱功能的管理和协调.
+Recipe Manager - Responsible for managing and coordinating recipe functions.
 """
 
 import random
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 class RecipeManager:
     """
-    菜谱管理器 - 管理菜谱数据缓存和工具功能.
+    Recipe Manager - Manages recipe data caching and tool functions.
     """
 
     def __init__(self):
@@ -25,7 +25,7 @@ class RecipeManager:
 
     async def _ensure_client_initialized(self):
         """
-        确保客户端已初始化.
+        Ensure the client is initialized.
         """
         if not self._client_initialized:
             await self.client.__aenter__()
@@ -33,53 +33,53 @@ class RecipeManager:
 
     async def _ensure_recipes_loaded(self):
         """
-        确保菜谱数据已加载.
+        Ensure recipe data is loaded.
         """
         if not self._recipes_loaded:
             await self.load_recipes()
 
     async def cleanup(self):
         """
-        清理资源.
+        Clean up resources.
         """
         if self._client_initialized:
             await self.client.__aexit__(None, None, None)
             self._client_initialized = False
 
     async def load_recipes(self) -> bool:
-        """加载菜谱数据.
+        """Load recipe data.
 
         Returns:
-            加载是否成功
+            Whether the loading was successful
         """
         try:
             await self._ensure_client_initialized()
 
-            # 获取菜谱数据
+            # Get recipe data
             recipes = await self.client.fetch_recipes()
 
             if not recipes:
-                logger.warning("未获取到任何菜谱数据")
+                logger.warning("No recipe data was obtained")
                 return False
 
-            # 缓存菜谱数据
+            # Cache recipe data
             self.current_session.add_recipes(recipes)
 
-            # 设置分类
+            # Set categories
             categories = self.client.get_all_categories(recipes)
             self.current_session.set_categories(categories)
 
             self._recipes_loaded = True
-            logger.info(f"成功加载 {len(recipes)} 个菜谱，{len(categories)} 个分类")
+            logger.info(f"Successfully loaded {len(recipes)} recipes, {len(categories)} categories")
             return True
 
         except Exception as e:
-            logger.error(f"加载菜谱数据失败: {e}")
+            logger.error(f"Failed to load recipe data: {e}")
             return False
 
     def init_tools(self, add_tool, PropertyList, Property, PropertyType):
         """
-        初始化并注册所有菜谱工具.
+        Initialize and register all recipe tools.
         """
         from .tools import (
             get_all_recipes,
@@ -90,7 +90,7 @@ class RecipeManager:
             what_to_eat,
         )
 
-        # 1. 获取所有菜谱工具（分页）
+        # 1. Get all recipes tool (paginated)
         get_all_recipes_props = PropertyList(
             [
                 Property("page", PropertyType.INTEGER, default_value=1),
@@ -121,7 +121,7 @@ class RecipeManager:
             )
         )
 
-        # 2. 根据ID获取菜谱详情工具
+        # 2. Get recipe details by ID tool
         get_recipe_by_id_props = PropertyList(
             [
                 Property("query", PropertyType.STRING),
@@ -157,7 +157,7 @@ class RecipeManager:
             )
         )
 
-        # 3. 根据分类获取菜谱工具（分页）
+        # 3. Get recipes by category tool (paginated)
         get_recipes_by_category_props = PropertyList(
             [
                 Property("category", PropertyType.STRING),
@@ -177,14 +177,14 @@ class RecipeManager:
                 "4. Plan meals with specific dietary preferences\n"
                 "5. Explore recipes from particular food categories\n"
                 "\nAvailable Categories:\n"
-                "- 水产 (Seafood dishes)\n"
-                "- 早餐 (Breakfast recipes)\n"
-                "- 荤菜 (Meat dishes)\n"
-                "- 主食 (Main dishes/staples)\n"
-                "- 素菜 (Vegetarian dishes)\n"
-                "- 汤羹 (Soups and broths)\n"
-                "- 甜品 (Desserts)\n"
-                "- 饮品 (Beverages)\n"
+                "- Seafood (Seafood dishes)\n"
+                "- Breakfast (Breakfast recipes)\n"
+                "- Meat (Meat dishes)\n"
+                "- Staple food (Main dishes/staples)\n"
+                "- Vegetable (Vegetarian dishes)\n"
+                "- Soup (Soups and broths)\n"
+                "- Dessert (Desserts)\n"
+                "- Beverage (Beverages)\n"
                 "- And many more categories\n"
                 "\nFeatures:\n"
                 "- Category-based filtering for precise results\n"
@@ -200,7 +200,7 @@ class RecipeManager:
             )
         )
 
-        # 4. 智能推荐菜品工具
+        # 4. Intelligent meal recommendation tool
         recommend_meals_props = PropertyList(
             [
                 Property("people_count", PropertyType.INTEGER, default_value=2),
@@ -241,7 +241,7 @@ class RecipeManager:
             )
         )
 
-        # 5. 随机推荐菜品工具
+        # 5. Random meal recommendation tool
         what_to_eat_props = PropertyList(
             [
                 Property("meal_type", PropertyType.STRING, default_value="any"),
@@ -285,7 +285,7 @@ class RecipeManager:
             )
         )
 
-        # 6. 模糊搜索菜谱工具（新增功能）
+        # 6. Fuzzy search for recipes tool (new feature)
         search_recipes_fuzzy_props = PropertyList(
             [
                 Property("query", PropertyType.STRING),
@@ -299,7 +299,7 @@ class RecipeManager:
                 "Search recipes using fuzzy keyword matching across recipe names, descriptions, "
                 "and ingredients. Perfect for finding recipes containing specific ingredients or keywords.\n"
                 "Use this tool when user wants to:\n"
-                "1. Find recipes containing specific ingredients (e.g., '花甲', '鸡蛋')\n"
+                "1. Find recipes containing specific ingredients (e.g., 'clams', 'eggs')\n"
                 "2. Search for recipes by cooking method or style\n"
                 "3. Discover recipes with particular flavors or characteristics\n"
                 "4. Find alternatives when exact recipe name is unknown\n"
@@ -311,11 +311,11 @@ class RecipeManager:
                 "- Case-insensitive search for user convenience\n"
                 "- Partial keyword matching for broader results\n"
                 "\nSearch Examples:\n"
-                "- '花甲' → finds all recipes containing clams\n"
-                "- '鸡蛋' → finds all egg-based recipes\n"
-                "- '辣' → finds spicy dishes\n"
-                "- '素食' → finds vegetarian options\n"
-                "- '汤' → finds soup recipes\n"
+                "- 'clams' → finds all recipes containing clams\n"
+                "- 'eggs' → finds all egg-based recipes\n"
+                "- 'spicy' → finds spicy dishes\n"
+                "- 'vegetarian' → finds vegetarian options\n"
+                "- 'soup' → finds soup recipes\n"
                 "\nFeatures:\n"
                 "- Intelligent keyword matching algorithm\n"
                 "- Pagination support for large result sets\n"
@@ -333,14 +333,14 @@ class RecipeManager:
     async def get_all_recipes(
         self, page: int = 1, page_size: int = 10
     ) -> PaginatedResult:
-        """获取所有菜谱（分页）.
+        """Get all recipes (paginated).
 
         Args:
-            page: 页码
-            page_size: 每页大小
+            page: Page number
+            page_size: Page size
 
         Returns:
-            分页结果
+            Paginated result
         """
         await self._ensure_recipes_loaded()
 
@@ -348,32 +348,32 @@ class RecipeManager:
         return self.client.paginate_name_only_recipes(recipes, page, page_size)
 
     async def get_recipe_by_id(self, query: str) -> dict:
-        """根据ID或名称获取菜谱详情.
+        """Get recipe details by ID or name.
 
         Args:
-            query: 菜谱ID或名称
+            query: Recipe ID or name
 
         Returns:
-            菜谱详情或错误信息
+            Recipe details or error message
         """
         await self._ensure_recipes_loaded()
 
-        # 首先尝试精确匹配ID
+        # First, try to match the ID exactly
         recipe = self.current_session.get_recipe(query)
         if recipe:
             return recipe.to_dict()
 
-        # 尝试精确匹配名称
+        # Try to match the name exactly
         for recipe in self.current_session.recipes.values():
             if recipe.name == query:
                 return recipe.to_dict()
 
-        # 尝试模糊匹配名称
+        # Try to fuzzy match the name
         for recipe in self.current_session.recipes.values():
             if query.lower() in recipe.name.lower():
                 return recipe.to_dict()
 
-        # 如果还没找到，返回所有可能的匹配项（最多5个）
+        # If still not found, return all possible matches (up to 5)
         possible_matches = []
         for recipe in self.current_session.recipes.values():
             if (
@@ -393,13 +393,13 @@ class RecipeManager:
 
         if not possible_matches:
             return {
-                "error": "未找到匹配的菜谱",
+                "error": "No matching recipe found",
                 "query": query,
-                "suggestion": "请检查菜谱名称是否正确，或尝试使用关键词搜索",
+                "suggestion": "Please check if the recipe name is correct, or try searching with keywords",
             }
 
         return {
-            "message": "未找到精确匹配，以下是可能的匹配项：",
+            "message": "No exact match found, here are possible matches:",
             "query": query,
             "possible_matches": possible_matches,
         }
@@ -407,15 +407,15 @@ class RecipeManager:
     async def get_recipes_by_category(
         self, category: str, page: int = 1, page_size: int = 10
     ) -> PaginatedResult:
-        """根据分类获取菜谱（分页）.
+        """Get recipes by category (paginated).
 
         Args:
-            category: 分类名称
-            page: 页码
-            page_size: 每页大小
+            category: Category name
+            page: Page number
+            page_size: Page size
 
         Returns:
-            分页结果
+            Paginated result
         """
         await self._ensure_recipes_loaded()
 
@@ -425,15 +425,15 @@ class RecipeManager:
     async def search_recipes(
         self, query: str, page: int = 1, page_size: int = 10
     ) -> PaginatedResult:
-        """搜索菜谱（分页）.
+        """Search recipes (paginated).
 
         Args:
-            query: 搜索关键词
-            page: 页码
-            page_size: 每页大小
+            query: Search keyword
+            page: Page number
+            page_size: Page size
 
         Returns:
-            分页结果
+            Paginated result
         """
         await self._ensure_recipes_loaded()
 
@@ -447,20 +447,20 @@ class RecipeManager:
         page: int = 1,
         page_size: int = 10,
     ) -> PaginatedResult:
-        """推荐菜品（分页）.
+        """Recommend dishes (paginated).
 
         Args:
-            people_count: 用餐人数
-            meal_type: 用餐类型
-            page: 页码
-            page_size: 每页大小
+            people_count: Number of people
+            meal_type: Meal type
+            page: Page number
+            page_size: Page size
 
         Returns:
-            分页结果
+            Paginated result
         """
         await self._ensure_recipes_loaded()
 
-        # 根据用餐类型筛选菜谱
+        # Filter recipes by meal type
         all_recipes = list(self.current_session.recipes.values())
 
         if meal_type == "breakfast":
@@ -480,11 +480,11 @@ class RecipeManager:
         else:
             filtered_recipes = all_recipes
 
-        # 如果没有找到合适的菜谱，使用所有菜谱
+        # If no suitable recipes are found, use all recipes
         if not filtered_recipes:
             filtered_recipes = all_recipes
 
-        # 随机排序
+        # Random sort
         random.shuffle(filtered_recipes)
 
         return self.client.paginate_simple_recipes(filtered_recipes, page, page_size)
@@ -492,19 +492,19 @@ class RecipeManager:
     async def what_to_eat(
         self, meal_type: str = "any", page: int = 1, page_size: int = 10
     ) -> PaginatedResult:
-        """随机推荐菜品（分页）.
+        """Randomly recommend dishes (paginated).
 
         Args:
-            meal_type: 用餐类型
-            page: 页码
-            page_size: 每页大小
+            meal_type: Meal type
+            page: Page number
+            page_size: Page size
 
         Returns:
-            分页结果
+            Paginated result
         """
         await self._ensure_recipes_loaded()
 
-        # 根据用餐类型筛选菜谱
+        # Filter recipes by meal type
         all_recipes = list(self.current_session.recipes.values())
 
         if meal_type == "breakfast":
@@ -524,18 +524,18 @@ class RecipeManager:
         else:
             filtered_recipes = all_recipes
 
-        # 如果没有找到合适的菜谱，使用所有菜谱
+        # If no suitable recipes are found, use all recipes
         if not filtered_recipes:
             filtered_recipes = all_recipes
 
-        # 随机排序
+        # Random sort
         random.shuffle(filtered_recipes)
 
         return self.client.paginate_simple_recipes(filtered_recipes, page, page_size)
 
     def get_session_info(self) -> dict:
         """
-        获取当前会话信息.
+        Get current session information.
         """
         return {
             "session_id": self.current_session.id,
@@ -548,13 +548,13 @@ class RecipeManager:
         }
 
 
-# 全局管理器实例
+# Global manager instance
 _recipe_manager = None
 
 
 def get_recipe_manager() -> RecipeManager:
     """
-    获取菜谱管理器单例.
+    Get recipe manager singleton.
     """
     global _recipe_manager
     if _recipe_manager is None:
@@ -564,7 +564,7 @@ def get_recipe_manager() -> RecipeManager:
 
 async def cleanup_recipe_manager():
     """
-    清理菜谱管理器资源.
+    Clean up recipe manager resources.
     """
     global _recipe_manager
     if _recipe_manager:

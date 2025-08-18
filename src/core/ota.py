@@ -35,30 +35,30 @@ class Ota:
 
     async def init(self):
         """
-        初始化OTA实例.
+        Initialize the OTA instance.
         """
         self.local_ip = await self.get_local_ip()
-        # 从配置中获取设备ID（MAC地址）
+        # Get device ID (MAC address) from configuration
         self.mac_addr = self.config.get_config("SYSTEM_OPTIONS.DEVICE_ID")
-        # 获取OTA URL
+        # Get OTA URL
         self.ota_version_url = self.config.get_config(
             "SYSTEM_OPTIONS.NETWORK.OTA_VERSION_URL"
         )
 
     async def get_local_ip(self):
         """
-        异步获取本机IP地址.
+        Asynchronously get the local IP address.
         """
         try:
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, self._sync_get_ip)
         except Exception as e:
-            self.logger.error(f"获取本机 IP 失败：{e}")
+            self.logger.error(f"Failed to get local IP: {e}")
             return "127.0.0.1"
 
     def _sync_get_ip(self):
         """
-        同步获取IP地址.
+        Synchronously get the IP address.
         """
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.connect(("8.8.8.8", 80))
@@ -66,9 +66,9 @@ class Ota:
 
     def build_payload(self):
         """
-        构建OTA请求的payload.
+        Build the payload for the OTA request.
         """
-        # 从efuse.json获取hmac_key作为elf_sha256
+        # Get hmac_key from efuse.json as elf_sha256
         hmac_key = self.device_fingerprint.get_hmac_key()
         elf_sha256 = hmac_key if hmac_key else "unknown"
 
@@ -87,148 +87,148 @@ class Ota:
 
     def build_headers(self):
         """
-        构建OTA请求的headers.
+        Build the headers for the OTA request.
         """
         app_version = SystemConstants.APP_VERSION
         board_type = SystemConstants.BOARD_TYPE
         app_name = SystemConstants.APP_NAME
 
-        # 基础头部
+        # Basic headers
         headers = {
             "Device-Id": self.mac_addr,
             "Client-Id": self.config.get_config("SYSTEM_OPTIONS.CLIENT_ID"),
             "Content-Type": "application/json",
             "User-Agent": f"{board_type}/{app_name}-{app_version}",
-            "Accept-Language": "zh-CN",
+            "Accept-Language": "en-US",
         }
 
-        # 根据激活版本决定是否添加Activation-Version头部
+        # Decide whether to add the Activation-Version header based on the activation version
         activation_version = self.config.get_config(
             "SYSTEM_OPTIONS.NETWORK.ACTIVATION_VERSION", "v1"
         )
 
-        # 只有v2协议才添加Activation-Version头部
+        # Only the v2 protocol adds the Activation-Version header
         if activation_version == "v2":
             headers["Activation-Version"] = app_version
-            self.logger.debug(f"v2协议：添加Activation-Version头部: {app_version}")
+            self.logger.debug(f"v2 protocol: Adding Activation-Version header: {app_version}")
         else:
-            self.logger.debug("v1协议：不添加Activation-Version头部")
+            self.logger.debug("v1 protocol: Not adding Activation-Version header")
 
         return headers
 
     async def get_ota_config(self):
         """
-        获取OTA服务器的配置信息（MQTT、WebSocket等）
+        Get configuration information from the OTA server (MQTT, WebSocket, etc.)
         """
         if not self.mac_addr:
-            self.logger.error("设备ID(MAC地址)未配置")
-            raise ValueError("设备ID未配置")
+            self.logger.error("Device ID (MAC address) not configured")
+            raise ValueError("Device ID not configured")
 
         if not self.ota_version_url:
-            self.logger.error("OTA URL未配置")
-            raise ValueError("OTA URL未配置")
+            self.logger.error("OTA URL not configured")
+            raise ValueError("OTA URL not configured")
 
         headers = self.build_headers()
         payload = self.build_payload()
 
         try:
-            # 使用aiohttp异步发送请求
+            # Use aiohttp to send requests asynchronously
             timeout = aiohttp.ClientTimeout(total=10)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(
                     self.ota_version_url, headers=headers, json=payload
                 ) as response:
-                    # 检查HTTP状态码
+                    # Check HTTP status code
                     if response.status != 200:
-                        self.logger.error(f"OTA服务器错误: HTTP {response.status}")
-                        raise ValueError(f"OTA服务器返回错误状态码: {response.status}")
+                        self.logger.error(f"OTA server error: HTTP {response.status}")
+                        raise ValueError(f"OTA server returned error status code: {response.status}")
 
-                    # 解析JSON数据
+                    # Parse JSON data
                     response_data = await response.json()
 
-                    # 调试信息：打印完整的OTA响应
+                    # Debug info: Print the complete OTA response
                     self.logger.debug(
-                        f"OTA服务器返回数据: "
+                        f"Data returned from OTA server: "
                         f"{json.dumps(response_data, indent=4, ensure_ascii=False)}"
                     )
 
                     return response_data
 
         except asyncio.TimeoutError:
-            self.logger.error("OTA请求超时，请检查网络或服务器状态")
-            raise ValueError("OTA请求超时！请稍后重试。")
+            self.logger.error("OTA request timed out, please check the network or server status")
+            raise ValueError("OTA request timed out! Please try again later.")
 
         except aiohttp.ClientError as e:
-            self.logger.error(f"OTA请求失败: {e}")
-            raise ValueError("无法连接到OTA服务器，请检查网络连接！")
+            self.logger.error(f"OTA request failed: {e}")
+            raise ValueError("Unable to connect to OTA server, please check your network connection!")
 
     async def update_mqtt_config(self, response_data):
         """
-        更新MQTT配置信息.
+        Update MQTT configuration information.
         """
         if "mqtt" in response_data:
-            self.logger.info("发现MQTT配置信息")
+            self.logger.info("Found MQTT configuration information")
             mqtt_info = response_data["mqtt"]
             if mqtt_info:
-                # 更新配置
+                # Update configuration
                 success = self.config.update_config(
                     "SYSTEM_OPTIONS.NETWORK.MQTT_INFO", mqtt_info
                 )
                 if success:
-                    self.logger.info("MQTT配置已更新")
+                    self.logger.info("MQTT configuration has been updated")
                     return mqtt_info
                 else:
-                    self.logger.error("MQTT配置更新失败")
+                    self.logger.error("MQTT configuration update failed")
             else:
-                self.logger.warning("MQTT配置为空")
+                self.logger.warning("MQTT configuration is empty")
         else:
-            self.logger.info("未发现MQTT配置信息")
+            self.logger.info("No MQTT configuration information found")
 
         return None
 
     async def update_websocket_config(self, response_data):
         """
-        更新WebSocket配置信息.
+        Update WebSocket configuration information.
         """
         if "websocket" in response_data:
-            self.logger.info("发现WebSocket配置信息")
+            self.logger.info("Found WebSocket configuration information")
             websocket_info = response_data["websocket"]
 
-            # 更新WebSocket URL
+            # Update WebSocket URL
             if "url" in websocket_info:
                 self.config.update_config(
                     "SYSTEM_OPTIONS.NETWORK.WEBSOCKET_URL", websocket_info["url"]
                 )
-                self.logger.info(f"WebSocket URL已更新: {websocket_info['url']}")
+                self.logger.info(f"WebSocket URL has been updated: {websocket_info['url']}")
 
-            # 更新WebSocket Token
+            # Update WebSocket Token
             token_value = websocket_info.get("token", "test-token") or "test-token"
             self.config.update_config(
                 "SYSTEM_OPTIONS.NETWORK.WEBSOCKET_ACCESS_TOKEN", token_value
             )
-            self.logger.info("WebSocket Token已更新")
+            self.logger.info("WebSocket Token has been updated")
 
             return websocket_info
         else:
-            self.logger.info("未发现WebSocket配置信息")
+            self.logger.info("No WebSocket configuration information found")
 
         return None
 
     async def fetch_and_update_config(self):
         """
-        获取并更新所有配置信息.
+        Fetch and update all configuration information.
         """
         try:
-            # 获取OTA配置
+            # Get OTA configuration
             response_data = await self.get_ota_config()
 
-            # 更新MQTT配置
+            # Update MQTT configuration
             mqtt_config = await self.update_mqtt_config(response_data)
 
-            # 更新WebSocket配置
+            # Update WebSocket configuration
             websocket_config = await self.update_websocket_config(response_data)
 
-            # 返回完整的响应数据，供激活流程使用
+            # Return the complete response data for the activation process to use
             return {
                 "response_data": response_data,
                 "mqtt_config": mqtt_config,
@@ -236,5 +236,5 @@ class Ota:
             }
 
         except Exception as e:
-            self.logger.error(f"获取并更新配置失败: {e}")
+            self.logger.error(f"Failed to fetch and update configuration: {e}")
             raise

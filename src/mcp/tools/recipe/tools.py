@@ -1,5 +1,5 @@
 """
-菜谱工具实现 - 具体的MCP工具函数.
+Recipe tool implementation - specific MCP tool functions.
 """
 
 import json
@@ -13,17 +13,17 @@ logger = get_logger(__name__)
 
 
 async def get_all_recipes(args: Dict[str, Any]) -> str:
-    """获取所有菜谱工具.
+    """Get all recipes tool.
 
     Args:
-        args: 包含page和page_size的参数字典
+        args: Dictionary containing page and page_size
 
     Returns:
-        JSON格式的分页结果
+        Paginated results in JSON format
     """
     try:
         page = args.get("page", 1)
-        page_size = min(args.get("page_size", 10), 50)  # 限制最大page_size
+        page_size = min(args.get("page_size", 10), 50)  # Limit max page_size
 
         manager = get_recipe_manager()
         result = await manager.get_all_recipes(page, page_size)
@@ -31,26 +31,26 @@ async def get_all_recipes(args: Dict[str, Any]) -> str:
         return json.dumps(result.to_dict(), ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"获取所有菜谱失败: {e}")
+        logger.error(f"Failed to get all recipes: {e}")
         return json.dumps(
-            {"error": "获取菜谱失败", "message": str(e)}, ensure_ascii=False
+            {"error": "Failed to get recipes", "message": str(e)}, ensure_ascii=False
         )
 
 
 async def get_recipe_by_id(args: Dict[str, Any]) -> str:
-    """根据ID获取菜谱详情工具.
+    """Get recipe details by ID tool.
 
     Args:
-        args: 包含query的参数字典
+        args: Dictionary containing query
 
     Returns:
-        JSON格式的菜谱详情
+        Recipe details in JSON format
     """
     try:
         query = args.get("query", "")
         if not query:
             return json.dumps(
-                {"error": "缺少查询参数", "message": "请提供菜谱名称或ID"},
+                {"error": "Missing query parameter", "message": "Please provide a recipe name or ID"},
                 ensure_ascii=False,
             )
 
@@ -60,31 +60,31 @@ async def get_recipe_by_id(args: Dict[str, Any]) -> str:
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"获取菜谱详情失败: {e}")
+        logger.error(f"Failed to get recipe details: {e}")
         return json.dumps(
-            {"error": "获取菜谱详情失败", "message": str(e)}, ensure_ascii=False
+            {"error": "Failed to get recipe details", "message": str(e)}, ensure_ascii=False
         )
 
 
 async def get_recipes_by_category(args: Dict[str, Any]) -> str:
-    """根据分类获取菜谱工具.
+    """Get recipes by category tool.
 
     Args:
-        args: 包含category、page和page_size的参数字典
+        args: Dictionary containing category, page, and page_size
 
     Returns:
-        JSON格式的分页结果
+        Paginated results in JSON format
     """
     try:
         category = args.get("category", "")
         if not category:
             return json.dumps(
-                {"error": "缺少分类参数", "message": "请提供菜谱分类名称"},
+                {"error": "Missing category parameter", "message": "Please provide a recipe category name"},
                 ensure_ascii=False,
             )
 
         page = args.get("page", 1)
-        page_size = min(args.get("page_size", 10), 50)  # 限制最大page_size
+        page_size = min(args.get("page_size", 10), 50)  # Limit max page_size
 
         manager = get_recipe_manager()
         result = await manager.get_recipes_by_category(category, page, page_size)
@@ -92,113 +92,113 @@ async def get_recipes_by_category(args: Dict[str, Any]) -> str:
         return json.dumps(result.to_dict(), ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"根据分类获取菜谱失败: {e}")
+        logger.error(f"Failed to get recipes by category: {e}")
         return json.dumps(
-            {"error": "根据分类获取菜谱失败", "message": str(e)}, ensure_ascii=False
+            {"error": "Failed to get recipes by category", "message": str(e)}, ensure_ascii=False
         )
 
 
 async def recommend_meals(args: Dict[str, Any]) -> str:
-    """推荐菜品工具.
+    """Recommend meals tool.
 
     Args:
-        args: 包含people_count、meal_type、page和page_size的参数字典
+        args: Dictionary containing people_count, meal_type, page, and page_size
 
     Returns:
-        JSON格式的分页结果
+        Paginated results in JSON format
     """
     try:
         people_count = args.get("people_count", 2)
         meal_type = args.get("meal_type", "dinner")
         page = args.get("page", 1)
-        page_size = min(args.get("page_size", 10), 50)  # 限制最大page_size
+        page_size = min(args.get("page_size", 10), 50)  # Limit max page_size
 
         manager = get_recipe_manager()
         result = await manager.recommend_meals(people_count, meal_type, page, page_size)
 
-        # 添加推荐信息
+        # Add recommendation information
         response = result.to_dict()
         response["recommendation_info"] = {
             "people_count": people_count,
             "meal_type": meal_type,
-            "message": f"为 {people_count} 人的{meal_type}推荐菜品",
+            "message": f"Recommended dishes for {people_count} people for {meal_type}",
         }
 
         return json.dumps(response, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"推荐菜品失败: {e}")
+        logger.error(f"Failed to recommend dishes: {e}")
         return json.dumps(
-            {"error": "推荐菜品失败", "message": str(e)}, ensure_ascii=False
+            {"error": "Failed to recommend dishes", "message": str(e)}, ensure_ascii=False
         )
 
 
 async def what_to_eat(args: Dict[str, Any]) -> str:
-    """随机推荐菜品工具.
+    """Randomly recommend dishes tool.
 
     Args:
-        args: 包含meal_type、page和page_size的参数字典
+        args: Dictionary containing meal_type, page, and page_size
 
     Returns:
-        JSON格式的分页结果
+        Paginated results in JSON format
     """
     try:
         meal_type = args.get("meal_type", "any")
         page = args.get("page", 1)
-        page_size = min(args.get("page_size", 10), 50)  # 限制最大page_size
+        page_size = min(args.get("page_size", 10), 50)  # Limit max page_size
 
         manager = get_recipe_manager()
         result = await manager.what_to_eat(meal_type, page, page_size)
 
-        # 添加推荐信息
+        # Add recommendation information
         response = result.to_dict()
         response["recommendation_info"] = {
             "meal_type": meal_type,
             "message": (
-                f"随机推荐{meal_type}菜品" if meal_type != "any" else "随机推荐菜品"
+                f"Randomly recommend {meal_type} dishes" if meal_type != "any" else "Randomly recommend dishes"
             ),
         }
 
         return json.dumps(response, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"随机推荐菜品失败: {e}")
+        logger.error(f"Failed to randomly recommend dishes: {e}")
         return json.dumps(
-            {"error": "随机推荐菜品失败", "message": str(e)}, ensure_ascii=False
+            {"error": "Failed to randomly recommend dishes", "message": str(e)}, ensure_ascii=False
         )
 
 
 async def search_recipes_fuzzy(args: Dict[str, Any]) -> str:
-    """模糊搜索菜谱工具.
+    """Fuzzy search for recipes tool.
 
     Args:
-        args: 包含query、page和page_size的参数字典
+        args: Dictionary containing query, page, and page_size
 
     Returns:
-        JSON格式的分页结果
+        Paginated results in JSON format
     """
     try:
         query = args.get("query", "")
         if not query:
             return json.dumps(
-                {"error": "缺少搜索关键词", "message": "请提供搜索关键词"},
+                {"error": "Missing search keyword", "message": "Please provide a search keyword"},
                 ensure_ascii=False,
             )
 
         page = args.get("page", 1)
-        page_size = min(args.get("page_size", 10), 50)  # 限制最大page_size
+        page_size = min(args.get("page_size", 10), 50)  # Limit max page_size
 
         manager = get_recipe_manager()
         result = await manager.search_recipes(query, page, page_size)
 
-        # 添加搜索信息
+        # Add search information
         response = result.to_dict()
-        response["search_info"] = {"query": query, "message": f"搜索关键词: {query}"}
+        response["search_info"] = {"query": query, "message": f"Search keyword: {query}"}
 
         return json.dumps(response, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"模糊搜索菜谱失败: {e}")
+        logger.error(f"Fuzzy search for recipes failed: {e}")
         return json.dumps(
-            {"error": "模糊搜索菜谱失败", "message": str(e)}, ensure_ascii=False
+            {"error": "Fuzzy search for recipes failed", "message": str(e)}, ensure_ascii=False
         )

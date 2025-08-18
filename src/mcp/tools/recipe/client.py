@@ -1,5 +1,5 @@
 """
-菜谱数据客户端 - 负责从远程API获取菜谱数据.
+Recipe data client - responsible for fetching recipe data from a remote API.
 """
 
 import math
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 class RecipeClient:
     """
-    菜谱数据客户端.
+    Recipe data client.
     """
 
     def __init__(self, recipes_url: str = "https://weilei.site/all_recipes.json"):
@@ -25,7 +25,7 @@ class RecipeClient:
 
     async def __aenter__(self):
         """
-        异步上下文管理器入口.
+        Asynchronous context manager entry.
         """
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=30),
@@ -37,30 +37,30 @@ class RecipeClient:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """
-        异步上下文管理器退出.
+        Asynchronous context manager exit.
         """
         if self.session:
             await self.session.close()
 
     async def fetch_recipes(self) -> List[Recipe]:
-        """从远程API获取所有菜谱数据.
+        """Fetch all recipe data from the remote API.
 
         Returns:
-            菜谱列表
+            A list of recipes.
         """
         try:
             if not self.session:
                 raise RuntimeError("Client session not initialized")
 
-            logger.info(f"正在从 {self.recipes_url} 获取菜谱数据...")
+            logger.info(f"Fetching recipe data from {self.recipes_url}...")
 
             async with self.session.get(self.recipes_url) as response:
                 if response.status != 200:
-                    raise Exception(f"HTTP错误: {response.status}")
+                    raise Exception(f"HTTP error: {response.status}")
 
                 data = await response.json()
 
-                # 转换为Recipe对象
+                # Convert to Recipe objects
                 recipes = []
                 for recipe_data in data:
                     try:
@@ -68,25 +68,25 @@ class RecipeClient:
                         recipes.append(recipe)
                     except Exception as e:
                         logger.warning(
-                            f"解析菜谱失败: {recipe_data.get('name', 'Unknown')}, 错误: {e}"
+                            f"Failed to parse recipe: {recipe_data.get('name', 'Unknown')}, error: {e}"
                         )
                         continue
 
-                logger.info(f"成功获取 {len(recipes)} 个菜谱")
+                logger.info(f"Successfully fetched {len(recipes)} recipes")
                 return recipes
 
         except Exception as e:
-            logger.error(f"获取菜谱数据失败: {e}")
+            logger.error(f"Failed to fetch recipe data: {e}")
             return []
 
     def get_all_categories(self, recipes: List[Recipe]) -> List[str]:
-        """从菜谱列表中提取所有分类.
+        """Extract all categories from a list of recipes.
 
         Args:
-            recipes: 菜谱列表
+            recipes: A list of recipes.
 
         Returns:
-            分类列表
+            A list of categories.
         """
         categories = set()
         for recipe in recipes:
@@ -97,30 +97,30 @@ class RecipeClient:
     def paginate_recipes(
         self, recipes: List[Recipe], page: int = 1, page_size: int = 10
     ) -> PaginatedResult:
-        """对菜谱列表进行分页.
+        """Paginate a list of recipes.
 
         Args:
-            recipes: 菜谱列表
-            page: 页码（从1开始）
-            page_size: 每页大小
+            recipes: A list of recipes.
+            page: Page number (starting from 1).
+            page_size: Number of items per page.
 
         Returns:
-            分页结果
+            A paginated result.
         """
         total_records = len(recipes)
         total_pages = math.ceil(total_records / page_size) if total_records > 0 else 0
 
-        # 校验页码
+        # Validate page number
         if page < 1:
             page = 1
         if page > total_pages and total_pages > 0:
             page = total_pages
 
-        # 计算起始和结束索引
+        # Calculate start and end indices
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
 
-        # 获取分页数据
+        # Get paginated data
         paginated_data = recipes[start_idx:end_idx]
 
         return PaginatedResult(
@@ -134,30 +134,30 @@ class RecipeClient:
     def paginate_simple_recipes(
         self, recipes: List[Recipe], page: int = 1, page_size: int = 10
     ) -> PaginatedResult:
-        """对菜谱列表进行分页，返回简化版数据.
+        """Paginate a list of recipes, returning simplified data.
 
         Args:
-            recipes: 菜谱列表
-            page: 页码（从1开始）
-            page_size: 每页大小
+            recipes: A list of recipes.
+            page: Page number (starting from 1).
+            page_size: Number of items per page.
 
         Returns:
-            分页结果
+            A paginated result.
         """
         total_records = len(recipes)
         total_pages = math.ceil(total_records / page_size) if total_records > 0 else 0
 
-        # 校验页码
+        # Validate page number
         if page < 1:
             page = 1
         if page > total_pages and total_pages > 0:
             page = total_pages
 
-        # 计算起始和结束索引
+        # Calculate start and end indices
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
 
-        # 获取分页数据
+        # Get paginated data
         paginated_data = recipes[start_idx:end_idx]
 
         return PaginatedResult(
@@ -171,30 +171,30 @@ class RecipeClient:
     def paginate_name_only_recipes(
         self, recipes: List[Recipe], page: int = 1, page_size: int = 10
     ) -> PaginatedResult:
-        """对菜谱列表进行分页，返回仅包含名称和描述的数据.
+        """Paginate a list of recipes, returning only name and description.
 
         Args:
-            recipes: 菜谱列表
-            page: 页码（从1开始）
-            page_size: 每页大小
+            recipes: A list of recipes.
+            page: Page number (starting from 1).
+            page_size: Number of items per page.
 
         Returns:
-            分页结果
+            A paginated result.
         """
         total_records = len(recipes)
         total_pages = math.ceil(total_records / page_size) if total_records > 0 else 0
 
-        # 校验页码
+        # Validate page number
         if page < 1:
             page = 1
         if page > total_pages and total_pages > 0:
             page = total_pages
 
-        # 计算起始和结束索引
+        # Calculate start and end indices
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
 
-        # 获取分页数据
+        # Get paginated data
         paginated_data = recipes[start_idx:end_idx]
 
         return PaginatedResult(
@@ -208,57 +208,57 @@ class RecipeClient:
     def search_recipes(
         self, recipes: List[Recipe], query: str, page: int = 1, page_size: int = 10
     ) -> PaginatedResult:
-        """搜索菜谱并分页返回结果.
+        """Search recipes and return paginated results.
 
         Args:
-            recipes: 菜谱列表
-            query: 搜索关键词
-            page: 页码（从1开始）
-            page_size: 每页大小
+            recipes: A list of recipes.
+            query: Search keyword.
+            page: Page number (starting from 1).
+            page_size: Number of items per page.
 
         Returns:
-            分页结果
+            A paginated result.
         """
         query_lower = query.lower()
         filtered_recipes = []
 
         for recipe in recipes:
-            # 检查名称
+            # Check name
             if query_lower in recipe.name.lower():
                 filtered_recipes.append(recipe)
                 continue
 
-            # 检查描述
+            # Check description
             if query_lower in recipe.description.lower():
                 filtered_recipes.append(recipe)
                 continue
 
-            # 检查食材
+            # Check ingredients
             for ingredient in recipe.ingredients:
                 if query_lower in ingredient.name.lower():
                     filtered_recipes.append(recipe)
                     break
 
-        logger.info(f"搜索关键词 '{query}' 找到 {len(filtered_recipes)} 个匹配的菜谱")
+        logger.info(f"Search keyword '{query}' found {len(filtered_recipes)} matching recipes")
 
         return self.paginate_simple_recipes(filtered_recipes, page, page_size)
 
     def get_recipes_by_category(
         self, recipes: List[Recipe], category: str, page: int = 1, page_size: int = 10
     ) -> PaginatedResult:
-        """根据分类获取菜谱并分页返回结果.
+        """Get recipes by category and return paginated results.
 
         Args:
-            recipes: 菜谱列表
-            category: 分类名称
-            page: 页码（从1开始）
-            page_size: 每页大小
+            recipes: A list of recipes.
+            category: Category name.
+            page: Page number (starting from 1).
+            page_size: Number of items per page.
 
         Returns:
-            分页结果
+            A paginated result.
         """
         filtered_recipes = [recipe for recipe in recipes if recipe.category == category]
 
-        logger.info(f"分类 '{category}' 找到 {len(filtered_recipes)} 个菜谱")
+        logger.info(f"Category '{category}' found {len(filtered_recipes)} recipes")
 
         return self.paginate_simple_recipes(filtered_recipes, page, page_size)

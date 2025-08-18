@@ -1,5 +1,5 @@
 """
-菜谱工具模块初始化文件.
+Recipe tool module initialization file.
 """
 
 from .manager import cleanup_recipe_manager, get_recipe_manager

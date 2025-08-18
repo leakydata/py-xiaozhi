@@ -1,5 +1,5 @@
 """
-搜索工具模块 - 提供必应搜索和网页内容获取功能
+Search tool module - provides Bing search and web page content acquisition functions
 """
 
 from .manager import cleanup_search_manager, get_search_manager

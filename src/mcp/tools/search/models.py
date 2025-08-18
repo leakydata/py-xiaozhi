@@ -1,5 +1,5 @@
 """
-搜索数据模型.
+Search data models.
 """
 
 import uuid
@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 class SearchResult:
     """
-    搜索结果数据模型.
+    Search result data model.
     """
 
     def __init__(
@@ -32,7 +32,7 @@ class SearchResult:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to a dictionary.
         """
         return {
             "id": self.id,
@@ -47,7 +47,7 @@ class SearchResult:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SearchResult":
         """
-        从字典创建搜索结果.
+        Create a search result from a dictionary.
         """
         return cls(
             title=data.get("title", ""),
@@ -62,15 +62,15 @@ class SearchResult:
 
 class SearchQuery:
     """
-    搜索查询模型.
+    Search query model.
     """
 
     def __init__(
         self,
         query: str,
         num_results: int = 5,
-        language: str = "zh-cn",
-        region: str = "CN",
+        language: str = "en-us",
+        region: str = "US",
         safe_search: str = "moderate",
         query_id: str = None,
     ):
@@ -84,7 +84,7 @@ class SearchQuery:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to a dictionary.
         """
         return {
             "id": self.id,
@@ -99,13 +99,13 @@ class SearchQuery:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SearchQuery":
         """
-        从字典创建搜索查询.
+        Create a search query from a dictionary.
         """
         return cls(
             query=data.get("query", ""),
             num_results=data.get("num_results", 5),
-            language=data.get("language", "zh-cn"),
-            region=data.get("region", "CN"),
+            language=data.get("language", "en-us"),
+            region=data.get("region", "US"),
             safe_search=data.get("safe_search", "moderate"),
             query_id=data.get("id"),
         )
@@ -113,7 +113,7 @@ class SearchQuery:
 
 class SearchSession:
     """
-    搜索会话模型，用于缓存搜索结果.
+    Search session model, used for caching search results.
     """
 
     def __init__(self, session_id: str = None):
@@ -125,35 +125,35 @@ class SearchSession:
 
     def add_result(self, result: SearchResult) -> None:
         """
-        添加搜索结果到会话.
+        Add a search result to the session.
         """
         self.results[result.id] = result
         self.last_accessed = datetime.now().isoformat()
 
     def get_result(self, result_id: str) -> Optional[SearchResult]:
         """
-        从会话中获取搜索结果.
+        Get a search result from the session.
         """
         self.last_accessed = datetime.now().isoformat()
         return self.results.get(result_id)
 
     def add_query(self, query: SearchQuery) -> None:
         """
-        添加搜索查询到会话.
+        Add a search query to the session.
         """
         self.queries.append(query)
         self.last_accessed = datetime.now().isoformat()
 
     def clear_results(self) -> None:
         """
-        清空搜索结果.
+        Clear the search results.
         """
         self.results.clear()
         self.last_accessed = datetime.now().isoformat()
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to a dictionary.
         """
         return {
             "id": self.id,

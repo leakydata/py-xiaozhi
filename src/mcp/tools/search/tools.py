@@ -34,8 +34,8 @@ async def search_bing(args: Dict[str, Any]) -> str:
             )
 
         num_results = args.get("num_results", 5)
-        language = args.get("language", "zh-cn")
-        region = args.get("region", "CN")
+        language = args.get("language", "en-us")
+        region = args.get("region", "US")
 
         # Limit the number of search results
         if num_results > 10:

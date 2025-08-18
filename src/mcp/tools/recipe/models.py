@@ -1,5 +1,5 @@
 """
-菜谱数据模型.
+Recipe data models.
 """
 
 import uuid
@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 class Ingredient:
     """
-    食材模型.
+    Ingredient model.
     """
 
     def __init__(
@@ -28,7 +28,7 @@ class Ingredient:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to a dictionary.
         """
         return {
             "name": self.name,
@@ -41,7 +41,7 @@ class Ingredient:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Ingredient":
         """
-        从字典创建食材.
+        Create an ingredient from a dictionary.
         """
         return cls(
             name=data.get("name", ""),
@@ -54,7 +54,7 @@ class Ingredient:
 
 class Step:
     """
-    制作步骤模型.
+    Cooking step model.
     """
 
     def __init__(self, step: int, description: str):
@@ -63,21 +63,21 @@ class Step:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to a dictionary.
         """
         return {"step": self.step, "description": self.description}
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Step":
         """
-        从字典创建步骤.
+        Create a step from a dictionary.
         """
         return cls(step=data.get("step", 0), description=data.get("description", ""))
 
 
 class Recipe:
     """
-    菜谱模型.
+    Recipe model.
     """
 
     def __init__(
@@ -118,7 +118,7 @@ class Recipe:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to a dictionary.
         """
         return {
             "id": self.id,
@@ -141,7 +141,7 @@ class Recipe:
 
     def to_simple_dict(self) -> Dict[str, Any]:
         """
-        转换为简化版字典，包含id、name、description和ingredients.
+        Convert to a simplified dictionary, including id, name, description, and ingredients.
         """
         return {
             "id": self.id,
@@ -155,14 +155,14 @@ class Recipe:
 
     def to_name_only_dict(self) -> Dict[str, Any]:
         """
-        转换为仅包含name和description的字典.
+        Convert to a dictionary containing only name and description.
         """
         return {"name": self.name, "description": self.description}
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Recipe":
         """
-        从字典创建菜谱.
+        Create a recipe from a dictionary.
         """
         ingredients = [Ingredient.from_dict(ing) for ing in data.get("ingredients", [])]
         steps = [Step.from_dict(step) for step in data.get("steps", [])]
@@ -189,7 +189,7 @@ class Recipe:
 
 class PaginatedResult:
     """
-    分页结果模型.
+    Paginated result model.
     """
 
     def __init__(
@@ -208,7 +208,7 @@ class PaginatedResult:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to a dictionary.
         """
         return {
             "data": self.data,
@@ -223,7 +223,7 @@ class PaginatedResult:
 
 class RecipeSession:
     """
-    菜谱会话模型，用于缓存菜谱数据.
+    Recipe session model for caching recipe data.
     """
 
     def __init__(self, session_id: str = None):
@@ -235,21 +235,21 @@ class RecipeSession:
 
     def add_recipe(self, recipe: Recipe) -> None:
         """
-        添加菜谱到会话.
+        Add a recipe to the session.
         """
         self.recipes[recipe.id] = recipe
         self.last_accessed = datetime.now().isoformat()
 
     def get_recipe(self, recipe_id: str) -> Optional[Recipe]:
         """
-        从会话中获取菜谱.
+        Get a recipe from the session.
         """
         self.last_accessed = datetime.now().isoformat()
         return self.recipes.get(recipe_id)
 
     def add_recipes(self, recipes: List[Recipe]) -> None:
         """
-        批量添加菜谱.
+        Add recipes in bulk.
         """
         for recipe in recipes:
             self.recipes[recipe.id] = recipe
@@ -257,30 +257,30 @@ class RecipeSession:
 
     def set_categories(self, categories: List[str]) -> None:
         """
-        设置分类列表.
+        Set the category list.
         """
         self.categories = categories
         self.last_accessed = datetime.now().isoformat()
 
     def search_recipes(self, query: str) -> List[Recipe]:
         """
-        搜索菜谱，支持模糊匹配.
+        Search for recipes, supports fuzzy matching.
         """
         query_lower = query.lower()
         results = []
 
         for recipe in self.recipes.values():
-            # 检查名称
+            # Check name
             if query_lower in recipe.name.lower():
                 results.append(recipe)
                 continue
 
-            # 检查描述
+            # Check description
             if query_lower in recipe.description.lower():
                 results.append(recipe)
                 continue
 
-            # 检查食材
+            # Check ingredients
             for ingredient in recipe.ingredients:
                 if query_lower in ingredient.name.lower():
                     results.append(recipe)
@@ -290,7 +290,7 @@ class RecipeSession:
 
     def get_recipes_by_category(self, category: str) -> List[Recipe]:
         """
-        根据分类获取菜谱.
+        Get recipes by category.
         """
         return [
             recipe for recipe in self.recipes.values() if recipe.category == category
@@ -298,14 +298,14 @@ class RecipeSession:
 
     def clear_recipes(self) -> None:
         """
-        清空菜谱缓存.
+        Clear the recipe cache.
         """
         self.recipes.clear()
         self.last_accessed = datetime.now().isoformat()
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to a dictionary.
         """
         return {
             "id": self.id,
