@@ -254,27 +254,89 @@ class McpServer:
         original_tools = self.tools.copy()
         self.tools.clear()
 
-        # Add tools from the tool manager
-        from src.mcp.tools.tool_manager import tool_manager
+        # Add system tools
+        from src.mcp.tools.system import get_system_tools_manager
 
-        for tool in tool_manager.get_all_tools():
-            self.add_tool(
-                McpTool(
-                    tool.name,
-                    tool.description,
-                    PropertyList(
-                        [
-                            Property(
-                                name,
-                                PropertyType.STRING,
-                                default_value=field.default,
-                            )
-                            for name, field in tool.args_schema.__fields__.items()
-                        ]
-                    ),
-                    tool.run,
-                )
+        system_manager = get_system_tools_manager()
+        system_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+
+        # Add calendar management tools
+        from src.mcp.tools.calendar import get_calendar_manager
+
+        calendar_manager = get_calendar_manager()
+        calendar_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+
+        # Add countdown timer tools
+        from src.mcp.tools.timer import get_timer_manager
+
+        timer_manager = get_timer_manager()
+        timer_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+
+        # Add music player tools
+        from src.mcp.tools.music import get_music_tools_manager
+
+        music_manager = get_music_tools_manager()
+        music_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+
+        # Add 12306 railway query tools
+        from src.mcp.tools.railway import get_railway_tools_manager
+
+        railway_manager = get_railway_tools_manager()
+        railway_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+
+        # Add search tools
+        from src.mcp.tools.search import get_search_manager
+
+        search_manager = get_search_manager()
+        search_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+
+        # Add recipe tools
+        from src.mcp.tools.recipe import get_recipe_manager
+
+        recipe_manager = get_recipe_manager()
+        recipe_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+
+        # Add camera tools
+        from src.mcp.tools.camera import take_photo
+
+        # Register the take_photo tool
+        properties = PropertyList([Property("question", PropertyType.STRING)])
+        self.add_tool(
+            McpTool(
+                "take_photo",
+                "Take a photo and analyze the image content. Can perform object recognition, text recognition, scene analysis, question answering, etc. Suitable for: what is this, take a photo to identify, read text, analyze the scene, answer questions, etc. Take photo and analyze image content including object recognition, text recognition, scene analysis, and question answering.",
+                properties,
+                take_photo,
             )
+        )
+
+        # Add Gaode Map tools
+        from src.mcp.tools.amap import get_amap_manager
+
+        amap_manager = get_amap_manager()
+        amap_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+
+        # Add Bazi numerology tools
+        from src.mcp.tools.bazi import get_bazi_manager
+
+        bazi_manager = get_bazi_manager()
+        bazi_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+
+        # Add web reader tools
+        from src.mcp.tools.web_reader.manager import get_web_reader_manager
+
+        web_reader_manager = get_web_reader_manager()
+        web_reader_manager.init_tools(
+            self.add_tool, PropertyList, Property, PropertyType
+        )
+
+        # Add Python interpreter tools
+        from src.mcp.tools.python_interpreter.manager import get_python_interpreter_manager
+
+        python_interpreter_manager = get_python_interpreter_manager()
+        python_interpreter_manager.init_tools(
+            self.add_tool, PropertyList, Property, PropertyType
+        )
 
         # Restore original tools
         self.tools.extend(original_tools)
@@ -404,11 +466,13 @@ class McpServer:
         logger.info(f"[MCP] Attempting to call tool: {tool_name}")
 
         # Find the tool
-        from src.mcp.tools.tool_manager import tool_manager
+        tool = None
+        for t in self.tools:
+            if t.name == tool_name:
+                tool = t
+                break
 
-        try:
-            tool = tool_manager.get_tool(tool_name)
-        except ValueError:
+        if not tool:
             await self._reply_error(id, f"Unknown tool: {tool_name}")
             return
 
@@ -419,9 +483,9 @@ class McpServer:
 
         # Call the tool asynchronously
         try:
-            result = await tool.run(**arguments)
+            result = await tool.call(arguments)
             logger.info(f"[MCP] Tool {tool_name} executed successfully, result: {result}")
-            await self._reply_result(id, result)
+            await self._reply_result(id, json.loads(result))
         except Exception as e:
             logger.error(f"[MCP] Tool {tool_name} execution failed: {e}", exc_info=True)
             await self._reply_error(id, str(e))
