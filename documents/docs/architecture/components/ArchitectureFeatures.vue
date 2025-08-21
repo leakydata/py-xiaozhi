@@ -1,41 +1,41 @@
 <script setup lang="ts">
 import {
-  PuzzlePieceIcon,
-  CubeIcon,
   ArrowsRightLeftIcon,
   BoltIcon,
+  CubeIcon,
+  PuzzlePieceIcon,
   ShareIcon
 } from '@heroicons/vue/24/solid';
-// 架构特点
+// Architecture Features
 const architectureFeatures = [
   {
-    title: '单例模式',
-    description: '应用核心采用线程安全的单例模式，保证全局唯一实例',
+    title: 'Singleton Pattern',
+    description: 'The application core uses a thread-safe singleton pattern to ensure a single global instance',
     icon: CubeIcon
   },
   {
-    title: '异步架构',
-    description: '全面采用asyncio异步编程，支持高并发和高性能',
+    title: 'Asynchronous Architecture',
+    description: 'Fully adopts asyncio for asynchronous programming, supporting high concurrency and high performance',
     icon: BoltIcon
   },
   {
-    title: '资源管理',
-    description: '中央化资源管理器，依赖跟踪和优雅清理',
+    title: 'Resource Management',
+    description: 'Centralized resource manager for dependency tracking and graceful cleanup',
     icon: ShareIcon
   },
   {
-    title: '状态机模式',
-    description: '设备状态管理采用状态机模式，清晰的状态转换逻辑',
+    title: 'State Machine Pattern',
+    description: 'Device state management uses a state machine pattern for clear state transition logic',
     icon: ArrowsRightLeftIcon
   },
   {
-    title: '插件化设计',
-    description: 'MCP工具和IoT设备采用插件化设计，支持动态扩展',
+    title: 'Plugin-based Design',
+    description: 'MCP tools and IoT devices use a plugin-based design, supporting dynamic extension',
     icon: PuzzlePieceIcon
   },
   {
-    title: '跨平台兼容',
-    description: '支持Windows、macOS、Linux多平台，优雅降级处理',
+    title: 'Cross-platform Compatibility',
+    description: 'Supports multiple platforms including Windows, macOS, and Linux with graceful degradation',
     icon: CubeIcon
   }
 ];
@@ -66,7 +66,7 @@ const featureColors = [
 </template>
 
 <style scoped>
-/* 架构特点卡片样式优化 */
+/* Architecture features card style optimization */
 .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 > div {
   transition: all 0.3s ease;
   height: 100%;
