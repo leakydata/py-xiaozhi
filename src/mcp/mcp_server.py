@@ -330,8 +330,18 @@ class McpServer:
             self.add_tool, PropertyList, Property, PropertyType
         )
 
+        # Add filesystem tools
+        from src.mcp.tools.filesystem.manager import get_filesystem_manager
+
+        filesystem_manager = get_filesystem_manager()
+        filesystem_manager.init_tools(
+            self.add_tool, PropertyList, Property, PropertyType
+        )
+
         # Add Python interpreter tools
-        from src.mcp.tools.python_interpreter.manager import get_python_interpreter_manager
+        from src.mcp.tools.python_interpreter.manager import (
+            get_python_interpreter_manager,
+        )
 
         python_interpreter_manager = get_python_interpreter_manager()
         python_interpreter_manager.init_tools(
