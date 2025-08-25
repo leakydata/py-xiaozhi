@@ -9,6 +9,13 @@ async def read_file(path: str) -> str:
     try:
         async with aiofiles.open(path, mode='r', encoding='utf-8') as f:
             return await f.read()
+    except UnicodeDecodeError:
+        try:
+            # If UTF-8 fails, try reading with latin-1 encoding as a fallback
+            async with aiofiles.open(path, mode='r', encoding='latin-1') as f:
+                return await f.read()
+        except Exception as e:
+            return f"Error reading file with fallback encoding: {e}"
     except FileNotFoundError:
         return f"Error: File not found at {path}"
     except Exception as e:
