@@ -17,7 +17,7 @@ from speechbrain.inference.speaker import EncoderClassifier
 # ---- Config via env or edit here ----
 PG_DSN = os.getenv(
     "POSTGRES_CONNECTION",
-    "postgresql://postgres:postgres@localhost:5432/postgres"
+    "postgresql://postgres:2!Vacarosa@localhost:5432/speech"
 )
 TABLE_NAME = os.getenv("VOICE_TABLE", "voice_embeddings")
 INDEX_TYPE = os.getenv("VOICE_INDEX", "ivfflat")  # or "hnsw"
