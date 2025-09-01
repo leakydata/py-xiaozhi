@@ -13,7 +13,7 @@ from psycopg.rows import dict_row
 from pgvector.psycopg import register_vector
 import torch
 from speechbrain.inference.speaker import EncoderClassifier
-
+# & C:/Users/schol/anaconda3/envs/xiaozhi/python.exe c:/Users/schol/Documents/github/py-xiaozhi/tests/speech_brain.py ingest --i C:\Users\schol\Downloads\n -l Nathan
 # ---- Config via env or edit here ----
 PG_DSN = os.getenv(
     "POSTGRES_CONNECTION",
