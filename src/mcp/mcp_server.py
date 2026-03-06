@@ -340,6 +340,15 @@ class McpServer:
         except Exception as e:
             logger.warning(f"Failed to load news tools: {e}")
 
+        # Add messages/receptionist tools
+        try:
+            from src.mcp.tools.messages import get_messages_manager
+
+            messages_manager = get_messages_manager()
+            messages_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+        except Exception as e:
+            logger.warning(f"Failed to load messages tools: {e}")
+
         # Add web reader tools
         from src.mcp.tools.web_reader.manager import get_web_reader_manager
 

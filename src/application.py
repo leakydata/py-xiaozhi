@@ -14,6 +14,8 @@ from src.utils.common_utils import handle_verification_code
 from src.utils.config_manager import ConfigManager
 from src.utils.conversation_history import ConversationHistory
 from src.utils.logging_config import get_logger
+from src.utils.message_board import MessageBoard
+from src.utils.presence_manager import PresenceManager
 from src.utils.opus_loader import setup_opus
 
 # Ignore SIGTRAP signal
@@ -109,6 +111,12 @@ class Application:
 
         # Conversation history for natural multi-turn dialogue
         self.conversation = ConversationHistory.get_instance()
+
+        # Presence/Away mode management
+        self.presence = PresenceManager.get_instance()
+        self.message_board = MessageBoard.get_instance()
+        self.presence.on_away(self._on_user_away)
+        self.presence.on_return(self._on_user_return)
 
         # MCP server
         self.mcp_server = McpServer.get_instance()
@@ -306,6 +314,9 @@ class Application:
         # Initialize shortcut manager
         await self._initialize_shortcuts()
 
+        # Start presence monitoring for away mode
+        self.presence.start_monitoring()
+
         logger.info("Application components initialization complete")
 
     async def _initialize_audio(self):
@@ -412,6 +423,7 @@ class Application:
                     self.abort_speaking, AbortReason.WAKE_WORD_DETECTED
                 ),
                 send_text_callback=self._send_text_tts,
+                away_callback=self._create_async_callback(self.toggle_away),
             )
         )
 
@@ -1004,6 +1016,29 @@ class Application:
         except Exception as e:
             logger.error(f"Failed to update IoT states: {e}")
 
+    def _on_user_away(self):
+        """Handle user going away - switch to receptionist mode."""
+        logger.info("Entering away/receptionist mode")
+        self.schedule(lambda: self._update_away_ui(True))
+
+    def _on_user_return(self):
+        """Handle user returning - show message summary."""
+        logger.info("Exiting away mode, user returned")
+        self.schedule(lambda: self._update_away_ui(False))
+        unread = self.message_board.unread_count
+        if unread > 0:
+            summary = self.message_board.get_summary_text()
+            self.schedule(lambda: self.set_chat_message("assistant", summary))
+
+    async def _update_away_ui(self, away: bool):
+        """Update UI for away/present state."""
+        if hasattr(self.display, 'update_away_status'):
+            await self.display.update_away_status(away)
+
+    async def toggle_away(self):
+        """Toggle away/receptionist mode."""
+        self.presence.toggle_away()
+
     def _on_mode_changed(self):
         """
         Handle chat mode changes.
@@ -1054,6 +1089,9 @@ class Application:
             self._shutdown_event.set()
 
         try:
+            # Stop presence monitoring
+            self.presence.stop_monitoring()
+
             # 2. Close the wake word detector
             await self._safe_close_resource(
                 self.wake_word_detector, "Wake Word Detector", "stop"

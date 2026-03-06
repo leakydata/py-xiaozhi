@@ -156,6 +156,10 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.auto_callback = None
         self.abort_callback = None
         self.send_text_callback = None
+        self.away_callback = None
+
+        # Away mode state
+        self._is_away = False
 
         # System tray component
         self.system_tray = None
@@ -168,6 +172,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         auto_callback: Optional[Callable] = None,
         abort_callback: Optional[Callable] = None,
         send_text_callback: Optional[Callable] = None,
+        away_callback: Optional[Callable] = None,
     ):
         """Set callback functions."""
         self.button_press_callback = press_callback
@@ -176,6 +181,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.auto_callback = auto_callback
         self.abort_callback = abort_callback
         self.send_text_callback = send_text_callback
+        self.away_callback = away_callback
 
     def _add_chat_bubble(self, text: str, role: str = "assistant"):
         """Add a chat bubble to the chat area."""
@@ -229,6 +235,24 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         """Handle abort button click event."""
         if self.abort_callback:
             self.abort_callback()
+
+    def _on_away_button_click(self):
+        """Toggle away/receptionist mode."""
+        if self.away_callback:
+            self.away_callback()
+
+    async def update_away_status(self, away: bool):
+        """Update the UI for away/present state."""
+        self._is_away = away
+        if self.away_btn:
+            self.away_btn.setChecked(away)
+            self.away_btn.setText("Away" if away else "Away")
+        if self.status_label and away:
+            self._safe_update_label(self.status_label, "Away - Receptionist Mode")
+        if away:
+            self._add_chat_bubble("Away mode activated. I'll greet visitors and take messages.", "status")
+        else:
+            self._add_chat_bubble("Welcome back! Checking for messages...", "status")
 
     def _on_mode_button_click(self):
         """Conversation mode switch button click event."""
@@ -458,6 +482,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.mode_btn = self.root.findChild(QPushButton, "mode_btn")
         self.text_input = self.root.findChild(QLineEdit, "text_input")
         self.send_btn = self.root.findChild(QPushButton, "send_btn")
+        self.away_btn = self.root.findChild(QPushButton, "away_btn")
 
         # Chat area
         self.chat_scroll_area = self.root.findChild(QScrollArea, "chat_scroll_area")
@@ -479,6 +504,8 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             self.manual_btn.hide()
         if self.mode_btn:
             self.mode_btn.clicked.connect(self._on_mode_button_click)
+        if self.away_btn:
+            self.away_btn.clicked.connect(self._on_away_button_click)
         if self.text_input and self.send_btn:
             self.send_btn.clicked.connect(self._on_send_button_click)
             self.text_input.returnPressed.connect(self._on_send_button_click)
