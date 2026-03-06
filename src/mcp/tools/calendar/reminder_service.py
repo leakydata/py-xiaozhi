@@ -1,5 +1,5 @@
 """
-日程提醒服务 定期检查数据库中的事件，当到达提醒时间时通过TTS播报提醒.
+Calendar reminder service. Periodically checks events in the database and announces reminders via TTS when the reminder time is reached.
 """
 
 import asyncio
@@ -16,45 +16,45 @@ logger = get_logger(__name__)
 
 class CalendarReminderService:
     """
-    日程提醒服务.
+    Calendar reminder service.
     """
 
     def __init__(self):
         self.db = get_calendar_database()
         self.is_running = False
         self._task: Optional[asyncio.Task] = None
-        self.check_interval = 30  # 检查间隔（秒）
+        self.check_interval = 30  # Check interval (seconds)
 
     def _get_application(self):
         """
-        延迟加载获取应用实例.
+        Lazy-load and get the application instance.
         """
         try:
             from src.application import Application
 
             return Application.get_instance()
         except Exception as e:
-            logger.warning(f"获取应用实例失败: {e}")
+            logger.warning(f"Failed to get application instance: {e}")
             return None
 
     async def start(self):
         """
-        启动提醒服务.
+        Start the reminder service.
         """
         if self.is_running:
-            logger.warning("提醒服务已在运行")
+            logger.warning("Reminder service is already running")
             return
 
         self.is_running = True
         self._task = asyncio.create_task(self._reminder_loop())
-        logger.info("日程提醒服务已启动")
+        logger.info("Calendar reminder service started")
 
-        # 程序启动时重置未来事件的提醒标志
+        # Reset reminder flags for future events on startup
         await self.reset_reminder_flags_for_future_events()
 
     async def stop(self):
         """
-        停止提醒服务.
+        Stop the reminder service.
         """
         if not self.is_running:
             return
@@ -68,35 +68,35 @@ class CalendarReminderService:
                 pass
             self._task = None
 
-        logger.info("日程提醒服务已停止")
+        logger.info("Calendar reminder service stopped")
 
     async def _reminder_loop(self):
         """
-        提醒检查循环.
+        Reminder check loop.
         """
-        logger.info("开始日程提醒检查循环")
+        logger.info("Starting calendar reminder check loop")
 
         while self.is_running:
             try:
                 await self._check_and_send_reminders()
-                # 定期清理过期事件的提醒标志
+                # Periodically clean up reminder flags for expired events
                 await self._cleanup_expired_reminders()
                 await asyncio.sleep(self.check_interval)
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.error(f"提醒检查循环出错: {e}", exc_info=True)
+                logger.error(f"Reminder check loop error: {e}", exc_info=True)
                 await asyncio.sleep(self.check_interval)
 
     async def _check_and_send_reminders(self):
         """
-        检查并发送提醒.
+        Check and send reminders.
         """
         try:
             now = datetime.now()
 
-            # 查询所有未发送提醒且提醒时间已到的事件
-            # 同时确保事件还没有过期（开始时间在当前时间之后或者在合理的过期时间内）
+            # Query all events where reminder has not been sent and reminder time has arrived
+            # Also ensure the event has not expired (start time is after now or within a reasonable expiry window)
             with self.db._get_connection() as conn:
                 cursor = conn.execute(
                     """
@@ -115,27 +115,27 @@ class CalendarReminderService:
             if not pending_reminders:
                 return
 
-            logger.info(f"发现 {len(pending_reminders)} 个待发送的提醒")
+            logger.info(f"Found {len(pending_reminders)} pending reminders to send")
 
-            # 处理每个提醒
+            # Process each reminder
             for reminder in pending_reminders:
                 await self._send_reminder(dict(reminder))
 
         except Exception as e:
-            logger.error(f"检查提醒失败: {e}", exc_info=True)
+            logger.error(f"Failed to check reminders: {e}", exc_info=True)
 
     async def _send_reminder(self, event_data: dict):
         """
-        发送单个提醒.
+        Send a single reminder.
         """
         try:
             event_id = event_data["id"]
             title = event_data["title"]
             start_time = event_data["start_time"]
             description = event_data.get("description", "")
-            category = event_data.get("category", "默认")
+            category = event_data.get("category", "default")
 
-            # 计算距离开始时间
+            # Calculate time until start
             start_dt = datetime.fromisoformat(start_time)
             now = datetime.now()
             time_until = start_dt - now
@@ -145,13 +145,13 @@ class CalendarReminderService:
                 minutes = int((time_until.total_seconds() % 3600) // 60)
 
                 if hours > 0:
-                    time_str = f"{hours}小时{minutes}分钟后"
+                    time_str = f"in {hours} hours {minutes} minutes"
                 else:
-                    time_str = f"{minutes}分钟后"
+                    time_str = f"in {minutes} minutes"
             else:
-                time_str = "现在"
+                time_str = "now"
 
-            # 构建提醒消息
+            # Build reminder message
             reminder_message = {
                 "type": "calendar_reminder",
                 "event": {
@@ -167,22 +167,22 @@ class CalendarReminderService:
                 ),
             }
 
-            # 序列化为JSON字符串
+            # Serialize to JSON string
             reminder_json = json.dumps(reminder_message, ensure_ascii=False)
 
-            # 获取应用实例并调用TTS方法
+            # Get application instance and call TTS method
             application = self._get_application()
             if application and hasattr(application, "_send_text_tts"):
                 await application._send_text_tts(reminder_json)
-                logger.info(f"已发送提醒: {title} ({time_str})")
+                logger.info(f"Reminder sent: {title} ({time_str})")
             else:
-                logger.warning("无法发送提醒：应用实例或TTS方法不可用")
+                logger.warning("Cannot send reminder: application instance or TTS method unavailable")
 
-            # 标记提醒已发送
+            # Mark reminder as sent
             await self._mark_reminder_sent(event_id)
 
         except Exception as e:
-            logger.error(f"发送提醒失败: {e}", exc_info=True)
+            logger.error(f"Failed to send reminder: {e}", exc_info=True)
 
     def _format_reminder_text(
         self, title: str, time_str: str, category: str, description: str

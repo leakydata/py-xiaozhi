@@ -376,9 +376,9 @@ class AudioCodec:
         self._encoded_audio_callback = callback
         
         if callback:
-            logger.info("✓ Enabled real-time recording encoding mode - recording callback directly encodes and passes")
+            logger.info("[OK] Enabled real-time recording encoding mode - recording callback directly encodes and passes")
         else:
-            logger.info("✓ Disabled recording encoding callback")
+            logger.info("[OK] Disabled recording encoding callback")
 
     async def write_audio(self, opus_data: bytes):
         """
