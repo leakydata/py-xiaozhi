@@ -595,19 +595,19 @@ def aec_demo(audio_file):
         # Close PyAudio
         p.terminate()
 
-        # 保存原始录音
+        # Save original recording
         original_output_path = os.path.join(current_dir, "original_recording.wav")
         save_wav(original_output_path, original_frames, SAMPLE_RATE, CHANNELS)
 
-        # 保存处理后的录音
+        # Save processed recording
         processed_output_path = os.path.join(current_dir, "processed_recording.wav")
         save_wav(processed_output_path, processed_frames, SAMPLE_RATE, CHANNELS)
 
-        # 保存参考音频（播放的音频）
+        # Save reference audio (the played audio)
         reference_output_path = os.path.join(current_dir, "reference_playback.wav")
         save_wav(reference_output_path, reference_frames, SAMPLE_RATE, CHANNELS)
 
-        # 删除临时文件
+        # Delete temporary file
         if os.path.exists(temp_wav_path):
             try:
                 os.remove(temp_wav_path)

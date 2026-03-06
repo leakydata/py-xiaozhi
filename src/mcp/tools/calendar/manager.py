@@ -262,11 +262,11 @@ class CalendarManager:
                 "3. What types of events can be created\n"
                 "4. Available options for event categorization\n"
                 "\nDefault Categories:\n"
-                "- 默认 (Default)\n"
-                "- 工作 (Work)\n"
-                "- 个人 (Personal)\n"
-                "- 会议 (Meeting)\n"
-                "- 提醒 (Reminder)",
+                "- Default (默认)\n"
+                "- Work (工作)\n"
+                "- Personal (个人)\n"
+                "- Meeting (会议)\n"
+                "- Reminder (提醒)",
                 PropertyList(),
                 get_categories,
             )
@@ -274,7 +274,7 @@ class CalendarManager:
 
     def _migrate_from_json_if_exists(self):
         """
-        从旧的JSON文件迁移数据（如果存在）
+        Migrate data from old JSON file (if it exists)
         """
         json_file = "cache/calendar_data.json"
         if os.path.exists(json_file):

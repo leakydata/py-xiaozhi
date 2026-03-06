@@ -750,37 +750,37 @@ class RailwayToolsManager:
         return f"🏢 {station.station_name}\nCode: {station.station_code}\nCity: {station.city}\nPinyin: {station.station_pinyin}"
 
     def _analyze_direct_tickets(self, tickets, preferences: str) -> List[Dict]:
-        """分析直达车票."""
+        """Analyze direct tickets."""
         suggestions = []
         
         if "最快" in preferences or "fastest" in preferences.lower():
-            # 找最快的车次
+            # Find the fastest train
             fastest = min(tickets, key=lambda t: t.duration)
             suggestions.append({
                 "type": "direct",
-                "title": "最快直达",
+                "title": "Fastest Direct",
                 "ticket": fastest,
-                "reason": f"最短旅行时间 {fastest.duration}"
+                "reason": f"Shortest travel time {fastest.duration}"
             })
         
         if "最便宜" in preferences or "cheapest" in preferences.lower():
-            # 找最便宜的车次
+            # Find the cheapest train
             cheapest = min(tickets, key=lambda t: min([p.price for p in t.prices if p.num != "无" and p.num != "--"]))
             suggestions.append({
                 "type": "direct",
-                "title": "最经济直达",
+                "title": "Most Economical Direct",
                 "ticket": cheapest,
-                "reason": "票价最低"
+                "reason": "Lowest ticket price"
             })
         
-        # 默认推荐高铁
+        # Default: recommend high-speed rail
         for ticket in tickets:
             if ticket.start_train_code.startswith('G'):
                 suggestions.append({
                     "type": "direct",
-                    "title": "高铁推荐",
+                    "title": "High-Speed Rail Recommended",
                     "ticket": ticket,
-                    "reason": "高铁舒适快捷"
+                    "reason": "High-speed rail is comfortable and fast"
                 })
                 break
         
