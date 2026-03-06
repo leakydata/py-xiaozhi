@@ -3,6 +3,7 @@ import json
 import signal
 import sys
 import threading
+import time
 from typing import Set
 
 from src.constants.constants import AbortReason, DeviceState, ListeningMode
@@ -90,6 +91,8 @@ class Application:
         self.voice_detected = False
         self.keep_listening = False
         self.aborted = False
+        self._pending_interruption_followup = False
+        self._last_interrupt_reason = AbortReason.NONE
 
         # Asynchronous components
         self.audio_codec = None
@@ -574,9 +577,29 @@ class Application:
         await self._set_device_state(DeviceState.CONNECTING)
 
         self.keep_listening = keep_listening_flag
-        await self.protocol.send_start_listening(listening_mode)
+        await self._send_start_listening(listening_mode)
         await self._set_device_state(DeviceState.LISTENING)
         return True
+
+    def _build_interruption_context(self):
+        """
+        Build start-listening context for interruption follow-up turns.
+        """
+        if not self._pending_interruption_followup:
+            return None
+        return {
+            "interruption_followup": True,
+            "interruption_reason": self._last_interrupt_reason,
+        }
+
+    async def _send_start_listening(self, mode):
+        """
+        Send start-listening with optional interruption context.
+        """
+        await self.protocol.send_start_listening(
+            mode,
+            context=self._build_interruption_context(),
+        )
 
     async def start_listening(self):
         """
@@ -607,6 +630,8 @@ class Application:
         Implementation for stopping listening.
         """
         if self.device_state == DeviceState.LISTENING:
+            self._pending_interruption_followup = False
+            self._last_interrupt_reason = AbortReason.NONE
             await self.protocol.send_stop_listening()
             await self._set_device_state(DeviceState.IDLE)
 
@@ -627,6 +652,8 @@ class Application:
             self.keep_listening = False
             await self.abort_speaking(AbortReason.USER_INTERRUPTION)
         elif self.device_state == DeviceState.LISTENING:
+            self._pending_interruption_followup = False
+            self._last_interrupt_reason = AbortReason.NONE
             await self.protocol.close_audio_channel()
             await self._set_device_state(DeviceState.IDLE)
 
@@ -644,7 +671,21 @@ class Application:
             await self.audio_codec.clear_audio_queue()
 
         try:
-            await self.protocol.send_abort_speaking(reason)
+            intentional_interruption = reason in [
+                AbortReason.USER_INTERRUPTION,
+                AbortReason.WAKE_WORD_DETECTED,
+            ]
+            self._pending_interruption_followup = intentional_interruption
+            self._last_interrupt_reason = reason
+
+            await self.protocol.send_abort_speaking(
+                reason,
+                metadata={
+                    "intentional": intentional_interruption,
+                    "timestamp_ms": int(time.time() * 1000),
+                    "assistant_last_text": self.conversation.get_last_assistant_message(),
+                },
+            )
             await self._set_device_state(DeviceState.IDLE)
             self.aborted = False
             if (
@@ -653,7 +694,7 @@ class Application:
                 and self.protocol.is_audio_channel_opened()
             ):
                 await asyncio.sleep(0.1)
-                await self.protocol.send_start_listening(ListeningMode.AUTO_STOP)
+                await self._send_start_listening(ListeningMode.AUTO_STOP)
                 await self._set_device_state(DeviceState.LISTENING)
 
         except Exception as e:
@@ -723,7 +764,17 @@ class Application:
         if not self.protocol.is_audio_channel_opened():
             await self.protocol.open_audio_channel()
 
-        await self.protocol.send_wake_word_detected(text)
+        payload = text
+        if self._pending_interruption_followup and text:
+            payload = (
+                "[User intentionally interrupted the assistant's prior response. "
+                "Treat this as a follow-up and continue naturally.] "
+                f"{text}"
+            )
+            self._pending_interruption_followup = False
+            self._last_interrupt_reason = AbortReason.NONE
+
+        await self.protocol.send_wake_word_detected(payload)
 
     def set_chat_message(self, role, message):
         """
@@ -753,6 +804,8 @@ class Application:
         Handle a network error.
         """
         self.keep_listening = False
+        self._pending_interruption_followup = False
+        self._last_interrupt_reason = AbortReason.NONE
         await self._set_device_state(DeviceState.IDLE)
 
         if self.protocol:
@@ -865,7 +918,7 @@ class Application:
             # or if the assistant ended with a question
             should_keep_listening = self.keep_listening or self.conversation.ended_with_question()
             if should_keep_listening and self.protocol.is_audio_channel_opened():
-                await self.protocol.send_start_listening(ListeningMode.AUTO_STOP)
+                await self._send_start_listening(ListeningMode.AUTO_STOP)
                 await self._set_device_state(DeviceState.LISTENING)
             else:
                 await self._set_device_state(DeviceState.IDLE)
@@ -876,6 +929,12 @@ class Application:
         """
         text = data.get("text", "")
         if text:
+            if self._pending_interruption_followup:
+                logger.info(
+                    f"Interruption follow-up acknowledged by STT (reason: {self._last_interrupt_reason})"
+                )
+                self._pending_interruption_followup = False
+                self._last_interrupt_reason = AbortReason.NONE
             logger.info(f">> {text}")
             self.set_chat_message("user", text)
 
@@ -911,6 +970,8 @@ class Application:
         logger.info("Audio channel has been closed")
         await self._set_device_state(DeviceState.IDLE)
         self.keep_listening = False
+        self._pending_interruption_followup = False
+        self._last_interrupt_reason = AbortReason.NONE
 
     async def _initialize_wake_word_detector(self):
         """
@@ -1002,7 +1063,7 @@ class Application:
 
             await self.protocol.send_wake_word_detected(wake_word or "wake")
             self.keep_listening = True
-            await self.protocol.send_start_listening(ListeningMode.AUTO_STOP)
+            await self._send_start_listening(ListeningMode.AUTO_STOP)
             await self._set_device_state(DeviceState.LISTENING)
 
         except Exception as e:

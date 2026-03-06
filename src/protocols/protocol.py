@@ -95,7 +95,7 @@ class Protocol:
         """
         raise NotImplementedError("The close_audio_channel method must be implemented by a subclass")
 
-    async def send_abort_speaking(self, reason):
+    async def send_abort_speaking(self, reason, metadata=None):
         """
         Send a message to abort speech.
         """
@@ -106,6 +106,8 @@ class Protocol:
             AbortReason.NONE: "none",
         }
         message["reason"] = reason_map.get(reason, "user_interruption")
+        if isinstance(metadata, dict) and metadata:
+            message["metadata"] = metadata
         await self.send_text(json.dumps(message))
 
     async def send_wake_word_detected(self, wake_word):
@@ -120,7 +122,7 @@ class Protocol:
         }
         await self.send_text(json.dumps(message))
 
-    async def send_start_listening(self, mode):
+    async def send_start_listening(self, mode, context=None):
         """
         Send a message to start listening.
         """
@@ -135,6 +137,8 @@ class Protocol:
             "state": "start",
             "mode": mode_map[mode],
         }
+        if isinstance(context, dict) and context:
+            message["context"] = context
         await self.send_text(json.dumps(message))
 
     async def send_stop_listening(self):
