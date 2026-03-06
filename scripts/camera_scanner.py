@@ -171,12 +171,12 @@ def detect_cameras():
                             break
 
                     if test_frames >= 5:
-                        print(f"  ✓ Camera functionality is normal (tested reading {test_frames} frames)")
+                        print(f"  [OK] Camera functionality is normal (tested reading {test_frames} frames)")
                     else:
-                        print(f"  ⚠ Camera functionality might be abnormal (only read {test_frames} frames)")
+                        print(f"  [WARN] Camera functionality might be abnormal (only read {test_frames} frames)")
 
                 except Exception as e:
-                    print(f"  ✗ Camera functionality test failed: {e}")
+                    print(f"  [FAIL] Camera functionality test failed: {e}")
 
                 # Ask whether to show a preview
                 print(f"Show preview for device {i}? (y/n, default n): ", end="")
@@ -289,15 +289,15 @@ def detect_cameras():
         changes = []
         if current_index != recommended_camera["index"]:
             changes.append(
-                f"Camera Index: {current_index} → {recommended_camera['index']}"
+                f"Camera Index: {current_index} -> {recommended_camera['index']}"
             )
         if current_width != r_width or current_height != r_height:
             changes.append(
-                f"Resolution: {current_width}x{current_height} → {r_width}x{r_height}"
+                f"Resolution: {current_width}x{current_height} -> {r_width}x{r_height}"
             )
         if current_fps != recommended_camera["capabilities"]["fps"]:
             changes.append(
-                f"FPS: {current_fps} → {recommended_camera['capabilities']['fps']}"
+                f"FPS: {current_fps} -> {recommended_camera['capabilities']['fps']}"
             )
 
         if changes:
@@ -318,16 +318,16 @@ def detect_cameras():
                     success = config_manager.update_config("CAMERA", new_camera_config)
 
                     if success:
-                        print("\n✓ Camera configuration successfully updated in config.json!")
+                        print("\n[OK] Camera configuration successfully updated in config.json!")
                         print("\n===== Latest Configuration =====\n")
                         updated_config = config_manager.get_config("CAMERA", {})
                         print(json.dumps(updated_config, indent=2, ensure_ascii=False))
                     else:
-                        print("\n✗ Failed to update camera configuration!")
+                        print("\n[FAIL] Failed to update camera configuration!")
 
                 except Exception as e:
                     logger.error(f"Error while updating configuration: {e}")
-                    print(f"\n✗ Error while updating configuration: {e}")
+                    print(f"\n[FAIL] Error while updating configuration: {e}")
             else:
                 print("\nConfiguration not updated")
     else:
