@@ -493,10 +493,10 @@ def aec_demo(audio_file):
     # Create stream configuration
     stream_config = apm_lib.WebRTC_APM_CreateStreamConfig(SAMPLE_RATE, CHANNELS)
 
-    # 设置较小的延迟时间以更准确匹配参考信号和麦克风信号
+    # Set a small delay to more accurately match the reference signal and microphone signal
     apm_lib.WebRTC_APM_SetStreamDelayMs(apm, 50)
 
-    # 创建录音缓冲区
+    # Create recording buffers
     original_frames = []
     processed_frames = []
     reference_frames = []

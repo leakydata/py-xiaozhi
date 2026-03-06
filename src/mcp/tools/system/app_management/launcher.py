@@ -119,13 +119,13 @@ async def _launch_matched_app(matched_app: Dict[str, Any], original_name: str) -
 
 
 async def _launch_by_name(app_name: str) -> bool:
-    """根据名称启动应用程序.
+    """Launch an application by name.
 
     Args:
-        app_name: 应用程序名称或路径
+        app_name: Application name or path
 
     Returns:
-        bool: 启动是否成功
+        bool: Whether the launch was successful
     """
     try:
         system = platform.system()
@@ -143,19 +143,19 @@ async def _launch_by_name(app_name: str) -> bool:
 
             return await asyncio.to_thread(launch_application, app_name)
         else:
-            logger.error(f"[AppLauncher] 不支持的操作系统: {system}")
+            logger.error(f"[AppLauncher] Unsupported operating system: {system}")
             return False
 
     except Exception as e:
-        logger.error(f"[AppLauncher] 启动应用程序失败: {e}")
+        logger.error(f"[AppLauncher] Failed to launch application: {e}")
         return False
 
 
 def get_system_launcher():
-    """根据当前系统获取对应的启动器模块.
+    """Get the launcher module for the current system.
 
     Returns:
-        对应系统的启动器模块
+        The launcher module for the corresponding system
     """
     system = platform.system()
 
@@ -172,5 +172,5 @@ def get_system_launcher():
 
         return launcher
     else:
-        logger.warning(f"[AppLauncher] 不支持的系统: {system}")
+        logger.warning(f"[AppLauncher] Unsupported system: {system}")
         return None

@@ -180,7 +180,7 @@ class RailwayToolsManager:
             )
         )
 
-        # 查询城市中的车站
+        # Query stations in a city
         city_stations_props = PropertyList([Property("city", PropertyType.STRING)])
         add_tool(
             (
@@ -192,7 +192,7 @@ class RailwayToolsManager:
             )
         )
 
-        # 获取城市主要车站编码
+        # Get main station codes for cities
         city_code_props = PropertyList([Property("cities", PropertyType.STRING)])
         add_tool(
             (
@@ -205,7 +205,7 @@ class RailwayToolsManager:
             )
         )
 
-        # 根据车站名获取编码
+        # Get codes by station name
         station_name_props = PropertyList([Property("station_names", PropertyType.STRING)])
         add_tool(
             (
@@ -217,7 +217,7 @@ class RailwayToolsManager:
             )
         )
 
-        # 根据编码获取车站信息
+        # Get station info by code
         station_code_props = PropertyList([Property("station_code", PropertyType.STRING)])
         add_tool(
             (
