@@ -620,61 +620,61 @@ class RailwayToolsManager:
             result_lines.append(f"   🕐 {ticket.start_time} → {ticket.arrive_time} ({ticket.duration})")
             result_lines.append(f"   🚉 {ticket.from_station} → {ticket.to_station}")
             
-            # 座位信息
+            # Seat information
             if ticket.prices:
-                result_lines.append("   💺 座位信息:")
+                result_lines.append("   💺 Seat Info:")
                 for price in ticket.prices[:4]:  # 只显示前4种座位
                     status = self._format_ticket_status(price.num)
                     result_lines.append(f"     • {price.seat_name}: {status} ¥{price.price}")
-            
-            # 特性
+
+            # Features
             if ticket.features:
-                result_lines.append(f"   ✨ 特性: {', '.join(ticket.features)}")
+                result_lines.append(f"   ✨ Features: {', '.join(ticket.features)}")
             
             result_lines.append("")
 
         return "\n".join(result_lines)
 
     def _format_smart_transfers(self, transfers, departure_city: str, arrival_city: str, travel_date: str) -> str:
-        """格式化智能中转结果."""
+        """Format smart transfer results."""
         if not transfers:
-            return "没有找到符合条件的中转方案"
+            return "No transfer options matching the criteria were found"
 
         result_lines = []
-        result_lines.append(f"🔄 {travel_date} {departure_city} → {arrival_city} 中转方案查询结果\n")
+        result_lines.append(f"🔄 {travel_date} {departure_city} → {arrival_city} Transfer Options Query Results\n")
         
         for i, transfer in enumerate(transfers[:5], 1):
-            result_lines.append(f"📍 方案 {i}:")
-            result_lines.append(f"   🕐 {transfer.start_time} → {transfer.arrive_time} (总时长: {transfer.duration})")
+            result_lines.append(f"📍 Option {i}:")
+            result_lines.append(f"   🕐 {transfer.start_time} → {transfer.arrive_time} (Total duration: {transfer.duration})")
             result_lines.append(f"   🚉 {transfer.from_station_name} → {transfer.middle_station_name} → {transfer.end_station_name}")
-            result_lines.append(f"   ⏰ 换乘等待: {transfer.wait_time}")
-            result_lines.append(f"   🔄 换乘方式: {'同站换乘' if transfer.same_station else '跨站换乘'}")
-            
-            # 车次信息
-            result_lines.append("   🚄 车次信息:")
+            result_lines.append(f"   ⏰ Transfer wait: {transfer.wait_time}")
+            result_lines.append(f"   🔄 Transfer type: {'Same station' if transfer.same_station else 'Cross station'}")
+
+            # Train information
+            result_lines.append("   🚄 Train info:")
             for j, ticket in enumerate(transfer.ticket_list, 1):
-                result_lines.append(f"     第{j}程: {ticket.start_train_code} ({ticket.start_time}-{ticket.arrive_time})")
+                result_lines.append(f"     Leg {j}: {ticket.start_train_code} ({ticket.start_time}-{ticket.arrive_time})")
             
             result_lines.append("")
 
         return "\n".join(result_lines)
 
     def _format_ticket_status(self, num: str) -> str:
-        """格式化票量状态."""
+        """Format ticket availability status."""
         if num.isdigit():
             count = int(num)
-            return f"余{count}张" if count > 0 else "无票"
-        
+            return f"{count} remaining" if count > 0 else "Sold out"
+
         status_map = {
-            "有": "有票",
-            "充足": "充足",
-            "无": "无票",
-            "--": "无票",
-            "": "无票",
-            "候补": "候补"
+            "有": "Available",
+            "充足": "Sufficient",
+            "无": "Sold out",
+            "--": "Sold out",
+            "": "Sold out",
+            "候补": "Waitlist"
         }
-        
-        return status_map.get(num, "未知")
+
+        return status_map.get(num, "Unknown")
 
     def _extract_city_from_query(self, query: str) -> str:
         """从查询中提取城市名."""

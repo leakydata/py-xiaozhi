@@ -77,7 +77,7 @@ class CalendarManager:
             )
         )
 
-        # 查询日程
+        # Query events
         query_events_props = PropertyList(
             [
                 Property("date_type", PropertyType.STRING, default_value="today"),
@@ -114,7 +114,7 @@ class CalendarManager:
             )
         )
 
-        # 获取即将到来的日程
+        # Get upcoming events
         upcoming_events_props = PropertyList(
             [Property("hours", PropertyType.INTEGER, default_value=24)]
         )
@@ -131,7 +131,7 @@ class CalendarManager:
                 "4. Show me events in the next few hours\n"
                 "5. What should I prepare for\n"
                 "\nFeatures:\n"
-                "- Shows time remaining until each event ('2小时30分钟后')\n"
+                "- Shows time remaining until each event ('2 hours 30 minutes from now')\n"
                 "- Sorts events by start time\n"
                 "- Configurable time range (default 24 hours)\n"
                 "- Excludes past events\n"
@@ -142,7 +142,7 @@ class CalendarManager:
             )
         )
 
-        # 更新日程
+        # Update event
         update_event_props = PropertyList(
             [
                 Property("event_id", PropertyType.STRING),

@@ -568,16 +568,16 @@ def aec_demo(audio_file):
             if result != 0:
                 print(f"\rWarning: Processing failed, error code: {result}")
 
-            # 保存处理后的音频帧
+            # Save processed audio frame
             processed_frames.append(output_array.tobytes())
 
-            # 计算并显示进度
+            # Calculate and display progress
             progress = (time.time() - start_time) / recording_time * 100
-            sys.stdout.write(f"\r处理进度: {progress:.1f}%")
+            sys.stdout.write(f"\rProcessing progress: {progress:.1f}%")
             sys.stdout.flush()
 
     except KeyboardInterrupt:
-        print("\n录制被用户中断")
+        print("\nRecording interrupted by user")
     finally:
         print("\n录制和处理完成")
 
