@@ -322,6 +322,24 @@ class McpServer:
         bazi_manager = get_bazi_manager()
         bazi_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
 
+        # Add weather tools (US-focused, Open-Meteo API, no key needed)
+        try:
+            from src.mcp.tools.weather import get_weather_manager
+
+            weather_manager = get_weather_manager()
+            weather_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+        except Exception as e:
+            logger.warning(f"Failed to load weather tools: {e}")
+
+        # Add news tools (US headlines via RSS feeds)
+        try:
+            from src.mcp.tools.news import get_news_manager
+
+            news_manager = get_news_manager()
+            news_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
+        except Exception as e:
+            logger.warning(f"Failed to load news tools: {e}")
+
         # Add web reader tools
         from src.mcp.tools.web_reader.manager import get_web_reader_manager
 
