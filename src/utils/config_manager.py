@@ -53,6 +53,12 @@ class ConfigManager:
                 "description": "Show/hide window",
             },
         },
+        "INTERRUPTION": {
+            "ENABLE_VAD_BARGE_IN": False,
+            "AUTO_START_ON_SPEECH": False,
+            "AUTO_START_SPEECH_FRAMES": 8,
+            "AUTO_START_COOLDOWN_SEC": 2.0,
+        },
     }
 
     def __new__(cls):

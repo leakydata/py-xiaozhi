@@ -100,8 +100,12 @@ class Protocol:
         Send a message to abort speech.
         """
         message = {"session_id": self.session_id, "type": "abort"}
-        if reason == AbortReason.WAKE_WORD_DETECTED:
-            message["reason"] = "wake_word_detected"
+        reason_map = {
+            AbortReason.WAKE_WORD_DETECTED: "wake_word_detected",
+            AbortReason.USER_INTERRUPTION: "user_interruption",
+            AbortReason.NONE: "none",
+        }
+        message["reason"] = reason_map.get(reason, "user_interruption")
         await self.send_text(json.dumps(message))
 
     async def send_wake_word_detected(self, wake_word):

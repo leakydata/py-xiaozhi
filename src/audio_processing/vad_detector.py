@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import threading
 import time
@@ -7,7 +8,8 @@ import numpy as np
 import pyaudio
 import webrtcvad
 
-from src.constants.constants import AbortReason, DeviceState
+from src.constants.constants import AbortReason, DeviceState, ListeningMode
+from src.utils.config_manager import ConfigManager
 
 logger = logging.getLogger("VADDetector")
 
@@ -15,7 +17,9 @@ logger = logging.getLogger("VADDetector")
 class VADDetector:
     """
     Voice Activity Detector based on WebRTC VAD with adaptive energy thresholding.
-    Detects when the user is speaking while the assistant is talking (barge-in).
+    Detects speech for:
+    1) Barge-in while assistant is speaking
+    2) Auto-start listening from standby when user starts talking
     """
 
     def __init__(self, audio_codec, protocol, app_instance, loop):
@@ -23,6 +27,7 @@ class VADDetector:
         self.protocol = protocol
         self.app = app_instance
         self.loop = loop
+        config = ConfigManager.get_instance()
 
         # VAD settings
         self.vad = webrtcvad.Vad()
@@ -41,7 +46,16 @@ class VADDetector:
 
         # Detection parameters
         self.speech_window = 4  # Consecutive speech frames to trigger interruption
+        self.auto_start_window = int(
+            config.get_config("INTERRUPTION.AUTO_START_SPEECH_FRAMES", 8)
+        )
         self.silence_reset_window = 8  # Consecutive silence frames to reset speech count
+        self.auto_start_cooldown_sec = float(
+            config.get_config("INTERRUPTION.AUTO_START_COOLDOWN_SEC", 2.0)
+        )
+        self._last_auto_start_time = 0.0
+        self.enable_barge_in = config.get_config("INTERRUPTION.ENABLE_VAD_BARGE_IN", False)
+        self.auto_start_on_speech = config.get_config("INTERRUPTION.AUTO_START_ON_SPEECH", False)
 
         # State variables
         self.running = False
@@ -59,15 +73,22 @@ class VADDetector:
         """Starts the VAD detector."""
         if self.thread and self.thread.is_alive():
             logger.warning("VAD detector is already running")
-            return
+            return False
 
         self.running = True
         self.paused = False
-        self._initialize_audio_stream()
+        if not self._initialize_audio_stream():
+            self.running = False
+            logger.warning("VAD detector could not start because audio stream initialization failed")
+            return False
 
         self.thread = threading.Thread(target=self._detection_loop, daemon=True)
         self.thread.start()
-        logger.info("VAD detector started with adaptive thresholding")
+        logger.info(
+            f"VAD detector started "
+            f"(barge_in={self.enable_barge_in}, auto_start={self.auto_start_on_speech})"
+        )
+        return True
 
     def stop(self):
         """Stops the VAD detector."""
@@ -163,19 +184,10 @@ class VADDetector:
                 continue
 
             try:
-                if self.app.device_state == DeviceState.SPEAKING:
-                    frame = self._read_audio_frame()
-                    if not frame:
-                        time.sleep(0.01)
-                        continue
-
-                    is_speech, energy = self._detect_speech(frame)
-                    self._update_adaptive_threshold(energy, is_speech)
-
-                    if is_speech:
-                        self._handle_speech_frame()
-                    else:
-                        self._handle_silence_frame()
+                if self.app.device_state == DeviceState.SPEAKING and self.enable_barge_in:
+                    self._process_frame("interrupt")
+                elif self.app.device_state == DeviceState.IDLE and self.auto_start_on_speech:
+                    self._process_frame("auto_start")
                 else:
                     self._reset_state()
 
@@ -183,6 +195,21 @@ class VADDetector:
                 logger.error(f"Error in VAD detection loop: {e}")
 
             time.sleep(0.01)
+
+    def _process_frame(self, trigger_type: str):
+        """Read/process one frame for a specific trigger type."""
+        frame = self._read_audio_frame()
+        if not frame:
+            time.sleep(0.01)
+            return
+
+        is_speech, energy = self._detect_speech(frame)
+        self._update_adaptive_threshold(energy, is_speech)
+
+        if is_speech:
+            self._handle_speech_frame(trigger_type)
+        else:
+            self._handle_silence_frame()
 
     def _read_audio_frame(self):
         """Reads one frame of audio data."""
@@ -217,19 +244,25 @@ class VADDetector:
             logger.error(f"Failed to detect speech: {e}")
             return False, 0.0
 
-    def _handle_speech_frame(self):
-        """Handles a speech frame."""
+    def _handle_speech_frame(self, trigger_type: str):
+        """Handles a speech frame for a trigger type."""
         self.speech_count += 1
         self.silence_count = 0
 
-        if self.speech_count >= self.speech_window and not self.triggered:
+        required_frames = (
+            self.speech_window if trigger_type == "interrupt" else self.auto_start_window
+        )
+        if self.speech_count >= required_frames and not self.triggered:
             self.triggered = True
-            logger.info(
-                f"Barge-in detected! (consecutive frames: {self.speech_count}, "
-                f"threshold: {self._energy_threshold:.0f})"
-            )
-            self._trigger_interrupt()
-            self.paused = True
+            if trigger_type == "interrupt":
+                logger.info(
+                    f"Barge-in detected! (consecutive frames: {self.speech_count}, "
+                    f"threshold: {self._energy_threshold:.0f})"
+                )
+                self._trigger_interrupt()
+            else:
+                if self._trigger_auto_start():
+                    self._last_auto_start_time = time.time()
             self._reset_state()
 
     def _handle_silence_frame(self):
@@ -246,6 +279,44 @@ class VADDetector:
 
     def _trigger_interrupt(self):
         """Triggers an interruption."""
-        self.app.schedule(
-            lambda: self.app.abort_speaking(AbortReason.WAKE_WORD_DETECTED)
+        if not self.loop or self.loop.is_closed():
+            logger.warning("Cannot trigger interruption: event loop is unavailable")
+            return
+
+        future = asyncio.run_coroutine_threadsafe(
+            self.app.schedule_command(
+                lambda: self.app.abort_speaking(AbortReason.USER_INTERRUPTION)
+            ),
+            self.loop,
         )
+        try:
+            future.result(timeout=1.0)
+        except Exception as e:
+            logger.error(f"Failed to schedule interruption from VAD thread: {e}")
+
+    def _trigger_auto_start(self) -> bool:
+        """Triggers auto-start listening from idle speech."""
+        if not self.loop or self.loop.is_closed():
+            logger.warning("Cannot trigger auto-start: event loop is unavailable")
+            return False
+
+        if self.app.device_state != DeviceState.IDLE:
+            return False
+
+        now = time.time()
+        if now - self._last_auto_start_time < self.auto_start_cooldown_sec:
+            return False
+
+        future = asyncio.run_coroutine_threadsafe(
+            self.app.schedule_command(
+                lambda: self.app._start_listening_common(ListeningMode.AUTO_STOP, True)
+            ),
+            self.loop,
+        )
+        try:
+            future.result(timeout=1.0)
+            logger.info("Idle speech detected, auto-starting listening")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to schedule auto-start from VAD thread: {e}")
+            return False

@@ -462,7 +462,7 @@ class ShortcutManager:
             logger.debug("Shortcut: Interrupt chat")
             try:
                 self._run_coroutine_threadsafe(
-                    self.application.abort_speaking(AbortReason.NONE)
+                    self.application.abort_speaking(AbortReason.USER_INTERRUPTION)
                 )
             except Exception as e:
                 logger.error(f"Error executing interrupt operation: {e}", exc_info=True)

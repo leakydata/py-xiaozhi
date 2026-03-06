@@ -96,6 +96,7 @@ class Application:
         self.protocol = None
         self.display = None
         self.wake_word_detector = None
+        self.vad_detector = None
         # Task management
         self.running = False
         self._main_tasks: Set[asyncio.Task] = set()
@@ -305,6 +306,9 @@ class Application:
         # Set protocol callbacks
         self._setup_protocol_callbacks()
 
+        # Initialize voice interruption detector (optional)
+        await self._initialize_vad_detector()
+
         # Start calendar reminder service
         await self._start_calendar_reminder_service()
 
@@ -420,7 +424,7 @@ class Application:
                 mode_callback=self._on_mode_changed,
                 auto_callback=self._create_async_callback(self.toggle_chat_state),
                 abort_callback=self._create_async_callback(
-                    self.abort_speaking, AbortReason.WAKE_WORD_DETECTED
+                    self.abort_speaking, AbortReason.USER_INTERRUPTION
                 ),
                 send_text_callback=self._send_text_tts,
                 away_callback=self._create_async_callback(self.toggle_away),
@@ -435,7 +439,7 @@ class Application:
             self.display.set_callbacks(
                 auto_callback=self._create_async_callback(self.toggle_chat_state),
                 abort_callback=self._create_async_callback(
-                    self.abort_speaking, AbortReason.WAKE_WORD_DETECTED
+                    self.abort_speaking, AbortReason.USER_INTERRUPTION
                 ),
                 send_text_callback=self._send_text_tts,
             )
@@ -588,7 +592,9 @@ class Application:
 
         if not success and self.device_state == DeviceState.SPEAKING:
             if not self.aborted:
-                await self.abort_speaking(AbortReason.WAKE_WORD_DETECTED)
+                self.keep_listening = False
+                await self.abort_speaking(AbortReason.USER_INTERRUPTION)
+                await self._start_listening_common(ListeningMode.MANUAL, False)
 
     async def stop_listening(self):
         """
@@ -618,7 +624,8 @@ class Application:
             await self._start_listening_common(ListeningMode.AUTO_STOP, True)
 
         elif self.device_state == DeviceState.SPEAKING:
-            await self.abort_speaking(AbortReason.NONE)
+            self.keep_listening = False
+            await self.abort_speaking(AbortReason.USER_INTERRUPTION)
         elif self.device_state == DeviceState.LISTENING:
             await self.protocol.close_audio_channel()
             await self._set_device_state(DeviceState.IDLE)
@@ -641,12 +648,13 @@ class Application:
             await self._set_device_state(DeviceState.IDLE)
             self.aborted = False
             if (
-                reason == AbortReason.WAKE_WORD_DETECTED
+                reason in [AbortReason.WAKE_WORD_DETECTED, AbortReason.USER_INTERRUPTION]
                 and self.keep_listening
                 and self.protocol.is_audio_channel_opened()
             ):
                 await asyncio.sleep(0.1)
-                await self.toggle_chat_state()
+                await self.protocol.send_start_listening(ListeningMode.AUTO_STOP)
+                await self._set_device_state(DeviceState.LISTENING)
 
         except Exception as e:
             logger.error(f"Error while aborting speech: {e}")
@@ -832,6 +840,8 @@ class Application:
 
         async with self._abort_lock:
             self.aborted = False
+            if self.vad_detector and not self.vad_detector.is_running():
+                await asyncio.to_thread(self.vad_detector.resume)
 
         if self.device_state in [DeviceState.IDLE, DeviceState.LISTENING]:
             await self._set_device_state(DeviceState.SPEAKING)
@@ -915,9 +925,12 @@ class Application:
             self.wake_word_detector.on_detected(self._on_wake_word_detected)
             self.wake_word_detector.on_error = self._handle_wake_word_error
 
-            await self.wake_word_detector.start(self.audio_codec)
-
-            logger.info("Wake word detector initialized successfully")
+            started = await self.wake_word_detector.start(self.audio_codec)
+            if started:
+                logger.info("Wake word detector initialized successfully")
+            else:
+                logger.warning("Wake word detector is unavailable (disabled or model missing)")
+                self.wake_word_detector = None
 
         except RuntimeError as e:
             logger.info(f"Skipping wake word detector initialization: {e}")
@@ -925,6 +938,45 @@ class Application:
         except Exception as e:
             logger.error(f"Failed to initialize wake word detector: {e}")
             self.wake_word_detector = None
+
+    async def _initialize_vad_detector(self):
+        """
+        Initialize the VAD detector for voice barge-in interruption.
+        """
+        use_vad_barge_in = self.config.get_config(
+            "INTERRUPTION.ENABLE_VAD_BARGE_IN", False
+        )
+        auto_start_on_speech = self.config.get_config(
+            "INTERRUPTION.AUTO_START_ON_SPEECH", False
+        )
+        if not use_vad_barge_in and not auto_start_on_speech:
+            logger.info("VAD detector features are disabled in config")
+            self.vad_detector = None
+            return
+
+        if not self.audio_codec:
+            logger.warning("Skipping VAD detector initialization because audio codec is unavailable")
+            self.vad_detector = None
+            return
+
+        try:
+            from src.audio_processing.vad_detector import VADDetector
+
+            self.vad_detector = VADDetector(
+                audio_codec=self.audio_codec,
+                protocol=self.protocol,
+                app_instance=self,
+                loop=self._main_loop,
+            )
+            started = await asyncio.to_thread(self.vad_detector.start)
+            if started:
+                logger.info("VAD detector initialized successfully")
+            else:
+                logger.warning("VAD detector is unavailable")
+                self.vad_detector = None
+        except Exception as e:
+            logger.error(f"Failed to initialize VAD detector: {e}", exc_info=True)
+            self.vad_detector = None
 
     async def _on_wake_word_detected(self, wake_word, full_text):
         """
@@ -943,17 +995,12 @@ class Application:
         Connect to the server and start listening.
         """
         try:
-            if not await self.protocol.connect():
-                logger.error("Failed to connect to the server")
-                await self._set_device_state(DeviceState.IDLE)
-                return
-
             if not await self.protocol.open_audio_channel():
                 logger.error("Failed to open audio channel")
                 await self._set_device_state(DeviceState.IDLE)
                 return
 
-            await self.protocol.send_wake_word_detected("wake")
+            await self.protocol.send_wake_word_detected(wake_word or "wake")
             self.keep_listening = True
             await self.protocol.send_start_listening(ListeningMode.AUTO_STOP)
             await self._set_device_state(DeviceState.LISTENING)
@@ -1097,7 +1144,12 @@ class Application:
                 self.wake_word_detector, "Wake Word Detector", "stop"
             )
 
-            # 3. Cancel all long-running tasks
+            # 3. Close the VAD detector
+            await self._safe_close_resource(
+                self.vad_detector, "VAD Detector", "stop"
+            )
+
+            # 4. Cancel all long-running tasks
             if self._main_tasks:
                 logger.info(f"Cancelling {len(self._main_tasks)} main tasks")
                 tasks = list(self._main_tasks)
@@ -1115,7 +1167,7 @@ class Application:
 
                 self._main_tasks.clear()
 
-            # 4. Close the protocol connection
+            # 5. Close the protocol connection
             if self.protocol:
                 try:
                     await self.protocol.close_audio_channel()
@@ -1123,13 +1175,13 @@ class Application:
                 except Exception as e:
                     logger.error(f"Failed to close protocol connection: {e}")
 
-            # 5. Close the audio device
+            # 6. Close the audio device
             await self._safe_close_resource(self.audio_codec, "Audio Device")
 
-            # 6. Close the MCP server
+            # 7. Close the MCP server
             await self._safe_close_resource(self.mcp_server, "MCP Server")
 
-            # 7. Clear the queues
+            # 8. Clear the queues
             try:
                 for q in [
                     self.command_queue,
@@ -1143,7 +1195,7 @@ class Application:
             except Exception as e:
                 logger.error(f"Failed to clear queues: {e}")
 
-            # 8. Finally, stop the UI display
+            # 9. Finally, stop the UI display
             await self._safe_close_resource(self.display, "Display Interface")
 
             logger.info("Application shutdown complete")
