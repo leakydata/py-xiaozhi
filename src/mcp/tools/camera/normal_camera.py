@@ -71,7 +71,10 @@ class NormalCamera(BaseCamera):
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
 
-            # Read the image
+            # Read a few frames to let the camera auto-expose
+            for _ in range(3):
+                cap.read()
+
             ret, frame = cap.read()
             cap.release()
 
@@ -79,23 +82,19 @@ class NormalCamera(BaseCamera):
                 logger.error("Failed to capture image")
                 return False
 
-            # Get original image dimensions
+            # Scale image (max 1024px for better quality)
             height, width = frame.shape[:2]
-
-            # Calculate scaling factor to make the longest side 320
             max_dim = max(height, width)
-            scale = 320 / max_dim if max_dim > 320 else 1.0
-
-            # Scale the image proportionally
-            if scale < 1.0:
+            if max_dim > 1024:
+                scale = 1024 / max_dim
                 new_width = int(width * scale)
                 new_height = int(height * scale)
                 frame = cv2.resize(
                     frame, (new_width, new_height), interpolation=cv2.INTER_AREA
                 )
 
-            # Directly encode the image into a JPEG byte stream
-            success, jpeg_data = cv2.imencode(".jpg", frame)
+            # Encode the image into a JPEG byte stream
+            success, jpeg_data = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
 
             if not success:
                 logger.error("Failed to encode image to JPEG")

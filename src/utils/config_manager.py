@@ -37,9 +37,9 @@ class ConfigManager:
             "frame_width": 640,
             "frame_height": 480,
             "fps": 30,
-            "Local_VL_url": "https://open.bigmodel.cn/api/paas/v4/",
+            "Local_VL_url": "",
             "VLapi_key": "",
-            "models": "glm-4v-plus",
+            "models": "gpt-4o",
         },
         "SHORTCUTS": {
             "ENABLED": True,
