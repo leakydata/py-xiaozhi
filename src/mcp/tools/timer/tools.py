@@ -1,6 +1,6 @@
-"""倒计时器MCP工具函数.
+"""Countdown timer MCP tool functions.
 
-提供给MCP服务器调用的异步工具函数
+Async tool functions for MCP server invocation.
 """
 
 import json
@@ -14,92 +14,92 @@ logger = get_logger(__name__)
 
 
 async def start_countdown_timer(args: Dict[str, Any]) -> str:
-    """启动一个倒计时任务.
+    """Start a countdown task.
 
     Args:
-        args: 包含以下参数的字典
-            - command: 要执行的MCP工具调用 (JSON格式字符串，包含name和arguments字段)
-            - delay: 延迟时间（秒），可选，默认为5秒
-            - description: 任务描述，可选
+        args: Dictionary containing the following parameters
+            - command: MCP tool call to execute (JSON string with name and arguments fields)
+            - delay: Delay time in seconds, optional, defaults to 5 seconds
+            - description: Task description, optional
 
     Returns:
-        str: JSON格式的结果字符串
+        str: JSON-formatted result string
     """
     try:
         command = args["command"]
         delay = args.get("delay")
         description = args.get("description", "")
 
-        logger.info(f"[TimerTools] 启动倒计时 - 命令: {command}, 延迟: {delay}秒")
+        logger.info(f"[TimerTools] Starting countdown - command: {command}, delay: {delay}s")
 
         timer_service = get_timer_service()
         result = await timer_service.start_countdown(
             command=command, delay=delay, description=description
         )
 
-        logger.info(f"[TimerTools] 倒计时启动结果: {result['success']}")
+        logger.info(f"[TimerTools] Countdown start result: {result['success']}")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[TimerTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"启动倒计时失败: {str(e)}"
+        error_msg = f"Failed to start countdown: {str(e)}"
         logger.error(f"[TimerTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def cancel_countdown_timer(args: Dict[str, Any]) -> str:
-    """取消指定的倒计时任务.
+    """Cancel a specified countdown task.
 
     Args:
-        args: 包含以下参数的字典
-            - timer_id: 要取消的计时器ID
+        args: Dictionary containing the following parameters
+            - timer_id: ID of the timer to cancel
 
     Returns:
-        str: JSON格式的结果字符串
+        str: JSON-formatted result string
     """
     try:
         timer_id = args["timer_id"]
 
-        logger.info(f"[TimerTools] 取消倒计时 {timer_id}")
+        logger.info(f"[TimerTools] Cancelling countdown {timer_id}")
 
         timer_service = get_timer_service()
         result = await timer_service.cancel_countdown(timer_id)
 
-        logger.info(f"[TimerTools] 倒计时取消结果: {result['success']}")
+        logger.info(f"[TimerTools] Countdown cancel result: {result['success']}")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except KeyError as e:
-        error_msg = f"缺少必需参数: {e}"
+        error_msg = f"Missing required parameter: {e}"
         logger.error(f"[TimerTools] {error_msg}")
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
     except Exception as e:
-        error_msg = f"取消倒计时失败: {str(e)}"
+        error_msg = f"Failed to cancel countdown: {str(e)}"
         logger.error(f"[TimerTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)
 
 
 async def get_active_countdown_timers(args: Dict[str, Any]) -> str:
-    """获取所有活动的倒计时任务状态.
+    """Get the status of all active countdown tasks.
 
     Args:
-        args: 空字典（此函数无需参数）
+        args: Empty dictionary (this function requires no parameters)
 
     Returns:
-        str: JSON格式的活动计时器列表
+        str: JSON-formatted list of active timers
     """
     try:
-        logger.info("[TimerTools] 获取活动倒计时列表")
+        logger.info("[TimerTools] Getting active countdown list")
 
         timer_service = get_timer_service()
         result = await timer_service.get_active_timers()
 
-        logger.info(f"[TimerTools] 当前活动倒计时数量: {result['total_active_timers']}")
+        logger.info(f"[TimerTools] Current active countdown count: {result['total_active_timers']}")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        error_msg = f"获取活动倒计时失败: {str(e)}"
+        error_msg = f"Failed to get active countdowns: {str(e)}"
         logger.error(f"[TimerTools] {error_msg}", exc_info=True)
         return json.dumps({"success": False, "message": error_msg}, ensure_ascii=False)

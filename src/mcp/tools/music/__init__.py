@@ -1,6 +1,6 @@
-"""音乐播放器工具包.
+"""Music player toolkit.
 
-提供完整的音乐播放功能，包括搜索、播放、暂停、停止、跳转等操作。
+Provides complete music playback functionality, including search, play, pause, stop, seek, and more.
 """
 
 from .manager import MusicToolsManager, get_music_tools_manager

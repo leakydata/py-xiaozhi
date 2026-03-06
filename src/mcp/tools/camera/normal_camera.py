@@ -67,12 +67,12 @@ class NormalCamera(BaseCamera):
                 logger.error(f"Cannot open camera at index {self.camera_index}")
                 return False
 
-            # Set camera parameters
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
+            # Request highest resolution for best detail
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
             # Read a few frames to let the camera auto-expose
-            for _ in range(3):
+            for _ in range(5):
                 cap.read()
 
             ret, frame = cap.read()

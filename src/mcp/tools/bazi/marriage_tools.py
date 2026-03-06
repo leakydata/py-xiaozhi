@@ -1,5 +1,5 @@
 """
-婚姻分析工具函数.
+Marriage analysis tool functions.
 """
 
 import json
@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 async def analyze_marriage_timing(args: Dict[str, Any]) -> str:
     """
-    分析婚姻时机和配偶信息.
+    Analyze marriage timing and spouse information.
     """
     try:
         solar_datetime = args.get("solar_datetime")
@@ -27,12 +27,12 @@ async def analyze_marriage_timing(args: Dict[str, Any]) -> str:
             return json.dumps(
                 {
                     "success": False,
-                    "message": "solar_datetime和lunar_datetime必须传且只传其中一个",
+                    "message": "Either solar_datetime or lunar_datetime must be provided, but not both",
                 },
                 ensure_ascii=False,
             )
 
-        # 先获取基础八字信息
+        # First get basic BaZi information
         calculator = get_bazi_calculator()
         bazi_result = calculator.build_bazi(
             solar_datetime=solar_datetime,
@@ -41,10 +41,10 @@ async def analyze_marriage_timing(args: Dict[str, Any]) -> str:
             eight_char_provider_sect=eight_char_provider_sect,
         )
 
-        # 进行婚姻专项分析
+        # Perform marriage-specific analysis
         marriage_analyzer = get_marriage_analyzer()
 
-        # 构建适合婚姻分析的八字数据格式
+        # Build BaZi data format suitable for marriage analysis
         eight_char_dict = {
             "year": bazi_result.year_pillar,
             "month": bazi_result.month_pillar,
@@ -56,13 +56,13 @@ async def analyze_marriage_timing(args: Dict[str, Any]) -> str:
             eight_char_dict, gender
         )
 
-        # 合并结果
+        # Merge results
         result = {
             "basic_info": {
-                "八字": bazi_result.bazi,
-                "性别": "男" if gender == 1 else "女",
-                "日主": bazi_result.day_master,
-                "生肖": bazi_result.zodiac,
+                "bazi": bazi_result.bazi,
+                "gender": "Male" if gender == 1 else "Female",
+                "day_master": bazi_result.day_master,
+                "zodiac": bazi_result.zodiac,
             },
             "marriage_analysis": marriage_analysis,
         }
@@ -72,23 +72,23 @@ async def analyze_marriage_timing(args: Dict[str, Any]) -> str:
         )
 
     except Exception as e:
-        logger.error(f"婚姻分析失败: {e}")
+        logger.error(f"Marriage analysis failed: {e}")
         return json.dumps(
-            {"success": False, "message": f"婚姻分析失败: {str(e)}"},
+            {"success": False, "message": f"Marriage analysis failed: {str(e)}"},
             ensure_ascii=False,
         )
 
 
 async def analyze_marriage_compatibility(args: Dict[str, Any]) -> str:
     """
-    分析两人八字婚姻合婚.
+    Analyze marriage compatibility between two people's BaZi.
     """
     try:
-        # 男方信息
+        # Male information
         male_solar = args.get("male_solar_datetime")
         male_lunar = args.get("male_lunar_datetime")
 
-        # 女方信息
+        # Female information
         female_solar = args.get("female_solar_datetime")
         female_lunar = args.get("female_lunar_datetime")
 
@@ -96,36 +96,36 @@ async def analyze_marriage_compatibility(args: Dict[str, Any]) -> str:
             return json.dumps(
                 {
                     "success": False,
-                    "message": "必须提供男女双方的时间信息",
+                    "message": "Time information for both male and female must be provided",
                 },
                 ensure_ascii=False,
             )
 
         calculator = get_bazi_calculator()
 
-        # 获取男方八字
+        # Get male BaZi
         male_bazi = calculator.build_bazi(
             solar_datetime=male_solar, lunar_datetime=male_lunar, gender=1
         )
 
-        # 获取女方八字
+        # Get female BaZi
         female_bazi = calculator.build_bazi(
             solar_datetime=female_solar, lunar_datetime=female_lunar, gender=0
         )
 
-        # 进行合婚分析
+        # Perform compatibility analysis
         compatibility_result = _analyze_compatibility(male_bazi, female_bazi)
 
         result = {
             "male_info": {
-                "八字": male_bazi.bazi,
-                "日主": male_bazi.day_master,
-                "生肖": male_bazi.zodiac,
+                "bazi": male_bazi.bazi,
+                "day_master": male_bazi.day_master,
+                "zodiac": male_bazi.zodiac,
             },
             "female_info": {
-                "八字": female_bazi.bazi,
-                "日主": female_bazi.day_master,
-                "生肖": female_bazi.zodiac,
+                "bazi": female_bazi.bazi,
+                "day_master": female_bazi.day_master,
+                "zodiac": female_bazi.zodiac,
             },
             "compatibility": compatibility_result,
         }
@@ -135,42 +135,42 @@ async def analyze_marriage_compatibility(args: Dict[str, Any]) -> str:
         )
 
     except Exception as e:
-        logger.error(f"合婚分析失败: {e}")
+        logger.error(f"Compatibility analysis failed: {e}")
         return json.dumps(
-            {"success": False, "message": f"合婚分析失败: {str(e)}"},
+            {"success": False, "message": f"Compatibility analysis failed: {str(e)}"},
             ensure_ascii=False,
         )
 
 
 def _analyze_compatibility(male_bazi, female_bazi) -> Dict[str, Any]:
-    """分析两人八字合婚 - 使用专业算法"""
-    # 获取双方日柱
+    """Analyze marriage compatibility between two BaZi - using professional algorithm"""
+    # Get both parties' day pillars
     male_day_gan = male_bazi.day_master
     female_day_gan = female_bazi.day_pillar["天干"]["天干"]
 
     male_day_zhi = male_bazi.day_pillar["地支"]["地支"]
     female_day_zhi = female_bazi.day_pillar["地支"]["地支"]
 
-    # 专业五行分析
+    # Professional Five Elements analysis
     element_analysis = _analyze_element_compatibility(male_day_gan, female_day_gan)
 
-    # 生肖相配分析
+    # Zodiac compatibility analysis
     zodiac_analysis = _analyze_zodiac_compatibility(
         male_bazi.zodiac, female_bazi.zodiac
     )
 
-    # 日柱相配分析
+    # Day Pillar compatibility analysis
     pillar_analysis = _analyze_pillar_compatibility(
         male_day_gan + male_day_zhi, female_day_gan + female_day_zhi
     )
 
-    # 地支关系分析
+    # Earthly Branch relationship analysis
     branch_analysis = _analyze_branch_relationships(male_bazi, female_bazi)
 
-    # 八字互补分析
+    # BaZi complementarity analysis
     complement_analysis = _analyze_complement(male_bazi, female_bazi)
 
-    # 综合评分
+    # Overall score
     total_score = (
         element_analysis["score"] * 0.3
         + zodiac_analysis["score"] * 0.2
@@ -195,7 +195,7 @@ def _analyze_compatibility(male_bazi, female_bazi) -> Dict[str, Any]:
 
 def _analyze_element_compatibility(male_gan: str, female_gan: str) -> Dict[str, Any]:
     """
-    专业五行相配分析.
+    Professional Five Elements compatibility analysis.
     """
     from .professional_data import GAN_WUXING, WUXING_RELATIONS
 
@@ -204,21 +204,21 @@ def _analyze_element_compatibility(male_gan: str, female_gan: str) -> Dict[str, 
 
     element_relation = WUXING_RELATIONS.get((male_element, female_element), "")
 
-    # 亓不位分析
+    # Five Elements analysis
     score_map = {
-        "↓": 90,  # 男生女，夫妻恩爱
-        "=": 80,  # 同类相配，志趣相投
-        "←": 50,  # 女克男，女强男弱
-        "→": 55,  # 男克女，男强女弱
-        "↑": 85,  # 女生男，妻贤夫贵
+        "↓": 90,  # Male generates Female, loving couple
+        "=": 80,  # Same element, like-minded
+        "←": 50,  # Female overcomes Male, strong wife weak husband
+        "→": 55,  # Male overcomes Female, strong husband weak wife
+        "↑": 85,  # Female generates Male, virtuous wife noble husband
     }
 
     desc_map = {
-        "↓": "男生女，夫妻恩爱，家庭和睦",
-        "=": "同类相配，志趣相投，容易理解",
-        "←": "女克男，女强男弱，需要平衡",
-        "→": "男克女，男强女弱，需要包容",
-        "↑": "女生男，妻贤夫贵，互相成就",
+        "↓": "Male generates Female, loving couple, harmonious family",
+        "=": "Same element, like-minded, easy to understand each other",
+        "←": "Female overcomes Male, strong wife weak husband, needs balance",
+        "→": "Male overcomes Female, strong husband weak wife, needs tolerance",
+        "↑": "Female generates Male, virtuous wife noble husband, mutual achievement",
     }
 
     return {
@@ -226,7 +226,7 @@ def _analyze_element_compatibility(male_gan: str, female_gan: str) -> Dict[str, 
         "female_element": female_element,
         "relation": element_relation,
         "score": score_map.get(element_relation, 70),
-        "description": desc_map.get(element_relation, "关系平和"),
+        "description": desc_map.get(element_relation, "Harmonious relationship"),
     }
 
 
@@ -234,11 +234,11 @@ def _analyze_zodiac_compatibility(
     male_zodiac: str, female_zodiac: str
 ) -> Dict[str, Any]:
     """
-    专业生肖相配分析.
+    Professional zodiac compatibility analysis.
     """
     from .professional_data import ZHI_CHONG, ZHI_HAI, ZHI_LIUHE, ZHI_SANHE, ZHI_XING
 
-    # 生肖对应地支映射
+    # Zodiac to Earthly Branch mapping
     zodiac_to_zhi = {
         "鼠": "子",
         "牛": "丑",
@@ -257,59 +257,59 @@ def _analyze_zodiac_compatibility(
     male_zhi = zodiac_to_zhi.get(male_zodiac, "")
     female_zhi = zodiac_to_zhi.get(female_zodiac, "")
 
-    # 检查关系
+    # Check relationships
     if (male_zhi, female_zhi) in ZHI_LIUHE or (female_zhi, male_zhi) in ZHI_LIUHE:
         return {
             "score": 90,
-            "level": "天作之合",
-            "description": "六合生肖，感情深厚",
-            "relation": "六合",
+            "level": "Perfect Match",
+            "description": "Six Combination zodiac, deep affection",
+            "relation": "Six Combination",
         }
 
-    # 检查三合
+    # Check Three Combinations
     for sanhe_group in ZHI_SANHE:
         if male_zhi in sanhe_group and female_zhi in sanhe_group:
             return {
                 "score": 85,
-                "level": "天作之合",
-                "description": "三合生肖，相处融洽",
-                "relation": "三合",
+                "level": "Perfect Match",
+                "description": "Three Combination zodiac, harmonious relationship",
+                "relation": "Three Combination",
             }
 
-    # 检查相冲
+    # Check Clashes
     if (male_zhi, female_zhi) in ZHI_CHONG or (female_zhi, male_zhi) in ZHI_CHONG:
         return {
             "score": 30,
-            "level": "相冲不合",
-            "description": "生肖相冲，矛盾较多",
-            "relation": "相冲",
+            "level": "Clash Incompatible",
+            "description": "Zodiac clash, many conflicts",
+            "relation": "Clash",
         }
 
-    # 检查相刑
+    # Check Punishments
     for xing_group in ZHI_XING:
         if male_zhi in xing_group and female_zhi in xing_group:
             return {
                 "score": 40,
-                "level": "相刑不合",
-                "description": "生肖相刑，需要化解",
-                "relation": "相刑",
+                "level": "Punishment Incompatible",
+                "description": "Zodiac punishment, needs resolution",
+                "relation": "Punishment",
             }
 
-    # 检查相害
+    # Check Harm
     if (male_zhi, female_zhi) in ZHI_HAI or (female_zhi, male_zhi) in ZHI_HAI:
         return {
             "score": 45,
-            "level": "相害不合",
-            "description": "生肖相害，小有不合",
-            "relation": "相害",
+            "level": "Harm Incompatible",
+            "description": "Zodiac harm, minor incompatibility",
+            "relation": "Harm",
         }
 
-    # 普通关系
+    # Normal relationship
     return {
         "score": 70,
-        "level": "一般",
-        "description": "生肖平和，无特别冲突",
-        "relation": "平和",
+        "level": "Average",
+        "description": "Zodiac neutral, no particular conflicts",
+        "relation": "Neutral",
     }
 
 
@@ -317,25 +317,25 @@ def _analyze_pillar_compatibility(
     male_pillar: str, female_pillar: str
 ) -> Dict[str, Any]:
     """
-    专业日柱相配分析.
+    Professional Day Pillar compatibility analysis.
     """
     if male_pillar == female_pillar:
-        return {"score": 55, "description": "日柱相同，共通点多但需要差异化解"}
+        return {"score": 55, "description": "Same Day Pillar, many commonalities but needs differentiation"}
 
-    # 分析干支组合
+    # Analyze stem-branch combination
     male_gan, male_zhi = male_pillar[0], male_pillar[1]
     female_gan, female_zhi = female_pillar[0], female_pillar[1]
 
-    score = 70  # 基础分数
+    score = 70  # Base score
 
-    # 天干关系
+    # Heavenly Stem relationship
     from .professional_data import get_ten_gods_relation
 
     gan_relation = get_ten_gods_relation(male_gan, female_gan)
     if gan_relation in ["正财", "偏财", "正官", "七杀"]:
         score += 10
 
-    # 地支关系
+    # Earthly Branch relationship
     from .professional_data import ZHI_CHONG, ZHI_LIUHE
 
     if (male_zhi, female_zhi) in ZHI_LIUHE or (female_zhi, male_zhi) in ZHI_LIUHE:
@@ -345,15 +345,15 @@ def _analyze_pillar_compatibility(
 
     return {
         "score": min(95, max(30, score)),
-        "description": f"日柱组合分析：{gan_relation}关系",
+        "description": f"Day Pillar combination analysis: {gan_relation} relationship",
     }
 
 
 def _analyze_branch_relationships(male_bazi, female_bazi) -> Dict[str, Any]:
     """
-    分析地支关系.
+    Analyze Earthly Branch relationships.
     """
-    # 获取双方四柱地支
+    # Get both parties' four pillar Earthly Branches
     male_branches = [
         male_bazi.year_pillar["地支"]["地支"],
         male_bazi.month_pillar["地支"]["地支"],
@@ -368,7 +368,7 @@ def _analyze_branch_relationships(male_bazi, female_bazi) -> Dict[str, Any]:
         female_bazi.hour_pillar["地支"]["地支"],
     ]
 
-    # 分析地支间关系
+    # Analyze Earthly Branch relationships
     from .professional_data import analyze_zhi_combinations
 
     combined_branches = male_branches + female_branches
@@ -387,21 +387,21 @@ def _analyze_branch_relationships(male_bazi, female_bazi) -> Dict[str, Any]:
     return {
         "score": min(95, max(30, score)),
         "relationships": relationships,
-        "description": f"地支关系分析：{len(relationships.get('liuhe', []))}个六合、{len(relationships.get('chong', []))}个相冲",
+        "description": f"Earthly Branch analysis: {len(relationships.get('liuhe', []))} Six Combinations, {len(relationships.get('chong', []))} Clashes",
     }
 
 
 def _analyze_complement(male_bazi, female_bazi) -> Dict[str, Any]:
     """
-    分析八字互补性.
+    Analyze BaZi complementarity.
     """
-    # 分析五行互补
+    # Analyze Five Elements complementarity
     from .professional_data import GAN_WUXING, ZHI_WUXING, WUXING
 
     male_elements = []
     female_elements = []
 
-    # 获取男方五行
+    # Get male Five Elements
     for pillar in [
         male_bazi.year_pillar,
         male_bazi.month_pillar,
@@ -412,7 +412,7 @@ def _analyze_complement(male_bazi, female_bazi) -> Dict[str, Any]:
         zhi = pillar["地支"]["地支"]
         male_elements.extend([GAN_WUXING.get(gan, ""), ZHI_WUXING.get(zhi, "")])
 
-    # 获取女方五行
+    # Get female Five Elements
     for pillar in [
         female_bazi.year_pillar,
         female_bazi.month_pillar,
@@ -423,19 +423,19 @@ def _analyze_complement(male_bazi, female_bazi) -> Dict[str, Any]:
         zhi = pillar["地支"]["地支"]
         female_elements.extend([GAN_WUXING.get(gan, ""), ZHI_WUXING.get(zhi, "")])
 
-    # 统计五行分布
+    # Count Five Elements distribution
     from collections import Counter
 
     male_counter = Counter(male_elements)
     female_counter = Counter(female_elements)
 
-    # 计算互补性
+    # Calculate complementarity
     complement_score = 0
     for element in WUXING:
         male_count = male_counter.get(element, 0)
         female_count = female_counter.get(element, 0)
 
-        # 互补加分
+        # Complementarity bonus
         if male_count > 0 and female_count == 0:
             complement_score += 5
         elif male_count == 0 and female_count > 0:
@@ -447,7 +447,7 @@ def _analyze_complement(male_bazi, female_bazi) -> Dict[str, Any]:
         "score": min(90, 50 + complement_score),
         "male_elements": dict(male_counter),
         "female_elements": dict(female_counter),
-        "description": f"五行互补性分析，补分{complement_score}",
+        "description": f"Five Elements complementarity analysis, complement score {complement_score}",
     }
 
 
@@ -457,63 +457,63 @@ def _get_professional_suggestions(
     zodiac_analysis: Dict[str, Any],
 ) -> List[str]:
     """
-    获取专业合婚建议.
+    Get professional marriage compatibility suggestions.
     """
     suggestions = []
 
     if total_score >= 80:
-        suggestions.extend(["天作之合，婚姻美满", "互相扶持，白头偕老"])
+        suggestions.extend(["Perfect match, happy marriage", "Mutual support, growing old together"])
     elif total_score >= 70:
-        suggestions.extend(["基础良好，需要磨合", "多沟通理解，感情可长久"])
+        suggestions.extend(["Good foundation, needs adjustment", "More communication and understanding for lasting relationship"])
     elif total_score >= 60:
-        suggestions.extend(["需要努力经营", "多包容对方，化解矛盾"])
+        suggestions.extend(["Requires effort to maintain", "More tolerance, resolve conflicts"])
     else:
-        suggestions.extend(["建议谨慎考虑", "如结婚需要择日化解"])
+        suggestions.extend(["Consider carefully", "If marrying, choose an auspicious date for resolution"])
 
-    # 根据五行分析添加建议
+    # Add suggestions based on Five Elements analysis
     if element_analysis["relation"] == "←":
-        suggestions.append("女方需要多体谅男方，避免过于强势")
+        suggestions.append("The wife should be more understanding, avoid being too dominant")
     elif element_analysis["relation"] == "→":
-        suggestions.append("男方需要多关心女方，避免过于专横")
+        suggestions.append("The husband should be more caring, avoid being too authoritative")
 
-    # 根据生肖分析添加建议
-    if zodiac_analysis["relation"] == "相冲":
-        suggestions.append("生肖相冲，建议佩戴化解物品或择吉日结婚")
+    # Add suggestions based on zodiac analysis
+    if zodiac_analysis["relation"] == "Clash":
+        suggestions.append("Zodiac clash, consider wearing resolution items or choosing an auspicious wedding date")
 
     return suggestions
 
 
 def _get_compatibility_level(score: float) -> str:
     """
-    获取合婚等级.
+    Get compatibility grade.
     """
     if score >= 80:
-        return "上等婚"
+        return "Excellent Match"
     elif score >= 70:
-        return "中上婚"
+        return "Good Match"
     elif score >= 60:
-        return "中等婚"
+        return "Average Match"
     else:
-        return "下等婚"
+        return "Below Average Match"
 
 
 def _get_compatibility_suggestions(score: float) -> List[str]:
-    """获取合婚建议"""
+    """Get compatibility suggestions"""
     if score >= 80:
-        return ["天作之合，婚姻美满", "互相扶持，白头偕老", "继续保持良好沟通"]
+        return ["Perfect match, happy marriage", "Mutual support, growing old together", "Continue maintaining good communication"]
     elif score >= 70:
-        return ["基础良好，需要磨合", "多沟通理解，感情可长久", "注重共同兴趣培养"]
+        return ["Good foundation, needs adjustment", "More communication and understanding for lasting relationship", "Focus on cultivating common interests"]
     elif score >= 60:
         return [
-            "需要努力经营",
-            "多包容对方，化解矛盾",
-            "建议婚前辅导",
-            "共同制定婚姻规则",
+            "Requires effort to maintain",
+            "More tolerance, resolve conflicts",
+            "Pre-marriage counseling recommended",
+            "Establish marriage rules together",
         ]
     else:
         return [
-            "建议谨慎考虑",
-            "如结婚需要择日化解",
-            "多行善积德改善运势",
-            "需要专业指导",
+            "Consider carefully",
+            "If marrying, choose an auspicious date for resolution",
+            "Do good deeds to improve fortune",
+            "Professional guidance needed",
         ]

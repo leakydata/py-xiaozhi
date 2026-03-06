@@ -1,6 +1,6 @@
-"""倒计时器工具管理器.
+"""Countdown timer tool manager.
 
-负责倒计时器工具的初始化、配置和MCP工具注册
+Responsible for countdown timer tool initialization, configuration, and MCP tool registration.
 """
 
 from typing import Any, Dict
@@ -18,48 +18,48 @@ logger = get_logger(__name__)
 
 class TimerToolsManager:
     """
-    倒计时器工具管理器.
+    Countdown timer tool manager.
     """
 
     def __init__(self):
         """
-        初始化倒计时器工具管理器.
+        Initialize the countdown timer tool manager.
         """
         self._initialized = False
-        logger.info("[TimerManager] 倒计时器工具管理器初始化")
+        logger.info("[TimerManager] Countdown timer tool manager initialized")
 
     def init_tools(self, add_tool, PropertyList, Property, PropertyType):
         """
-        初始化并注册所有倒计时器工具.
+        Initialize and register all countdown timer tools.
         """
         try:
-            logger.info("[TimerManager] 开始注册倒计时器工具")
+            logger.info("[TimerManager] Starting to register countdown timer tools")
 
-            # 注册启动倒计时工具
+            # Register start countdown tool
             self._register_start_countdown_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册取消倒计时工具
+            # Register cancel countdown tool
             self._register_cancel_countdown_tool(
                 add_tool, PropertyList, Property, PropertyType
             )
 
-            # 注册获取活动倒计时工具
+            # Register get active timers tool
             self._register_get_active_timers_tool(add_tool, PropertyList)
 
             self._initialized = True
-            logger.info("[TimerManager] 倒计时器工具注册完成")
+            logger.info("[TimerManager] Countdown timer tool registration complete")
 
         except Exception as e:
-            logger.error(f"[TimerManager] 倒计时器工具注册失败: {e}", exc_info=True)
+            logger.error(f"[TimerManager] Countdown timer tool registration failed: {e}", exc_info=True)
             raise
 
     def _register_start_countdown_tool(
         self, add_tool, PropertyList, Property, PropertyType
     ):
         """
-        注册启动倒计时工具.
+        Register the start countdown tool.
         """
         timer_props = PropertyList(
             [
@@ -72,7 +72,7 @@ class TimerToolsManager:
                     PropertyType.INTEGER,
                     default_value=5,
                     min_value=1,
-                    max_value=3600,  # 最大1小时
+                    max_value=3600,  # Maximum 1 hour
                 ),
                 Property(
                     "description",
@@ -97,13 +97,13 @@ class TimerToolsManager:
                 start_countdown_timer,
             )
         )
-        logger.debug("[TimerManager] 注册启动倒计时工具成功")
+        logger.debug("[TimerManager] Registered start countdown tool successfully")
 
     def _register_cancel_countdown_tool(
         self, add_tool, PropertyList, Property, PropertyType
     ):
         """
-        注册取消倒计时工具.
+        Register the cancel countdown tool.
         """
         cancel_props = PropertyList(
             [
@@ -126,11 +126,11 @@ class TimerToolsManager:
                 cancel_countdown_timer,
             )
         )
-        logger.debug("[TimerManager] 注册取消倒计时工具成功")
+        logger.debug("[TimerManager] Registered cancel countdown tool successfully")
 
     def _register_get_active_timers_tool(self, add_tool, PropertyList):
         """
-        注册获取活动倒计时工具.
+        Register the get active timers tool.
         """
         add_tool(
             (
@@ -147,21 +147,21 @@ class TimerToolsManager:
                 get_active_countdown_timers,
             )
         )
-        logger.debug("[TimerManager] 注册获取活动倒计时工具成功")
+        logger.debug("[TimerManager] Registered get active timers tool successfully")
 
     def is_initialized(self) -> bool:
         """
-        检查管理器是否已初始化.
+        Check if the manager is initialized.
         """
         return self._initialized
 
     def get_status(self) -> Dict[str, Any]:
         """
-        获取管理器状态.
+        Get the manager status.
         """
         return {
             "initialized": self._initialized,
-            "tools_count": 3,  # 当前注册的工具数量
+            "tools_count": 3,  # Number of currently registered tools
             "available_tools": [
                 "start_countdown",
                 "cancel_countdown",
@@ -170,16 +170,16 @@ class TimerToolsManager:
         }
 
 
-# 全局管理器实例
+# Global manager instance
 _timer_tools_manager = None
 
 
 def get_timer_manager() -> TimerToolsManager:
     """
-    获取倒计时器工具管理器单例.
+    Get the countdown timer tool manager singleton.
     """
     global _timer_tools_manager
     if _timer_tools_manager is None:
         _timer_tools_manager = TimerToolsManager()
-        logger.debug("[TimerManager] 创建倒计时器工具管理器实例")
+        logger.debug("[TimerManager] Created countdown timer tool manager instance")
     return _timer_tools_manager

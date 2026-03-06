@@ -1,4 +1,4 @@
-applescript==2021.2.9  # macOS音量控制
+applescript==2021.2.9  # macOS volume control
 comtypes==1.4.6
 cryptography==44.0.1
 numpy==1.26.4

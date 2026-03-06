@@ -1,6 +1,6 @@
-"""应用程序管理模块.
+"""Application management module.
 
-提供跨平台的应用程序扫描、启动和关闭功能
+Provides cross-platform application scanning, launching, and closing functionality.
 """
 
 from .scanner import list_running_applications, scan_installed_applications

@@ -1,5 +1,5 @@
 """
-macOS系统应用程序管理模块.
+macOS application management module.
 """
 
 from . import scanner

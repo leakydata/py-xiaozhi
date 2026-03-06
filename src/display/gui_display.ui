@@ -69,15 +69,21 @@ QFrame#top_bar {
       </property>
       <item>
        <widget class="QLabel" name="emotion_label">
+        <property name="minimumSize">
+         <size>
+          <width>48</width>
+          <height>48</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>40</width>
-          <height>40</height>
+          <width>48</width>
+          <height>48</height>
          </size>
         </property>
         <property name="font">
          <font>
-          <pointsize>22</pointsize>
+          <pointsize>26</pointsize>
          </font>
         </property>
         <property name="styleSheet">

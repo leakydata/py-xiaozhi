@@ -1,17 +1,17 @@
-"""12306铁路购票查询工具模块.
+"""12306 railway ticket query tool module.
 
-提供火车票查询、车次查询、经停站查询等功能.
+Provides train ticket query, train number lookup, station stop query, and other features.
 """
 
 from .manager import RailwayToolsManager, get_railway_manager
 
-# 全局工具管理器实例
+# Global tool manager instance
 _railway_tools_manager = None
 
 
 def get_railway_tools_manager() -> RailwayToolsManager:
     """
-    获取Railway工具管理器实例 - 新版本智能工具接口.
+    Get Railway tool manager instance - new version smart tool interface.
     """
     global _railway_tools_manager
     if _railway_tools_manager is None:
@@ -20,7 +20,7 @@ def get_railway_tools_manager() -> RailwayToolsManager:
 
 
 __all__ = [
-    "get_railway_manager",       # 兼容性接口
-    "get_railway_tools_manager", # 新版本智能工具接口
+    "get_railway_manager",       # Compatibility interface
+    "get_railway_tools_manager", # New version smart tool interface
     "RailwayToolsManager"
 ]

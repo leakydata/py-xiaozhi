@@ -411,6 +411,10 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             self.emotion_movie = movie
             label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
             label.setAlignment(Qt.AlignCenter)
+            # Scale GIF to fit the label
+            from PyQt5.QtCore import QSize
+            label_size = label.maximumSize()
+            movie.setScaledSize(QSize(label_size.width(), label_size.height()))
             label.setMovie(movie)
             movie.setSpeed(105)
             movie.start()

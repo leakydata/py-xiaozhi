@@ -1,7 +1,7 @@
-# Components包 - GUI组件模块
+# Components package - GUI components module
 """
-Components模块包含可复用的GUI组件
-- system_tray: 系统托盘组件
+Components module containing reusable GUI components
+- system_tray: System tray component
 """
 
 __version__ = "1.0.0"

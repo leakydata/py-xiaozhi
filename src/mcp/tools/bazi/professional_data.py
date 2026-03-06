@@ -1,27 +1,27 @@
 """
-八字命理专业数据模块.
+BaZi professional data module.
 """
 
 from collections import OrderedDict
 from typing import Dict, List
 
-# ==================== 基础干支数据 ====================
+# ==================== Basic Stem and Branch Data ====================
 
-# 天干
+# Heavenly Stems
 GAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
 
-# 地支
+# Earthly Branches
 ZHI = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
 
-# 生肖
+# Zodiac Animals
 SHENG_XIAO = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"]
 
-# 数字中文
+# Chinese Numerals
 NUM_CN = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
 
-# ==================== 五行数据 ====================
+# ==================== Five Elements Data ====================
 
-# 天干五行
+# Heavenly Stem Five Elements
 GAN_WUXING = {
     "甲": "木",
     "乙": "木",
@@ -35,7 +35,7 @@ GAN_WUXING = {
     "癸": "水",
 }
 
-# 地支五行
+# Earthly Branch Five Elements
 ZHI_WUXING = {
     "子": "水",
     "丑": "土",
@@ -51,7 +51,7 @@ ZHI_WUXING = {
     "亥": "水",
 }
 
-# 五行分组
+# Five Elements Groups
 WUXING_GROUPS = {
     "金": "庚辛申酉",
     "木": "甲乙寅卯",
@@ -60,10 +60,10 @@ WUXING_GROUPS = {
     "土": "戊己丑辰未戌",
 }
 
-# 五行列表
+# Five Elements List
 WUXING = ["金", "木", "水", "火", "土"]
 
-# 天干阴阳
+# Heavenly Stem Yin-Yang
 GAN_YINYANG = {
     "甲": 1,
     "乙": -1,
@@ -77,7 +77,7 @@ GAN_YINYANG = {
     "癸": -1,
 }
 
-# 地支阴阳
+# Earthly Branch Yin-Yang
 ZHI_YINYANG = {
     "子": 1,
     "丑": -1,
@@ -93,7 +93,7 @@ ZHI_YINYANG = {
     "亥": -1,
 }
 
-# 五行生克关系
+# Five Elements Generating and Overcoming Relationships
 WUXING_RELATIONS = {
     ("金", "金"): "=",
     ("金", "木"): "→",
@@ -122,7 +122,7 @@ WUXING_RELATIONS = {
     ("土", "火"): "↑",
 }
 
-# ==================== 地支藏干 ====================
+# ==================== Hidden Stems in Earthly Branches ====================
 
 ZHI_CANG_GAN = {
     "子": OrderedDict({"癸": 8}),
@@ -139,7 +139,7 @@ ZHI_CANG_GAN = {
     "亥": OrderedDict({"壬": 5, "甲": 3}),
 }
 
-# ==================== 六十甲子 ====================
+# ==================== Sixty Jiazi (Sexagenary Cycle) ====================
 
 GANZHI_60 = {
     1: "甲子",
@@ -204,11 +204,11 @@ GANZHI_60 = {
     60: "癸亥",
 }
 
-# ==================== 十神关系 ====================
+# ==================== Ten Gods Relationships ====================
 
-# 完整的十神映射表（100个组合）
+# Complete Ten Gods mapping table (100 combinations)
 TEN_GODS_MAP = {
-    # 甲日干
+    # Jia Day Master
     ("甲", "甲"): "比肩",
     ("甲", "乙"): "劫财",
     ("甲", "丙"): "食神",
@@ -219,7 +219,7 @@ TEN_GODS_MAP = {
     ("甲", "辛"): "正官",
     ("甲", "壬"): "偏印",
     ("甲", "癸"): "正印",
-    # 乙日干
+    # Yi Day Master
     ("乙", "甲"): "劫财",
     ("乙", "乙"): "比肩",
     ("乙", "丙"): "伤官",
@@ -230,7 +230,7 @@ TEN_GODS_MAP = {
     ("乙", "辛"): "七杀",
     ("乙", "壬"): "正印",
     ("乙", "癸"): "偏印",
-    # 丙日干
+    # Bing Day Master
     ("丙", "甲"): "偏印",
     ("丙", "乙"): "正印",
     ("丙", "丙"): "比肩",
@@ -241,7 +241,7 @@ TEN_GODS_MAP = {
     ("丙", "辛"): "正财",
     ("丙", "壬"): "七杀",
     ("丙", "癸"): "正官",
-    # 丁日干
+    # Ding Day Master
     ("丁", "甲"): "正印",
     ("丁", "乙"): "偏印",
     ("丁", "丙"): "劫财",
@@ -252,7 +252,7 @@ TEN_GODS_MAP = {
     ("丁", "辛"): "偏财",
     ("丁", "壬"): "正官",
     ("丁", "癸"): "七杀",
-    # 戊日干
+    # Wu Day Master
     ("戊", "甲"): "七杀",
     ("戊", "乙"): "正官",
     ("戊", "丙"): "偏印",
@@ -263,7 +263,7 @@ TEN_GODS_MAP = {
     ("戊", "辛"): "伤官",
     ("戊", "壬"): "偏财",
     ("戊", "癸"): "正财",
-    # 己日干
+    # Ji Day Master
     ("己", "甲"): "正官",
     ("己", "乙"): "七杀",
     ("己", "丙"): "正印",
@@ -274,7 +274,7 @@ TEN_GODS_MAP = {
     ("己", "辛"): "食神",
     ("己", "壬"): "正财",
     ("己", "癸"): "偏财",
-    # 庚日干
+    # Geng Day Master
     ("庚", "甲"): "偏财",
     ("庚", "乙"): "正财",
     ("庚", "丙"): "七杀",
@@ -285,7 +285,7 @@ TEN_GODS_MAP = {
     ("庚", "辛"): "劫财",
     ("庚", "壬"): "食神",
     ("庚", "癸"): "伤官",
-    # 辛日干
+    # Xin Day Master
     ("辛", "甲"): "正财",
     ("辛", "乙"): "偏财",
     ("辛", "丙"): "正官",
@@ -296,7 +296,7 @@ TEN_GODS_MAP = {
     ("辛", "辛"): "比肩",
     ("辛", "壬"): "伤官",
     ("辛", "癸"): "食神",
-    # 壬日干
+    # Ren Day Master
     ("壬", "甲"): "食神",
     ("壬", "乙"): "伤官",
     ("壬", "丙"): "偏财",
@@ -307,7 +307,7 @@ TEN_GODS_MAP = {
     ("壬", "辛"): "正印",
     ("壬", "壬"): "比肩",
     ("壬", "癸"): "劫财",
-    # 癸日干
+    # Gui Day Master
     ("癸", "甲"): "伤官",
     ("癸", "乙"): "食神",
     ("癸", "丙"): "正财",
@@ -320,9 +320,9 @@ TEN_GODS_MAP = {
     ("癸", "癸"): "比肩",
 }
 
-# ==================== 地支关系 ====================
+# ==================== Earthly Branch Relationships ====================
 
-# 地支六合
+# Earthly Branch Six Combinations
 ZHI_LIUHE = [
     ("子", "丑"),
     ("寅", "亥"),
@@ -332,15 +332,15 @@ ZHI_LIUHE = [
     ("午", "未"),
 ]
 
-# 地支三合
+# Earthly Branch Three Combinations
 ZHI_SANHE = [
-    ["申", "子", "辰"],  # 水局
-    ["巳", "酉", "丑"],  # 金局
-    ["寅", "午", "戌"],  # 火局
-    ["亥", "卯", "未"],  # 木局
+    ["申", "子", "辰"],  # Water Formation
+    ["巳", "酉", "丑"],  # Metal Formation
+    ["寅", "午", "戌"],  # Fire Formation
+    ["亥", "卯", "未"],  # Wood Formation
 ]
 
-# 地支相冲
+# Earthly Branch Clashes
 ZHI_CHONG = [
     ("子", "午"),
     ("丑", "未"),
@@ -350,18 +350,18 @@ ZHI_CHONG = [
     ("巳", "亥"),
 ]
 
-# 地支相刑
+# Earthly Branch Punishments
 ZHI_XING = [
-    ["寅", "申", "巳"],  # 无恩之刑
-    ["丑", "戌", "未"],  # 恃势之刑
-    ["子", "卯"],  # 无礼之刑
+    ["寅", "申", "巳"],  # Ungrateful Punishment
+    ["丑", "戌", "未"],  # Bullying Punishment
+    ["子", "卯"],  # Disrespectful Punishment
     ["辰", "辰"],
     ["午", "午"],
     ["酉", "酉"],
-    ["亥", "亥"],  # 自刑
+    ["亥", "亥"],  # Self-Punishment
 ]
 
-# 地支相害
+# Earthly Branch Harm
 ZHI_HAI = [
     ("子", "未"),
     ("丑", "午"),
@@ -371,7 +371,7 @@ ZHI_HAI = [
     ("酉", "戌"),
 ]
 
-# 地支冲合害刑关系
+# Earthly Branch Clash/Combination/Harm/Punishment Relationships
 ZHI_RELATIONS = {
     "子": {
         "冲": "午",
@@ -507,10 +507,10 @@ ZHI_RELATIONS = {
     },
 }
 
-# 三合局
+# Three Combination Formations
 ZHI_SAN_HE = {"申子辰": "水", "巳酉丑": "金", "寅午戌": "火", "亥卯未": "木"}
 
-# 六合
+# Six Combinations
 ZHI_LIU_HE = {
     "子丑": "土",
     "寅亥": "木",
@@ -520,7 +520,7 @@ ZHI_LIU_HE = {
     "未午": "土",
 }
 
-# 三会方
+# Three Meeting Directions
 ZHI_SAN_HUI = {
     "亥子丑": "水",
     "寅卯辰": "木",
@@ -528,7 +528,7 @@ ZHI_SAN_HUI = {
     "申酉戌": "金",
 }
 
-# ==================== 纳音五行 ====================
+# ==================== NaYin Five Elements ====================
 
 NAYIN_TABLE = {
     ("甲", "子"): "海中金",
@@ -591,9 +591,9 @@ NAYIN_TABLE = {
     ("辛", "酉"): "石榴木",
 }
 
-# ==================== 神煞星宿 ====================
+# ==================== Shen Sha (Spirit Stars) ====================
 
-# 天乙贵人
+# Tianyi Noble
 TIANYI_GUIREN = {
     "甲": "未丑",
     "乙": "申子",
@@ -607,7 +607,7 @@ TIANYI_GUIREN = {
     "癸": "卯巳",
 }
 
-# 文昌贵人
+# Wenchang Noble
 WENCHANG_GUIREN = {
     "甲": "巳",
     "乙": "午",
@@ -621,7 +621,7 @@ WENCHANG_GUIREN = {
     "癸": "丑",
 }
 
-# 驿马星
+# Yima Star (Post Horse)
 YIMA_XING = {
     "子": "寅",
     "丑": "亥",
@@ -637,7 +637,7 @@ YIMA_XING = {
     "亥": "巳",
 }
 
-# 桃花星
+# Peach Blossom Star
 TAOHUA_XING = {
     "子": "酉",
     "丑": "午",
@@ -653,7 +653,7 @@ TAOHUA_XING = {
     "亥": "子",
 }
 
-# 华盖星
+# Huagai Star (Canopy)
 HUAGAI_XING = {
     "子": "辰",
     "丑": "丑",
@@ -669,12 +669,12 @@ HUAGAI_XING = {
     "亥": "未",
 }
 
-# ==================== 长生十二宫 ====================
+# ==================== Twelve Stages of Life Cycle ====================
 
 CHANGSHENG_TWELVE = {
     "甲": {
         "子": "沐浴",
-        "丑": "冠带",
+        "丒": "冠带",
         "寅": "建禄",
         "卯": "帝旺",
         "辰": "衰",
@@ -814,26 +814,26 @@ CHANGSHENG_TWELVE = {
     },
 }
 
-# ==================== 实用函数 ====================
+# ==================== Utility Functions ====================
 
 
 def get_ten_gods_relation(day_master: str, other_stem: str) -> str:
     """
-    获取十神关系.
+    Get Ten Gods relationship.
     """
-    return TEN_GODS_MAP.get((day_master, other_stem), "未知")
+    return TEN_GODS_MAP.get((day_master, other_stem), "Unknown")
 
 
 def get_nayin(gan: str, zhi: str) -> str:
     """
-    获取纳音五行.
+    Get NaYin Five Elements.
     """
-    return NAYIN_TABLE.get((gan, zhi), "未知")
+    return NAYIN_TABLE.get((gan, zhi), "Unknown")
 
 
 def get_zhi_relation(zhi1: str, zhi2: str, relation_type: str) -> bool:
     """
-    检查地支关系.
+    Check Earthly Branch relationship.
     """
     if zhi1 not in ZHI_RELATIONS:
         return False
@@ -850,14 +850,14 @@ def get_zhi_relation(zhi1: str, zhi2: str, relation_type: str) -> bool:
 
 def get_changsheng_state(gan: str, zhi: str) -> str:
     """
-    获取长生十二宫状态.
+    Get the Twelve Stages of Life Cycle state.
     """
-    return CHANGSHENG_TWELVE.get(gan, {}).get(zhi, "未知")
+    return CHANGSHENG_TWELVE.get(gan, {}).get(zhi, "Unknown")
 
 
 def get_shensha(item: str, shensha_type: str) -> str:
     """
-    获取神煞.
+    Get Shen Sha (Spirit Star).
     """
     shensha_tables = {
         "tianyi": TIANYI_GUIREN,
@@ -873,7 +873,7 @@ def get_shensha(item: str, shensha_type: str) -> str:
 
 def analyze_zhi_combinations(zhi_list: List[str]) -> Dict[str, List[str]]:
     """
-    分析地支组合（三合、六合、三会等）
+    Analyze Earthly Branch combinations (Three Combinations, Six Combinations, Three Meetings, etc.)
     """
     result = {
         "sanhe": [],
@@ -884,31 +884,31 @@ def analyze_zhi_combinations(zhi_list: List[str]) -> Dict[str, List[str]]:
         "hai": [],
     }
 
-    # 检查三合
+    # Check Three Combinations
     for combo, element in ZHI_SAN_HE.items():
         if all(zhi in zhi_list for zhi in combo):
-            result["sanhe"].append(f"{combo}合{element}")
+            result["sanhe"].append(f"{combo} combines {element}")
 
-    # 检查六合
+    # Check Six Combinations
     for i, zhi1 in enumerate(zhi_list):
         for j, zhi2 in enumerate(zhi_list[i + 1 :], i + 1):
             combo = "".join(sorted([zhi1, zhi2]))
             if combo in ZHI_LIU_HE:
-                result["liuhe"].append(f"{zhi1}{zhi2}合{ZHI_LIU_HE[combo]}")
+                result["liuhe"].append(f"{zhi1}{zhi2} combines {ZHI_LIU_HE[combo]}")
 
-    # 检查三会
+    # Check Three Meetings
     for combo, element in ZHI_SAN_HUI.items():
         if all(zhi in zhi_list for zhi in combo):
-            result["sanhui"].append(f"{combo}会{element}")
+            result["sanhui"].append(f"{combo} meets {element}")
 
-    # 检查相冲、相刑、相害
+    # Check Clashes, Punishments, and Harm
     for i, zhi1 in enumerate(zhi_list):
         for zhi2 in zhi_list[i + 1 :]:
             if get_zhi_relation(zhi1, zhi2, "冲"):
-                result["chong"].append(f"{zhi1}冲{zhi2}")
+                result["chong"].append(f"{zhi1} clashes {zhi2}")
             if get_zhi_relation(zhi1, zhi2, "刑"):
-                result["xing"].append(f"{zhi1}刑{zhi2}")
+                result["xing"].append(f"{zhi1} punishes {zhi2}")
             if get_zhi_relation(zhi1, zhi2, "害"):
-                result["hai"].append(f"{zhi1}害{zhi2}")
+                result["hai"].append(f"{zhi1} harms {zhi2}")
 
     return result

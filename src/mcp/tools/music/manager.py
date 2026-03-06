@@ -266,7 +266,7 @@ class MusicToolsManager:
                 "downloaded and cached locally. Returns songs in format 'Title - Artist'. "
                 "To play a song from this list, use search_and_play with just the song title "
                 "(not the full 'Title - Artist' format). For example: if the list shows "
-                "'菊花台 - 周杰伦', call search_and_play with song_name='菊花台'.",
+                "'Bohemian Rhapsody - Queen', call search_and_play with song_name='Bohemian Rhapsody'.",
                 refresh_props,
                 get_local_playlist_wrapper,
             )

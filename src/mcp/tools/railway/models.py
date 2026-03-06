@@ -1,5 +1,5 @@
 """
-12306数据模型定义.
+12306 data model definitions.
 """
 
 from dataclasses import dataclass
@@ -9,12 +9,12 @@ from typing import List, Optional
 @dataclass
 class StationInfo:
     """
-    车站信息.
+    Station information.
     """
 
     station_id: str
     station_name: str
-    station_code: str  # 3位字母编码
+    station_code: str  # 3-letter code
     station_pinyin: str
     station_short: str
     city: str
@@ -24,73 +24,73 @@ class StationInfo:
 @dataclass
 class SeatPrice:
     """
-    座位价格信息.
+    Seat price information.
     """
 
-    seat_name: str  # 座位名称
-    short: str  # 短名称
-    seat_type_code: str  # 座位类型编码
-    num: str  # 余票数量
-    price: float  # 价格
-    discount: Optional[float] = None  # 折扣
+    seat_name: str  # Seat name
+    short: str  # Short name
+    seat_type_code: str  # Seat type code
+    num: str  # Remaining ticket count
+    price: float  # Price
+    discount: Optional[float] = None  # Discount
 
 
 @dataclass
 class TrainTicket:
     """
-    火车票信息.
+    Train ticket information.
     """
 
-    train_no: str  # 车次编号
-    start_train_code: str  # 车次代码
-    start_date: str  # 出发日期
-    start_time: str  # 出发时间
-    arrive_date: str  # 到达日期
-    arrive_time: str  # 到达时间
-    duration: str  # 历时
-    from_station: str  # 出发站
-    to_station: str  # 到达站
-    from_station_code: str  # 出发站编码
-    to_station_code: str  # 到达站编码
-    prices: List[SeatPrice]  # 座位价格列表
-    features: List[str]  # 特性标记（复兴号、智能动车组等）
+    train_no: str  # Train number
+    start_train_code: str  # Train code
+    start_date: str  # Departure date
+    start_time: str  # Departure time
+    arrive_date: str  # Arrival date
+    arrive_time: str  # Arrival time
+    duration: str  # Duration
+    from_station: str  # Departure station
+    to_station: str  # Arrival station
+    from_station_code: str  # Departure station code
+    to_station_code: str  # Arrival station code
+    prices: List[SeatPrice]  # Seat price list
+    features: List[str]  # Feature flags (Fuxing, Smart EMU, etc.)
 
 
 @dataclass
 class TransferTicket:
     """
-    中转车票信息.
+    Transfer ticket information.
     """
 
-    duration: str  # 总历时
-    start_time: str  # 出发时间
-    start_date: str  # 出发日期
-    middle_date: str  # 中转日期
-    arrive_date: str  # 到达日期
-    arrive_time: str  # 到达时间
-    from_station_code: str  # 出发站编码
-    from_station_name: str  # 出发站名称
-    middle_station_code: str  # 中转站编码
-    middle_station_name: str  # 中转站名称
-    end_station_code: str  # 到达站编码
-    end_station_name: str  # 到达站名称
-    start_train_code: str  # 首个车次代码
-    first_train_no: str  # 第一程车次编号
-    second_train_no: str  # 第二程车次编号
-    train_count: int  # 车次数量
-    ticket_list: List[TrainTicket]  # 车票列表
-    same_station: bool  # 是否同站换乘
-    same_train: bool  # 是否同车换乘
-    wait_time: str  # 等待时间
+    duration: str  # Total duration
+    start_time: str  # Departure time
+    start_date: str  # Departure date
+    middle_date: str  # Transfer date
+    arrive_date: str  # Arrival date
+    arrive_time: str  # Arrival time
+    from_station_code: str  # Departure station code
+    from_station_name: str  # Departure station name
+    middle_station_code: str  # Transfer station code
+    middle_station_name: str  # Transfer station name
+    end_station_code: str  # Arrival station code
+    end_station_name: str  # Arrival station name
+    start_train_code: str  # First train code
+    first_train_no: str  # First leg train number
+    second_train_no: str  # Second leg train number
+    train_count: int  # Number of trains
+    ticket_list: List[TrainTicket]  # Ticket list
+    same_station: bool  # Whether transferring at the same station
+    same_train: bool  # Whether transferring on the same train
+    wait_time: str  # Waiting time
 
 
 @dataclass
 class RouteStation:
     """
-    经停站信息.
+    Route station information.
     """
 
-    arrive_time: str  # 到达时间
-    station_name: str  # 站名
-    stopover_time: str  # 停车时间
-    station_no: int  # 站序
+    arrive_time: str  # Arrival time
+    station_name: str  # Station name
+    stopover_time: str  # Stop duration
+    station_no: int  # Station sequence number

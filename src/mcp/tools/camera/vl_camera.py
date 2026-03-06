@@ -53,11 +53,12 @@ class VLCamera(BaseCamera):
                 logger.error(f"Cannot open camera at index {self.camera_index}")
                 return False
 
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
+            # Request highest resolution for best detail
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
             # Read a few frames to let the camera auto-expose properly
-            for _ in range(3):
+            for _ in range(5):
                 cap.read()
 
             ret, frame = cap.read()
@@ -67,7 +68,9 @@ class VLCamera(BaseCamera):
                 logger.error("Failed to capture image")
                 return False
 
-            # Scale to reasonable size for vision API (max 1024px, not 320)
+            # Scale to optimal size for vision LLMs (1024px max dimension)
+            # This preserves enough detail for face recognition, text reading,
+            # and object identification while keeping file size reasonable
             height, width = frame.shape[:2]
             max_dim = max(height, width)
             if max_dim > 1024:

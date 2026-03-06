@@ -1,6 +1,6 @@
-"""12306工具函数实现.
+"""12306 tool function implementations.
 
-提供各种12306相关的查询功能.
+Provides various 12306-related query features.
 """
 
 import json
@@ -15,33 +15,33 @@ logger = get_logger(__name__)
 
 async def get_current_date(args: Dict[str, Any]) -> str:
     """
-    获取当前日期（上海时区）.
+    Get current date (Shanghai timezone).
     """
     try:
         client = await get_railway_client()
         current_date = client.get_current_date()
-        logger.info(f"获取当前日期: {current_date}")
+        logger.info(f"Get current date: {current_date}")
         return current_date
 
     except Exception as e:
-        logger.error(f"获取当前日期失败: {e}", exc_info=True)
-        return f"获取当前日期失败: {str(e)}"
+        logger.error(f"Failed to get current date: {e}", exc_info=True)
+        return f"Failed to get current date: {str(e)}"
 
 
 async def get_stations_in_city(args: Dict[str, Any]) -> str:
     """
-    获取城市中的所有车站.
+    Get all stations in a city.
     """
     try:
         city = args.get("city", "")
         if not city:
-            return "错误: 城市名称不能为空"
+            return "Error: City name cannot be empty"
 
         client = await get_railway_client()
         stations = client.get_stations_in_city(city)
 
         if not stations:
-            return f"未找到城市 '{city}' 的车站信息"
+            return f"No station information found for city '{city}'"
 
         result = {
             "city": city,
@@ -55,22 +55,22 @@ async def get_stations_in_city(args: Dict[str, Any]) -> str:
             ],
         }
 
-        logger.info(f"查询城市 {city} 的车站: 找到 {len(stations)} 个车站")
+        logger.info(f"Query stations in city {city}: found {len(stations)} stations")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"查询城市车站失败: {e}", exc_info=True)
-        return f"查询失败: {str(e)}"
+        logger.error(f"Failed to query city stations: {e}", exc_info=True)
+        return f"Query failed: {str(e)}"
 
 
 async def get_city_station_code(args: Dict[str, Any]) -> str:
     """
-    获取城市主要车站编码.
+    Get main station codes for cities.
     """
     try:
         cities = args.get("cities", "")
         if not cities:
-            return "错误: 城市名称不能为空"
+            return "Error: City name cannot be empty"
 
         client = await get_railway_client()
         city_list = cities.split("|")
@@ -86,24 +86,24 @@ async def get_city_station_code(args: Dict[str, Any]) -> str:
                     "station_name": station.station_name,
                 }
             else:
-                result[city] = {"error": "未找到城市主要车站"}
+                result[city] = {"error": "Main station not found for city"}
 
-        logger.info(f"查询城市主要车站: {cities}")
+        logger.info(f"Query main stations for cities: {cities}")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"查询城市主要车站失败: {e}", exc_info=True)
-        return f"查询失败: {str(e)}"
+        logger.error(f"Failed to query main city stations: {e}", exc_info=True)
+        return f"Query failed: {str(e)}"
 
 
 async def get_station_by_name(args: Dict[str, Any]) -> str:
     """
-    根据车站名获取车站信息.
+    Get station information by station name.
     """
     try:
         station_names = args.get("station_names", "")
         if not station_names:
-            return "错误: 车站名称不能为空"
+            return "Error: Station name cannot be empty"
 
         client = await get_railway_client()
         name_list = station_names.split("|")
@@ -120,30 +120,30 @@ async def get_station_by_name(args: Dict[str, Any]) -> str:
                     "city": station.city,
                 }
             else:
-                result[name] = {"error": "未找到车站"}
+                result[name] = {"error": "Station not found"}
 
-        logger.info(f"根据名称查询车站: {station_names}")
+        logger.info(f"Query station by name: {station_names}")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"根据名称查询车站失败: {e}", exc_info=True)
-        return f"查询失败: {str(e)}"
+        logger.error(f"Failed to query station by name: {e}", exc_info=True)
+        return f"Query failed: {str(e)}"
 
 
 async def get_station_by_code(args: Dict[str, Any]) -> str:
     """
-    根据车站编码获取车站信息.
+    Get station information by station code.
     """
     try:
         station_code = args.get("station_code", "")
         if not station_code:
-            return "错误: 车站编码不能为空"
+            return "Error: Station code cannot be empty"
 
         client = await get_railway_client()
         station = client.get_station_by_code(station_code)
 
         if not station:
-            return f"未找到车站编码 '{station_code}' 对应的车站"
+            return f"No station found for station code '{station_code}'"
 
         result = {
             "station_code": station.station_code,
@@ -153,17 +153,17 @@ async def get_station_by_code(args: Dict[str, Any]) -> str:
             "code": station.code,
         }
 
-        logger.info(f"根据编码查询车站: {station_code}")
+        logger.info(f"Query station by code: {station_code}")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:
-        logger.error(f"根据编码查询车站失败: {e}", exc_info=True)
-        return f"查询失败: {str(e)}"
+        logger.error(f"Failed to query station by code: {e}", exc_info=True)
+        return f"Query failed: {str(e)}"
 
 
 async def query_train_tickets(args: Dict[str, Any]) -> str:
     """
-    查询火车票.
+    Query train tickets.
     """
     try:
         date = args.get("date", "")
@@ -175,7 +175,7 @@ async def query_train_tickets(args: Dict[str, Any]) -> str:
         limit = args.get("limit", 0)
 
         if not all([date, from_station, to_station]):
-            return "错误: 日期、出发站和到达站都是必需参数"
+            return "Error: Date, departure station, and arrival station are all required parameters"
 
         client = await get_railway_client()
         success, tickets, message = await client.query_tickets(
@@ -183,25 +183,25 @@ async def query_train_tickets(args: Dict[str, Any]) -> str:
         )
 
         if not success:
-            return f"查询失败: {message}"
+            return f"Query failed: {message}"
 
         if not tickets:
-            return "未找到符合条件的车次"
+            return "No matching trains found"
 
-        # 格式化输出
+        # Format output
         result = _format_tickets(tickets)
 
-        logger.info(f"查询车票: {date} {from_station}->{to_station}, {message}")
+        logger.info(f"Query tickets: {date} {from_station}->{to_station}, {message}")
         return result
 
     except Exception as e:
-        logger.error(f"查询车票失败: {e}", exc_info=True)
-        return f"查询失败: {str(e)}"
+        logger.error(f"Failed to query tickets: {e}", exc_info=True)
+        return f"Query failed: {str(e)}"
 
 
 async def query_transfer_tickets(args: Dict[str, Any]) -> str:
     """
-    查询中转车票.
+    Query transfer tickets.
     """
     try:
         date = args.get("date", "")
@@ -215,7 +215,7 @@ async def query_transfer_tickets(args: Dict[str, Any]) -> str:
         limit = args.get("limit", 10)
 
         if not all([date, from_station, to_station]):
-            return "错误: 日期、出发站和到达站都是必需参数"
+            return "Error: Date, departure station, and arrival station are all required parameters"
 
         client = await get_railway_client()
         success, transfers, message = await client.query_transfer_tickets(
@@ -231,48 +231,48 @@ async def query_transfer_tickets(args: Dict[str, Any]) -> str:
         )
 
         if not success:
-            return f"查询失败: {message}"
+            return f"Query failed: {message}"
 
         if not transfers:
-            return "未找到符合条件的中转方案"
+            return "No matching transfer options found"
 
-        # 格式化输出
+        # Format output
         result = _format_transfer_tickets(transfers)
 
-        logger.info(f"查询中转票: {date} {from_station}->{to_station}, {message}")
+        logger.info(f"Query transfer tickets: {date} {from_station}->{to_station}, {message}")
         return result
 
     except Exception as e:
-        logger.error(f"查询中转车票失败: {e}", exc_info=True)
-        return f"查询失败: {str(e)}"
+        logger.error(f"Failed to query transfer tickets: {e}", exc_info=True)
+        return f"Query failed: {str(e)}"
 
 
 async def query_train_route(args: Dict[str, Any]) -> str:
     """
-    查询车次经停站.
+    Query train route stops.
     """
     try:
-        # 暂时返回不支持的信息
-        return "车次经停站查询功能正在开发中，请稍后再试"
+        # Temporarily return unsupported message
+        return "Train route stop query feature is under development, please try again later"
 
     except Exception as e:
-        logger.error(f"查询车次经停站失败: {e}", exc_info=True)
-        return f"查询失败: {str(e)}"
+        logger.error(f"Failed to query train route stops: {e}", exc_info=True)
+        return f"Query failed: {str(e)}"
 
 
 def _format_tickets(tickets: list) -> str:
     """
-    格式化车票信息.
+    Format ticket information.
     """
     if not tickets:
-        return "没有查询到相关车次信息"
+        return "No train information found"
 
     result_lines = []
-    result_lines.append("车次 | 出发站 -> 到达站 | 出发时间 -> 到达时间 | 历时")
+    result_lines.append("Train | Departure -> Arrival | Dep. Time -> Arr. Time | Duration")
     result_lines.append("-" * 80)
 
     for ticket in tickets:
-        # 车次基本信息
+        # Train basic information
         basic_info = (
             f"{ticket.start_train_code} | "
             f"{ticket.from_station} -> {ticket.to_station} | "
@@ -281,61 +281,61 @@ def _format_tickets(tickets: list) -> str:
         )
         result_lines.append(basic_info)
 
-        # 座位和价格信息
+        # Seat and price information
         for price in ticket.prices:
             ticket_status = _format_ticket_status(price.num)
-            price_info = f"  - {price.seat_name}: {ticket_status} {price.price}元"
+            price_info = f"  - {price.seat_name}: {ticket_status} {price.price} CNY"
             result_lines.append(price_info)
 
-        # 特性标记
+        # Feature flags
         if ticket.features:
-            features_info = f"  - 特性: {', '.join(ticket.features)}"
+            features_info = f"  - Features: {', '.join(ticket.features)}"
             result_lines.append(features_info)
 
-        result_lines.append("")  # 空行分隔
+        result_lines.append("")  # Blank line separator
 
     return "\n".join(result_lines)
 
 
 def _format_ticket_status(num: str) -> str:
     """
-    格式化票量信息.
+    Format ticket availability status.
     """
     if num.isdigit():
         count = int(num)
         if count == 0:
-            return "无票"
+            return "Sold out"
         else:
-            return f"剩余{count}张票"
+            return f"{count} tickets remaining"
 
-    # 处理特殊状态
+    # Handle special statuses
     status_map = {
-        "有": "有票",
-        "充足": "有票",
-        "无": "无票",
-        "--": "无票",
-        "": "无票",
-        "候补": "无票需候补",
+        "有": "Available",
+        "充足": "Available",
+        "无": "Sold out",
+        "--": "Sold out",
+        "": "Sold out",
+        "候补": "Sold out (waitlist available)",
     }
 
-    return status_map.get(num, f"{num}票")
+    return status_map.get(num, f"{num} tickets")
 
 
 def _format_transfer_tickets(transfers: list) -> str:
     """
-    格式化中转车票信息.
+    Format transfer ticket information.
     """
     if not transfers:
-        return "没有查询到相关中转方案"
+        return "No transfer options found"
 
     result_lines = []
     result_lines.append(
-        "出发时间 -> 到达时间 | 出发车站 -> 中转车站 -> 到达车站 | 换乘标志 | 换乘等待时间 | 总历时"
+        "Dep. Time -> Arr. Time | Dep. Station -> Transfer Station -> Arr. Station | Transfer Type | Transfer Wait | Total Duration"
     )
     result_lines.append("=" * 120)
 
     for transfer in transfers:
-        # 基本信息
+        # Basic information
         basic_info = (
             f"{transfer.start_date} {transfer.start_time} -> {transfer.arrive_date} {transfer.arrive_time} | "
             f"{transfer.from_station_name} -> {transfer.middle_station_name} -> {transfer.end_station_name} | "
@@ -345,51 +345,51 @@ def _format_transfer_tickets(transfers: list) -> str:
         result_lines.append(basic_info)
         result_lines.append("-" * 80)
 
-        # 车次详情
+        # Train details
         for i, ticket in enumerate(transfer.ticket_list, 1):
             segment_info = (
-                f"  第{i}程: {ticket.start_train_code} | "
+                f"  Leg {i}: {ticket.start_train_code} | "
                 f"{ticket.from_station} -> {ticket.to_station} | "
                 f"{ticket.start_time} -> {ticket.arrive_time} | "
                 f"{ticket.duration}"
             )
             result_lines.append(segment_info)
 
-            # 座位和价格信息
+            # Seat and price information
             for price in ticket.prices:
                 ticket_status = _format_ticket_status(price.num)
-                price_info = f"    - {price.seat_name}: {ticket_status} {price.price}元"
+                price_info = f"    - {price.seat_name}: {ticket_status} {price.price} CNY"
                 result_lines.append(price_info)
 
-            # 特性标记
+            # Feature flags
             if ticket.features:
-                features_info = f"    - 特性: {', '.join(ticket.features)}"
+                features_info = f"    - Features: {', '.join(ticket.features)}"
                 result_lines.append(features_info)
 
-        result_lines.append("")  # 空行分隔
+        result_lines.append("")  # Blank line separator
 
     return "\n".join(result_lines)
 
 
 def _format_ticket_status(num: str) -> str:
     """
-    格式化票量信息.
+    Format ticket availability status.
     """
     if num.isdigit():
         count = int(num)
         if count == 0:
-            return "无票"
+            return "Sold out"
         else:
-            return f"剩余{count}张票"
+            return f"{count} tickets remaining"
 
-    # 处理特殊状态
+    # Handle special statuses
     status_map = {
-        "有": "有票",
-        "充足": "有票",
-        "无": "无票",
-        "--": "无票",
-        "": "无票",
-        "候补": "无票需候补",
+        "有": "Available",
+        "充足": "Available",
+        "无": "Sold out",
+        "--": "Sold out",
+        "": "Sold out",
+        "候补": "Sold out (waitlist available)",
     }
 
-    return status_map.get(num, f"{num}票")
+    return status_map.get(num, f"{num} tickets")

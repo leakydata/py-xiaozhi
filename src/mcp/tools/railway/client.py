@@ -1,6 +1,6 @@
-"""12306 API客户端.
+"""12306 API client.
 
-提供访问12306官方API的功能.
+Provides access to the 12306 official API.
 """
 
 import re
@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 
 class Railway12306Client:
     """
-    12306客户端.
+    12306 client.
     """
 
     def __init__(self):
@@ -28,7 +28,7 @@ class Railway12306Client:
         self.web_url = "https://www.12306.cn/index/"
         self.lcquery_init_url = "https://kyfw.12306.cn/otn/lcQuery/init"
 
-        # 车站数据缓存
+        # Station data cache
         self._stations: Dict[str, StationInfo] = {}  # code -> StationInfo
         self._city_stations: Dict[str, List[StationInfo]] = (
             {}
@@ -37,29 +37,29 @@ class Railway12306Client:
         self._name_stations: Dict[str, StationInfo] = {}  # name -> StationInfo
         self._lcquery_path: Optional[str] = None
 
-        # 座位类型映射
+        # Seat type mapping
         self.seat_types = {
-            "9": {"name": "商务座", "short": "swz"},
-            "P": {"name": "特等座", "short": "tz"},
-            "M": {"name": "一等座", "short": "zy"},
-            "D": {"name": "优选一等座", "short": "zy"},
-            "O": {"name": "二等座", "short": "ze"},
-            "S": {"name": "二等包座", "short": "ze"},
-            "6": {"name": "高级软卧", "short": "gr"},
-            "A": {"name": "高级动卧", "short": "gr"},
-            "4": {"name": "软卧", "short": "rw"},
-            "I": {"name": "一等卧", "short": "rw"},
-            "F": {"name": "动卧", "short": "rw"},
-            "3": {"name": "硬卧", "short": "yw"},
-            "J": {"name": "二等卧", "short": "yw"},
-            "2": {"name": "软座", "short": "rz"},
-            "1": {"name": "硬座", "short": "yz"},
-            "W": {"name": "无座", "short": "wz"},
-            "WZ": {"name": "无座", "short": "wz"},
-            "H": {"name": "其他", "short": "qt"},
+            "9": {"name": "Business Class", "short": "swz"},
+            "P": {"name": "Premier Class", "short": "tz"},
+            "M": {"name": "First Class", "short": "zy"},
+            "D": {"name": "Premium First Class", "short": "zy"},
+            "O": {"name": "Second Class", "short": "ze"},
+            "S": {"name": "Second Class Compartment", "short": "ze"},
+            "6": {"name": "Deluxe Soft Sleeper", "short": "gr"},
+            "A": {"name": "Deluxe EMU Sleeper", "short": "gr"},
+            "4": {"name": "Soft Sleeper", "short": "rw"},
+            "I": {"name": "First Class Sleeper", "short": "rw"},
+            "F": {"name": "EMU Sleeper", "short": "rw"},
+            "3": {"name": "Hard Sleeper", "short": "yw"},
+            "J": {"name": "Second Class Sleeper", "short": "yw"},
+            "2": {"name": "Soft Seat", "short": "rz"},
+            "1": {"name": "Hard Seat", "short": "yz"},
+            "W": {"name": "Standing", "short": "wz"},
+            "WZ": {"name": "Standing", "short": "wz"},
+            "H": {"name": "Other", "short": "qt"},
         }
 
-        # 车次类型筛选器
+        # Train type filters
         self.train_filters = {
             "G": lambda code: code.startswith("G") or code.startswith("C"),
             "D": lambda code: code.startswith("D"),
@@ -78,60 +78,60 @@ class Railway12306Client:
             ),
         }
 
-        # 特性标记
+        # Feature flags
         self.dw_flags = [
-            "智能动车组",
-            "复兴号",
-            "静音车厢",
-            "温馨动卧",
-            "动感号",
-            "支持选铺",
-            "老年优惠",
+            "Smart EMU",
+            "Fuxing",
+            "Quiet Car",
+            "Comfort Sleeper",
+            "Vibrant Express",
+            "Berth Selection",
+            "Senior Discount",
         ]
 
     async def initialize(self) -> bool:
         """
-        初始化客户端，加载车站数据.
+        Initialize client and load station data.
         """
         try:
-            logger.info("开始初始化12306客户端...")
+            logger.info("Starting 12306 client initialization...")
 
-            # 加载车站数据
+            # Load station data
             await self._load_stations()
 
-            # 获取中转查询路径
+            # Get transfer query path
             await self._get_lcquery_path()
 
-            logger.info("初始化完成")
+            logger.info("Initialization complete")
             return True
 
         except Exception as e:
-            logger.error(f"初始化失败: {e}", exc_info=True)
+            logger.error(f"Initialization failed: {e}", exc_info=True)
             return False
 
     async def _load_stations(self):
         """
-        加载车站数据.
+        Load station data.
         """
         try:
-            # 获取车站JS文件
+            # Get station JS file
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.web_url) as response:
                     html = await response.text()
 
-                # 查找车站JS文件路径
+                # Find station JS file path
                 match = re.search(r"\.(.*station_name.*?\.js)", html)
                 if not match:
-                    raise Exception("未找到车站数据文件")
+                    raise Exception("Station data file not found")
 
                 js_path = match.group(0)
                 js_url = f"{self.web_url.rstrip('/')}/{js_path.lstrip('.')}"
 
-                # 获取车站数据
+                # Get station data
                 async with session.get(js_url) as response:
                     js_content = await response.text()
 
-                # 解析车站数据
+                # Parse station data
                 station_data = (
                     js_content.replace("var station_names =", "").strip().rstrip(";")
                 )
@@ -140,18 +140,18 @@ class Railway12306Client:
                 self._parse_stations_data(station_data)
 
         except Exception as e:
-            logger.error(f"加载车站数据失败: {e}")
-            # 使用默认车站数据
+            logger.error(f"Failed to load station data: {e}")
+            # Use default station data
             self._load_default_stations()
 
     def _parse_stations_data(self, raw_data: str):
         """
-        解析车站数据.
+        Parse station data.
         """
         try:
             data_array = raw_data.split("|")
 
-            # 每10个元素为一个车站
+            # Every 10 elements form one station
             for i in range(0, len(data_array), 10):
                 if i + 9 >= len(data_array):
                     break
@@ -170,36 +170,36 @@ class Railway12306Client:
                     code=group[6],
                 )
 
-                # 按编码索引
+                # Index by code
                 self._stations[station.station_code] = station
 
-                # 按城市索引
+                # Index by city
                 if station.city not in self._city_stations:
                     self._city_stations[station.city] = []
                 self._city_stations[station.city].append(station)
 
-                # 按名称索引
+                # Index by name
                 self._name_stations[station.station_name] = station
 
-            # 生成城市代表站编码（与城市同名的站）
+            # Generate representative station codes for cities (station with same name as city)
             for city, stations in self._city_stations.items():
                 for station in stations:
                     if station.station_name == city:
                         self._city_codes[city] = station
                         break
 
-            # 添加缺失的车站
+            # Add missing stations
             self._add_missing_stations()
 
-            logger.info(f"加载了{len(self._stations)}个车站")
+            logger.info(f"Loaded {len(self._stations)} stations")
 
         except Exception as e:
-            logger.error(f"解析车站数据失败: {e}")
+            logger.error(f"Failed to parse station data: {e}")
             raise
 
     def _add_missing_stations(self):
         """
-        添加缺失的车站.
+        Add missing stations.
         """
         missing_stations = [
             StationInfo(
@@ -234,7 +234,7 @@ class Railway12306Client:
 
     def _load_default_stations(self):
         """
-        加载默认车站数据（备用）.
+        Load default station data (fallback).
         """
         default_stations = [
             {
@@ -270,7 +270,7 @@ class Railway12306Client:
 
     async def _get_lcquery_path(self):
         """
-        获取中转查询路径.
+        Get transfer query path.
         """
         try:
             async with aiohttp.ClientSession() as session:
@@ -280,16 +280,16 @@ class Railway12306Client:
                 match = re.search(r"var lc_search_url = '(.+?)'", html)
                 if match:
                     self._lcquery_path = match.group(1)
-                    logger.debug(f"获取中转查询路径: {self._lcquery_path}")
+                    logger.debug(f"Got transfer query path: {self._lcquery_path}")
                 else:
-                    logger.warning("未找到中转查询路径")
+                    logger.warning("Transfer query path not found")
 
         except Exception as e:
-            logger.error(f"获取中转查询路径失败: {e}")
+            logger.error(f"Failed to get transfer query path: {e}")
 
     async def _get_cookie(self) -> Optional[str]:
         """
-        获取Cookie.
+        Get cookie.
         """
         try:
             url = f"{self.api_base}/otn/"
@@ -304,12 +304,12 @@ class Railway12306Client:
             return None
 
         except Exception as e:
-            logger.error(f"获取Cookie失败: {e}")
+            logger.error(f"Failed to get cookie: {e}")
             return None
 
     async def _make_request(self, url: str, params: dict = None) -> Optional[dict]:
         """
-        发起请求.
+        Make a request.
         """
         try:
             cookie = await self._get_cookie()
@@ -332,22 +332,22 @@ class Railway12306Client:
                     url = f"{url}?{urlencode(params)}"
 
                 async with session.get(url, headers=headers) as response:
-                    # 检查是否是错误页面
+                    # Check if it's an error page
                     if response.content_type == "text/html":
                         text = await response.text()
                         if "error.html" in response.url.path or "error" in text.lower():
-                            logger.error(f"12306返回错误页面: {response.url}")
+                            logger.error(f"12306 returned error page: {response.url}")
                             return None
 
                     return await response.json()
 
         except Exception as e:
-            logger.error(f"请求失败: {e}")
+            logger.error(f"Request failed: {e}")
             return None
 
     def get_current_date(self) -> str:
         """
-        获取当前日期（上海时区）.
+        Get current date (Shanghai timezone).
         """
         shanghai_tz = tz.gettz("Asia/Shanghai")
         now = datetime.now(shanghai_tz)
@@ -355,34 +355,34 @@ class Railway12306Client:
 
     def get_stations_in_city(self, city: str) -> List[StationInfo]:
         """
-        获取城市中的所有车站.
+        Get all stations in a city.
         """
         return self._city_stations.get(city, [])
 
     def get_city_main_station(self, city: str) -> Optional[StationInfo]:
         """
-        获取城市主要车站.
+        Get the main station of a city.
         """
         return self._city_codes.get(city)
 
     def get_station_by_name(self, name: str) -> Optional[StationInfo]:
-        """
-        根据名称获取车站.
-        """
-        # 去掉后缀“站”
+        “””
+        Get station by name.
+        “””
+        # Remove trailing suffix “站” (station)
         if name.endswith("站"):
             name = name[:-1]
         return self._name_stations.get(name)
 
     def get_station_by_code(self, code: str) -> Optional[StationInfo]:
         """
-        根据编码获取车站.
+        Get station by code.
         """
         return self._stations.get(code)
 
     def _check_date(self, date_str: str) -> bool:
         """
-        检查日期是否有效（不能早于今天）.
+        Check if date is valid (cannot be earlier than today).
         """
         try:
             shanghai_tz = tz.gettz("Asia/Shanghai")
@@ -409,41 +409,41 @@ class Railway12306Client:
         reverse: bool = False,
         limit: int = 10,
     ) -> Tuple[bool, List[TransferTicket], str]:
-        """查询中转车票.
+        """Query transfer tickets.
 
         Args:
-            date: 查询日期 (YYYY-MM-DD)
-            from_station: 出发站编码
-            to_station: 到达站编码
-            middle_station: 中转站编码 (可选)
-            show_wz: 是否显示无座车
-            train_filters: 车次筛选 (G/D/Z/T/K/O/F/S)
-            sort_by: 排序方式 (start_time/arrive_time/duration)
-            reverse: 是否逆序
-            limit: 限制数量
+            date: Query date (YYYY-MM-DD)
+            from_station: Departure station code
+            to_station: Arrival station code
+            middle_station: Transfer station code (optional)
+            show_wz: Whether to show standing-only trains
+            train_filters: Train type filter (G/D/Z/T/K/O/F/S)
+            sort_by: Sort method (start_time/arrive_time/duration)
+            reverse: Whether to reverse sort order
+            limit: Result limit
 
         Returns:
             (success, transfer_tickets, message)
         """
         try:
-            # 检查日期
+            # Check date
             if not self._check_date(date):
-                return False, [], "日期不能早于今天"
+                return False, [], "Date cannot be earlier than today"
 
-            # 检查车站
+            # Check stations
             if from_station not in self._stations or to_station not in self._stations:
-                return False, [], "车站编码不存在"
+                return False, [], "Station code does not exist"
 
             if middle_station and middle_station not in self._stations:
-                return False, [], "中转站编码不存在"
+                return False, [], "Transfer station code does not exist"
 
-            # 获取中转查询路径
+            # Get transfer query path
             if not self._lcquery_path:
                 await self._get_lcquery_path()
                 if not self._lcquery_path:
-                    return False, [], "中转查询路径不可用"
+                    return False, [], "Transfer query path unavailable"
 
-            # 构造请求参数
+            # Build request parameters
             params = {
                 "train_date": date,
                 "from_station_telecode": from_station,
@@ -452,54 +452,54 @@ class Railway12306Client:
                 "result_index": "0",
                 "can_query": "Y",
                 "isShowWZ": "Y" if show_wz else "N",
-                "purpose_codes": "00",  # 成人票
+                "purpose_codes": "00",  # Adult ticket
                 "channel": "E",
             }
 
             url = f"{self.api_base}{self._lcquery_path}"
             transfers = []
 
-            # 循环查询直到获取足够数据或无更多数据
+            # Loop query until enough data is obtained or no more data
             while len(transfers) < limit:
                 data = await self._make_request(url, params)
 
                 if not data:
-                    return False, [], "中转票查询API不可用"
+                    return False, [], "Transfer ticket query API unavailable"
 
-                # 检查查询结果
+                # Check query result
                 if isinstance(data.get("data"), str):
-                    # 查询失败
-                    error_msg = data.get("errorMsg", "未查到相关的列车余票")
-                    return False, [], f"未查到相关的中转票: {error_msg}"
+                    # Query failed
+                    error_msg = data.get("errorMsg", "No related train tickets found")
+                    return False, [], f"No transfer tickets found: {error_msg}"
 
-                # 解析中转数据
+                # Parse transfer data
                 data_dict = data.get("data", {})
                 middle_list = data_dict.get("middleList", [])
 
                 if not middle_list:
                     break
 
-                # 解析并添加中转票信息
+                # Parse and add transfer ticket information
                 parsed_transfers = self._parse_transfer_data(middle_list)
                 transfers.extend(parsed_transfers)
 
-                # 检查是否可以继续查询
+                # Check if more queries are possible
                 if data_dict.get("can_query") != "Y":
                     break
 
-                # 更新查询索引
+                # Update query index
                 params["result_index"] = str(data_dict.get("result_index", 0))
 
-            # 过滤和排序
+            # Filter and sort
             transfers = self._filter_and_sort_transfers(
                 transfers, train_filters, sort_by, reverse, limit
             )
 
-            return True, transfers, "查询成功"
+            return True, transfers, "Query successful"
 
         except Exception as e:
-            logger.error(f"查询中转票失败: {e}", exc_info=True)
-            return False, [], f"查询失败: {str(e)}"
+            logger.error(f"Failed to query transfer tickets: {e}", exc_info=True)
+            return False, [], f"Query failed: {str(e)}"
 
     async def query_tickets(
         self,
@@ -511,30 +511,30 @@ class Railway12306Client:
         reverse: bool = False,
         limit: int = 0,
     ) -> Tuple[bool, List[TrainTicket], str]:
-        """查询车票.
+        """Query tickets.
 
         Args:
-            date: 查询日期 (YYYY-MM-DD)
-            from_station: 出发站编码
-            to_station: 到达站编码
-            train_filters: 车次筛选 (G/D/Z/T/K/O)
-            sort_by: 排序方式 (start_time/arrive_time/duration)
-            reverse: 是否逆序
-            limit: 限制数量
+            date: Query date (YYYY-MM-DD)
+            from_station: Departure station code
+            to_station: Arrival station code
+            train_filters: Train type filter (G/D/Z/T/K/O)
+            sort_by: Sort method (start_time/arrive_time/duration)
+            reverse: Whether to reverse sort order
+            limit: Result limit
 
         Returns:
             (success, tickets, message)
         """
         try:
-            # 检查日期
+            # Check date
             if not self._check_date(date):
-                return False, [], "日期不能早于今天"
+                return False, [], "Date cannot be earlier than today"
 
-            # 检查车站
+            # Check stations
             if from_station not in self._stations or to_station not in self._stations:
-                return False, [], "车站编码不存在"
+                return False, [], "Station code does not exist"
 
-            # 构造请求参数
+            # Build request parameters
             params = {
                 "leftTicketDTO.train_date": date,
                 "leftTicketDTO.from_station": from_station,
@@ -546,27 +546,27 @@ class Railway12306Client:
             data = await self._make_request(url, params)
 
             if not data or not data.get("status"):
-                # 当12306 API不可用时，返回错误信息
-                logger.warning("12306 API不可用")
-                return False, [], "12306服务不可用，请稍后再试"
+                # When 12306 API is unavailable, return error message
+                logger.warning("12306 API unavailable")
+                return False, [], "12306 service unavailable, please try again later"
 
-            # 解析数据
+            # Parse data
             tickets = self._parse_tickets_data(data.get("data", {}))
 
-            # 过滤和排序
+            # Filter and sort
             tickets = self._filter_and_sort_tickets(
                 tickets, train_filters, sort_by, reverse, limit
             )
 
-            return True, tickets, "查询成功"
+            return True, tickets, "Query successful"
 
         except Exception as e:
-            logger.error(f"查询车票失败: {e}", exc_info=True)
-            return False, [], f"查询失败: {str(e)}"
+            logger.error(f"Failed to query tickets: {e}", exc_info=True)
+            return False, [], f"Query failed: {str(e)}"
 
     def _parse_tickets_data(self, data: dict) -> List[TrainTicket]:
         """
-        解析车票数据.
+        Parse ticket data.
         """
         tickets = []
 
@@ -576,7 +576,7 @@ class Railway12306Client:
 
             for result_str in results:
                 values = result_str.split("|")
-                if len(values) < 57:  # 数据不完整
+                if len(values) < 57:  # Incomplete data
                     continue
 
                 # 解析基本信息
@@ -592,7 +592,7 @@ class Railway12306Client:
                 # 计算日期
                 start_date = datetime.strptime(start_date_str, "%Y%m%d")
 
-                # 安全解析时间，处理可能的格式问题
+                # Safely parse time, handle possible format issues
                 try:
                     start_hour, start_minute = map(int, start_time.split(":"))
                     if (
@@ -601,12 +601,12 @@ class Railway12306Client:
                         or start_minute < 0
                         or start_minute > 59
                     ):
-                        logger.warning(f"无效的开始时间: {start_time}")
+                        logger.warning(f"Invalid start time: {start_time}")
                         continue
 
                     duration_hour, duration_minute = map(int, duration.split(":"))
                     if duration_hour < 0 or duration_minute < 0:
-                        logger.warning(f"无效的历时: {duration}")
+                        logger.warning(f"Invalid duration: {duration}")
                         continue
 
                     start_datetime = start_date.replace(
@@ -618,14 +618,14 @@ class Railway12306Client:
 
                 except (ValueError, IndexError) as e:
                     logger.warning(
-                        f"时间解析失败 start_time={start_time}, duration={duration}: {e}"
+                        f"Time parsing failed start_time={start_time}, duration={duration}: {e}"
                     )
                     continue
 
-                # 解析价格信息
+                # Parse price information
                 prices = self._parse_prices(values[42], values[54], values)
 
-                # 解析特性标记
+                # Parse feature flags
                 features = self._parse_features(values[46])
 
                 ticket = TrainTicket(
@@ -647,7 +647,7 @@ class Railway12306Client:
                 tickets.append(ticket)
 
         except Exception as e:
-            logger.error(f"解析车票数据失败: {e}")
+            logger.error(f"Failed to parse ticket data: {e}")
 
         return tickets
 
@@ -655,12 +655,12 @@ class Railway12306Client:
         self, yp_info: str, discount_info: str, values: list
     ) -> List[SeatPrice]:
         """
-        解析价格信息.
+        Parse price information.
         """
         prices = []
 
         try:
-            # 解析折扣信息
+            # Parse discount information
             discounts = {}
             for i in range(0, len(discount_info), 5):
                 if i + 4 < len(discount_info):
@@ -668,24 +668,24 @@ class Railway12306Client:
                     discount_val = int(discount_info[i + 1 : i + 5])
                     discounts[seat_code] = discount_val
 
-            # 解析价格信息
+            # Parse price information
             for i in range(0, len(yp_info), 10):
                 if i + 9 < len(yp_info):
                     price_str = yp_info[i : i + 10]
                     seat_code = price_str[0]
 
-                    # 特殊处理无座
+                    # Special handling for standing tickets
                     if int(price_str[6:10]) >= 3000:
                         seat_code = "W"
                     elif seat_code not in self.seat_types:
                         seat_code = "H"
 
                     seat_info = self.seat_types.get(
-                        seat_code, {"name": "其他", "short": "qt"}
+                        seat_code, {"name": "Other", "short": "qt"}
                     )
                     price_value = int(price_str[1:6]) / 10
 
-                    # 获取余票数量
+                    # Get remaining ticket count
                     seat_num_field = f"{seat_info['short']}_num"
                     seat_num_index = self._get_seat_num_index(seat_num_field)
                     num = (
@@ -704,13 +704,13 @@ class Railway12306Client:
                     prices.append(price)
 
         except Exception as e:
-            logger.error(f"解析价格信息失败: {e}")
+            logger.error(f"Failed to parse price information: {e}")
 
         return prices
 
     def _get_seat_num_index(self, seat_field: str) -> int:
         """
-        获取座位数量字段的索引.
+        Get the index of the seat count field.
         """
         seat_indices = {
             "gg_num": 22,
@@ -732,7 +732,7 @@ class Railway12306Client:
 
     def _parse_features(self, dw_flag: str) -> List[str]:
         """
-        解析特性标记.
+        Parse feature flags.
         """
         features = []
 
@@ -740,28 +740,28 @@ class Railway12306Client:
             flags = dw_flag.split("#")
 
             if len(flags) > 0 and flags[0] == "5":
-                features.append(self.dw_flags[0])  # 智能动车组
+                features.append(self.dw_flags[0])  # Smart EMU
 
             if len(flags) > 1 and flags[1] == "1":
-                features.append(self.dw_flags[1])  # 复兴号
+                features.append(self.dw_flags[1])  # Fuxing
 
             if len(flags) > 2:
                 if flags[2].startswith("Q"):
-                    features.append(self.dw_flags[2])  # 静音车厢
+                    features.append(self.dw_flags[2])  # Quiet Car
                 elif flags[2].startswith("R"):
-                    features.append(self.dw_flags[3])  # 温馨动卧
+                    features.append(self.dw_flags[3])  # Comfort Sleeper
 
             if len(flags) > 5 and flags[5] == "D":
-                features.append(self.dw_flags[4])  # 动感号
+                features.append(self.dw_flags[4])  # Vibrant Express
 
             if len(flags) > 6 and flags[6] != "z":
-                features.append(self.dw_flags[5])  # 支持选铺
+                features.append(self.dw_flags[5])  # Berth Selection
 
             if len(flags) > 7 and flags[7] != "z":
-                features.append(self.dw_flags[6])  # 老年优惠
+                features.append(self.dw_flags[6])  # Senior Discount
 
         except Exception as e:
-            logger.error(f"解析特性标记失败: {e}")
+            logger.error(f"Failed to parse feature flags: {e}")
 
         return features
 
@@ -774,11 +774,11 @@ class Railway12306Client:
         limit: int,
     ) -> List[TrainTicket]:
         """
-        过滤和排序车票.
+        Filter and sort tickets.
         """
         result = tickets
 
-        # 过滤车次类型
+        # Filter train types
         if train_filters:
             filtered = []
             for ticket in result:
@@ -789,7 +789,7 @@ class Railway12306Client:
                             break
             result = filtered
 
-        # 排序
+        # Sort
         if sort_by == "start_time":
             result.sort(key=lambda t: (t.start_date, t.start_time))
         elif sort_by == "arrive_time":
@@ -800,7 +800,7 @@ class Railway12306Client:
         if reverse:
             result.reverse()
 
-        # 限制数量
+        # Limit count
         if limit > 0:
             result = result[:limit]
 
@@ -808,13 +808,13 @@ class Railway12306Client:
 
     def _parse_transfer_data(self, middle_list: List[dict]) -> List[TransferTicket]:
         """
-        解析中转数据.
+        Parse transfer data.
         """
         transfers = []
 
         try:
             for transfer_data in middle_list:
-                # 解析基本信息
+                # Parse basic information
                 duration = self._extract_duration(transfer_data.get("all_lishi", ""))
                 start_time = transfer_data.get("start_time", "")
                 start_date = transfer_data.get("train_date", "")
@@ -837,11 +837,11 @@ class Railway12306Client:
                 same_train = transfer_data.get("same_train") == "Y"
                 wait_time = transfer_data.get("wait_time", "")
 
-                # 解析车票列表
+                # Parse ticket list
                 full_list = transfer_data.get("fullList", [])
                 ticket_list = self._parse_transfer_tickets(full_list)
 
-                # 获取第一个车次代码
+                # Get first train code
                 start_train_code = (
                     ticket_list[0].start_train_code if ticket_list else ""
                 )
@@ -872,19 +872,19 @@ class Railway12306Client:
                 transfers.append(transfer)
 
         except Exception as e:
-            logger.error(f"解析中转数据失败: {e}")
+            logger.error(f"Failed to parse transfer data: {e}")
 
         return transfers
 
     def _parse_transfer_tickets(self, full_list: List[dict]) -> List[TrainTicket]:
         """
-        解析中转车票列表.
+        Parse transfer ticket list.
         """
         tickets = []
 
         try:
             for ticket_data in full_list:
-                # 解析基本信息
+                # Parse basic information
                 train_no = ticket_data.get("train_no", "")
                 train_code = ticket_data.get("station_train_code", "")
                 start_time = ticket_data.get("start_time", "")
@@ -914,18 +914,18 @@ class Railway12306Client:
                     formatted_arrive_date = arrive_datetime.strftime("%Y-%m-%d")
 
                 except (ValueError, IndexError) as e:
-                    logger.warning(f"中转票时间解析失败: {e}")
+                    logger.warning(f"Transfer ticket time parsing failed: {e}")
                     formatted_start_date = start_date_str
                     formatted_arrive_date = start_date_str
 
-                # 解析价格信息
+                # Parse price information
                 yp_info = ticket_data.get("yp_info", "")
                 discount_info = ticket_data.get("seat_discount_info", "")
                 prices = self._parse_transfer_prices(
                     yp_info, discount_info, ticket_data
                 )
 
-                # 解析特性标记
+                # Parse feature flags
                 features = self._parse_features(ticket_data.get("dw_flag", ""))
 
                 ticket = TrainTicket(
@@ -947,7 +947,7 @@ class Railway12306Client:
                 tickets.append(ticket)
 
         except Exception as e:
-            logger.error(f"解析中转车票失败: {e}")
+            logger.error(f"Failed to parse transfer tickets: {e}")
 
         return tickets
 
@@ -955,12 +955,12 @@ class Railway12306Client:
         self, yp_info: str, discount_info: str, ticket_data: dict
     ) -> List[SeatPrice]:
         """
-        解析中转车票价格信息.
+        Parse transfer ticket price information.
         """
         prices = []
 
         try:
-            # 解析折扣信息
+            # Parse discount information
             discounts = {}
             for i in range(0, len(discount_info), 5):
                 if i + 4 < len(discount_info):
@@ -968,24 +968,24 @@ class Railway12306Client:
                     discount_val = int(discount_info[i + 1 : i + 5])
                     discounts[seat_code] = discount_val
 
-            # 解析价格信息
+            # Parse price information
             for i in range(0, len(yp_info), 10):
                 if i + 9 < len(yp_info):
                     price_str = yp_info[i : i + 10]
                     seat_code = price_str[0]
 
-                    # 特殊处理无座
+                    # Special handling for standing tickets
                     if int(price_str[6:10]) >= 3000:
                         seat_code = "W"
                     elif seat_code not in self.seat_types:
                         seat_code = "H"
 
                     seat_info = self.seat_types.get(
-                        seat_code, {"name": "其他", "short": "qt"}
+                        seat_code, {"name": "Other", "short": "qt"}
                     )
                     price_value = int(price_str[1:6]) / 10
 
-                    # 从ticket_data中获取余票数量
+                    # Get remaining ticket count from ticket_data
                     seat_short = seat_info["short"]
                     num_field = f"{seat_short}_num"
                     num = ticket_data.get(num_field, "--")
@@ -1002,16 +1002,16 @@ class Railway12306Client:
                     prices.append(price)
 
         except Exception as e:
-            logger.error(f"解析中转价格信息失败: {e}")
+            logger.error(f"Failed to parse transfer price information: {e}")
 
         return prices
 
     def _extract_duration(self, all_lishi: str) -> str:
         """
-        提取历时信息，格式化为 HH:MM.
+        Extract duration information, formatted as HH:MM.
         """
         try:
-            # 匹配 "X小时Y分钟" 或 "Y分钟" 格式
+            # Match "X小时Y分钟" or "Y分钟" format
             import re
 
             match = re.search(r"(?:(\d+)小时)?(\d+)分钟", all_lishi)
@@ -1022,7 +1022,7 @@ class Railway12306Client:
             return all_lishi
 
         except Exception as e:
-            logger.error(f"解析历时失败: {e}")
+            logger.error(f"Failed to parse duration: {e}")
             return all_lishi
 
     def _filter_and_sort_transfers(

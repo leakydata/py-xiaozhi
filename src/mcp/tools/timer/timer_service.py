@@ -1,6 +1,6 @@
-"""倒计时器服务.
+"""Countdown timer service.
 
-管理倒计时任务的创建、执行、取消和状态查询
+Manages countdown task creation, execution, cancellation, and status queries.
 """
 
 import asyncio
@@ -16,65 +16,65 @@ logger = get_logger(__name__)
 
 class TimerService:
     """
-    倒计时器服务，管理所有倒计时任务.
+    Countdown timer service that manages all countdown tasks.
     """
 
     def __init__(self):
-        # 使用字典存储活动的计时器，键是 timer_id，值是 TimerTask 对象
+        # Dictionary to store active timers, key is timer_id, value is TimerTask object
         self._timers: Dict[int, "TimerTask"] = {}
         self._next_timer_id = 0
-        # 使用锁来保护对 _timers 和 _next_timer_id 的访问，确保线程安全
+        # Lock to protect access to _timers and _next_timer_id, ensuring thread safety
         self._lock = asyncio.Lock()
-        self.DEFAULT_DELAY = 5  # 默认延迟秒数
+        self.DEFAULT_DELAY = 5  # Default delay in seconds
 
     async def start_countdown(
         self, command: str, delay: int = None, description: str = ""
     ) -> Dict[str, Any]:
-        """启动一个倒计时任务.
+        """Start a countdown task.
 
         Args:
-            command: 要执行的MCP工具调用 (JSON格式字符串，包含name和arguments字段)
-            delay: 延迟时间（秒），默认为5秒
-            description: 任务描述
+            command: MCP tool call to execute (JSON string with name and arguments fields)
+            delay: Delay time in seconds, defaults to 5 seconds
+            description: Task description
 
         Returns:
-            Dict[str, Any]: 包含任务信息的字典
+            Dict[str, Any]: Dictionary containing task information
         """
         if delay is None:
             delay = self.DEFAULT_DELAY
 
-        # 验证延迟时间
+        # Validate delay time
         try:
             delay = int(delay)
             if delay <= 0:
                 logger.warning(
-                    f"提供的延迟时间 {delay} 无效，使用默认值 {self.DEFAULT_DELAY} 秒"
+                    f"Provided delay {delay} is invalid, using default value {self.DEFAULT_DELAY} seconds"
                 )
                 delay = self.DEFAULT_DELAY
         except (ValueError, TypeError):
             logger.warning(
-                f"提供的延迟时间 '{delay}' 无效，使用默认值 {self.DEFAULT_DELAY} 秒"
+                f"Provided delay '{delay}' is invalid, using default value {self.DEFAULT_DELAY} seconds"
             )
             delay = self.DEFAULT_DELAY
 
-        # 验证命令格式
+        # Validate command format
         try:
             json.loads(command)
         except json.JSONDecodeError:
-            logger.error(f"启动倒计时失败：命令格式错误，无法解析JSON: {command}")
+            logger.error(f"Failed to start countdown: invalid command format, cannot parse JSON: {command}")
             return {
                 "success": False,
-                "message": f"命令格式错误，无法解析JSON: {command}",
+                "message": f"Invalid command format, cannot parse JSON: {command}",
             }
 
-        # 获取当前事件循环
+        # Get the current event loop
         loop = asyncio.get_running_loop()
 
         async with self._lock:
             timer_id = self._next_timer_id
             self._next_timer_id += 1
 
-            # 创建倒计时任务
+            # Create countdown task
             timer_task = TimerTask(
                 timer_id=timer_id,
                 command=command,
@@ -83,17 +83,17 @@ class TimerService:
                 service=self,
             )
 
-            # 创建异步任务
+            # Create async task
             task = loop.create_task(timer_task.run())
             timer_task.task = task
 
             self._timers[timer_id] = timer_task
 
-        logger.info(f"启动倒计时 {timer_id}，将在 {delay} 秒后执行命令: {command}")
+        logger.info(f"Started countdown {timer_id}, will execute command in {delay} seconds: {command}")
 
         return {
             "success": True,
-            "message": f"倒计时 {timer_id} 已启动，将在 {delay} 秒后执行",
+            "message": f"Countdown {timer_id} started, will execute in {delay} seconds",
             "timer_id": timer_id,
             "delay": delay,
             "command": command,
@@ -105,19 +105,19 @@ class TimerService:
         }
 
     async def cancel_countdown(self, timer_id: int) -> Dict[str, Any]:
-        """取消指定的倒计时任务.
+        """Cancel a specified countdown task.
 
         Args:
-            timer_id: 要取消的计时器ID
+            timer_id: ID of the timer to cancel
 
         Returns:
-            Dict[str, Any]: 取消结果
+            Dict[str, Any]: Cancellation result
         """
         try:
             timer_id = int(timer_id)
         except (ValueError, TypeError):
-            logger.error(f"取消倒计时失败：无效的 timer_id {timer_id}")
-            return {"success": False, "message": f"无效的 timer_id: {timer_id}"}
+            logger.error(f"Failed to cancel countdown: invalid timer_id {timer_id}")
+            return {"success": False, "message": f"Invalid timer_id: {timer_id}"}
 
         async with self._lock:
             if timer_id in self._timers:
@@ -125,26 +125,26 @@ class TimerService:
                 if timer_task.task:
                     timer_task.task.cancel()
 
-                logger.info(f"倒计时 {timer_id} 已成功取消")
+                logger.info(f"Countdown {timer_id} successfully cancelled")
                 return {
                     "success": True,
-                    "message": f"倒计时 {timer_id} 已取消",
+                    "message": f"Countdown {timer_id} cancelled",
                     "timer_id": timer_id,
                     "cancelled_at": datetime.now().isoformat(),
                 }
             else:
-                logger.warning(f"尝试取消不存在或已完成的倒计时 {timer_id}")
+                logger.warning(f"Attempted to cancel non-existent or completed countdown {timer_id}")
                 return {
                     "success": False,
-                    "message": f"找不到ID为 {timer_id} 的活动倒计时",
+                    "message": f"No active countdown found with ID {timer_id}",
                     "timer_id": timer_id,
                 }
 
     async def get_active_timers(self) -> Dict[str, Any]:
-        """获取所有活动的倒计时任务状态.
+        """Get the status of all active countdown tasks.
 
         Returns:
-            Dict[str, Any]: 活动计时器列表
+            Dict[str, Any]: List of active timers
         """
         async with self._lock:
             active_timers = []
@@ -175,18 +175,18 @@ class TimerService:
 
     async def cleanup_timer(self, timer_id: int):
         """
-        从管理器中移除已完成的计时器.
+        Remove a completed timer from the manager.
         """
         async with self._lock:
             if timer_id in self._timers:
                 del self._timers[timer_id]
-                logger.debug(f"已清理完成的倒计时 {timer_id}")
+                logger.debug(f"Cleaned up completed countdown {timer_id}")
 
     async def cleanup_all(self):
         """
-        清理所有倒计时任务（应用关闭时调用）
+        Clean up all countdown tasks (called when application closes).
         """
-        logger.info("正在清理所有倒计时任务...")
+        logger.info("Cleaning up all countdown tasks...")
         async with self._lock:
             active_timer_ids = list(self._timers.keys())
             for timer_id in active_timer_ids:
@@ -194,13 +194,13 @@ class TimerService:
                     timer_task = self._timers.pop(timer_id)
                     if timer_task.task:
                         timer_task.task.cancel()
-                    logger.info(f"已取消倒计时任务 {timer_id}")
-        logger.info("倒计时任务清理完成")
+                    logger.info(f"Cancelled countdown task {timer_id}")
+        logger.info("Countdown task cleanup complete")
 
 
 class TimerTask:
     """
-    单个倒计时任务.
+    A single countdown task.
     """
 
     def __init__(
@@ -222,46 +222,46 @@ class TimerTask:
 
     async def run(self):
         """
-        执行倒计时任务.
+        Execute the countdown task.
         """
         try:
-            # 等待延迟时间
+            # Wait for the delay period
             await asyncio.sleep(self.delay)
 
-            # 执行命令
+            # Execute command
             await self._execute_command()
 
         except asyncio.CancelledError:
-            logger.info(f"倒计时 {self.timer_id} 被取消")
+            logger.info(f"Countdown {self.timer_id} was cancelled")
         except Exception as e:
-            logger.error(f"倒计时 {self.timer_id} 执行过程中出错: {e}", exc_info=True)
+            logger.error(f"Countdown {self.timer_id} error during execution: {e}", exc_info=True)
         finally:
-            # 清理自己
+            # Clean up self
             await self.service.cleanup_timer(self.timer_id)
 
     async def _execute_command(self):
         """
-        执行倒计时结束后的命令.
+        Execute the command after countdown ends.
         """
-        logger.info(f"倒计时 {self.timer_id} 结束，准备执行MCP工具: {self.command}")
+        logger.info(f"Countdown {self.timer_id} finished, preparing to execute MCP tool: {self.command}")
 
         try:
-            # 解析MCP工具调用命令
+            # Parse MCP tool call command
             command_dict = json.loads(self.command)
 
-            # 验证命令格式（MCP工具调用格式）
+            # Validate command format (MCP tool call format)
             if "name" not in command_dict or "arguments" not in command_dict:
-                raise ValueError("MCP命令格式错误，必须包含 'name' 和 'arguments' 字段")
+                raise ValueError("Invalid MCP command format, must contain 'name' and 'arguments' fields")
 
             tool_name = command_dict["name"]
             arguments = command_dict["arguments"]
 
-            # 获取MCP服务器并执行工具
+            # Get MCP server and execute tool
             from src.mcp.mcp_server import McpServer
 
             mcp_server = McpServer.get_instance()
 
-            # 查找工具
+            # Find tool
             tool = None
             for t in mcp_server.tools:
                 if t.name == tool_name:
@@ -269,59 +269,59 @@ class TimerTask:
                     break
 
             if not tool:
-                raise ValueError(f"MCP工具不存在: {tool_name}")
+                raise ValueError(f"MCP tool does not exist: {tool_name}")
 
-            # 执行MCP工具
+            # Execute MCP tool
             result = await tool.call(arguments)
 
-            # 解析结果
+            # Parse result
             result_data = json.loads(result)
             is_success = not result_data.get("isError", False)
 
             if is_success:
                 logger.info(
-                    f"倒计时 {self.timer_id} 执行MCP工具成功，工具: {tool_name}"
+                    f"Countdown {self.timer_id} MCP tool executed successfully, tool: {tool_name}"
                 )
-                await self._notify_execution_result(True, f"已执行 {tool_name}")
+                await self._notify_execution_result(True, f"Executed {tool_name}")
             else:
-                error_text = result_data.get("content", [{}])[0].get("text", "未知错误")
-                logger.error(f"倒计时 {self.timer_id} 执行MCP工具失败: {error_text}")
+                error_text = result_data.get("content", [{}])[0].get("text", "Unknown error")
+                logger.error(f"Countdown {self.timer_id} MCP tool execution failed: {error_text}")
                 await self._notify_execution_result(False, error_text)
 
         except json.JSONDecodeError:
-            error_msg = f"倒计时 {self.timer_id}: MCP命令格式错误，无法解析JSON"
+            error_msg = f"Countdown {self.timer_id}: invalid MCP command format, cannot parse JSON"
             logger.error(error_msg)
             await self._notify_execution_result(False, error_msg)
         except Exception as e:
-            error_msg = f"倒计时 {self.timer_id} 执行MCP工具时出错: {e}"
+            error_msg = f"Countdown {self.timer_id} error executing MCP tool: {e}"
             logger.error(error_msg, exc_info=True)
             await self._notify_execution_result(False, error_msg)
 
     async def _notify_execution_result(self, success: bool, result: Any):
         """
-        通知执行结果（通过TTS播报）
+        Notify execution result (via TTS announcement).
         """
         try:
             from src.application import Application
 
             app = Application.get_instance()
             if success:
-                message = f"倒计时 {self.timer_id} 执行完成"
+                message = f"Countdown {self.timer_id} execution complete"
                 if self.description:
-                    message = f"{self.description}执行完成"
+                    message = f"{self.description} execution complete"
             else:
-                message = f"倒计时 {self.timer_id} 执行失败"
+                message = f"Countdown {self.timer_id} execution failed"
                 if self.description:
-                    message = f"{self.description}执行失败"
+                    message = f"{self.description} execution failed"
 
-            print("倒计时：", message)
+            print("Countdown:", message)
             await app._send_text_tts(message)
         except Exception as e:
-            logger.warning(f"通知倒计时执行结果失败: {e}")
+            logger.warning(f"Failed to notify countdown execution result: {e}")
 
     def get_remaining_time(self) -> float:
         """
-        获取剩余时间（秒）
+        Get remaining time in seconds.
         """
         now = datetime.now()
         remaining = (self.execution_time - now).total_seconds()
@@ -329,22 +329,22 @@ class TimerTask:
 
     def get_progress(self) -> float:
         """
-        获取进度（0-1之间的浮点数）
+        Get progress (float between 0 and 1).
         """
         elapsed = (datetime.now() - self.start_time).total_seconds()
         return min(1.0, elapsed / self.delay)
 
 
-# 全局服务实例
+# Global service instance
 _timer_service = None
 
 
 def get_timer_service() -> TimerService:
     """
-    获取倒计时器服务单例.
+    Get the countdown timer service singleton.
     """
     global _timer_service
     if _timer_service is None:
         _timer_service = TimerService()
-        logger.debug("创建倒计时器服务实例")
+        logger.debug("Created countdown timer service instance")
     return _timer_service

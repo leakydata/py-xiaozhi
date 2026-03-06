@@ -9,64 +9,64 @@ jobs:
   setup-and-build:
     runs-on: windows-latest
     steps:
-      # 检出代码
-      - name: 检出代码
+      # Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 安装 Inno Setup
-      - name: 安装 Inno Setup（通过 Chocolatey）
+      # Install Inno Setup
+      - name: Install Inno Setup (via Chocolatey)
         run: choco install innosetup -y
         shell: powershell
 
-      # 下载 ChineseSimplified.isl 文件
-      - name: 下载中文语言文件
+      # Download ChineseSimplified.isl file
+      - name: Download Chinese language file
         run: |
           $languageDir = "C:\Program Files (x86)\Inno Setup 6\Languages"
-          
-          # 确保目录存在
+
+          # Ensure directory exists
           if (-not (Test-Path $languageDir)) {
             New-Item -ItemType Directory -Path $languageDir -Force
           }
           
-          # 下载中文语言文件
+          # Download Chinese language file
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseSimplified.isl" -OutFile "$languageDir\ChineseSimplified.isl"
           
-          Write-Host "已下载中文语言文件到 $languageDir\ChineseSimplified.isl"
-          
-          # 验证文件是否存在
+          Write-Host "Downloaded Chinese language file to $languageDir\ChineseSimplified.isl"
+
+          # Verify file exists
           if (Test-Path "$languageDir\ChineseSimplified.isl") {
-            Write-Host "文件下载成功！"
+            Write-Host "File downloaded successfully!"
           } else {
-            Write-Error "文件下载失败！"
+            Write-Error "File download failed!"
             exit 1
           }
         shell: powershell
 
-      # 查找 ISCC.exe 路径并更新 build.json
-      - name: 查找 ISCC.exe 路径并更新 build.json
+      # Find ISCC.exe path and update build.json
+      - name: Find ISCC.exe path and update build.json
         run: |
-          # 获取 ISCC 路径
+          # Get ISCC path
           $isccPath = Get-Command ISCC.exe | Select-Object -ExpandProperty Source
           
-          # 设置环境变量
+          # Set environment variable
           $envLine = "ISCC_PATH=$($isccPath -replace '`r','' -replace '`n','')"
           [System.IO.File]::AppendAllText($env:GITHUB_ENV, "$envLine`n", [System.Text.Encoding]::UTF8)
           
-          # 读取 JSON 内容
+          # Read JSON content
           $jsonPath = "build.json"
           $json = Get-Content $jsonPath -Raw | ConvertFrom-Json
           
-          # 设置新的 Inno Setup 路径
+          # Set new Inno Setup path
           $json.inno_setup_path = $isccPath
           
-          # 写回 JSON 文件，格式化为 UTF-8 编码
+          # Write back JSON file, formatted as UTF-8 encoding
           $json | ConvertTo-Json -Depth 10 | Out-File -FilePath $jsonPath -Encoding UTF8
           
-          Write-Host "已更新 build.json 中的 Inno Setup 路径为: $isccPath"
+          Write-Host "Updated Inno Setup path in build.json to: $isccPath"
         shell: powershell
 
-      # 安装 Miniconda 和 Conda
-      - name: 安装 Miniconda 和 Conda
+      # Install Miniconda and Conda
+      - name: Install Miniconda and Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: "3.10"
@@ -74,45 +74,45 @@ jobs:
           auto-activate-base: false
           activate-environment: py-xiaozhi
 
-      # 创建 Conda 环境并安装依赖
-      - name: 创建 Conda 环境 py-xiaozhi
+      # Create Conda environment and install dependencies
+      - name: Create Conda environment py-xiaozhi
         shell: bash -el {0}
         run: conda create -n py-xiaozhi python=3.10 -y
 
-      # 创建一个简单的 requirements.txt 文件（如果不存在）
-      - name: 创建 requirements.txt
+      # Create a simple requirements.txt file (if it does not exist)
+      - name: Create requirements.txt
         run: |
           if (-not (Test-Path "requirements.txt")) {
             Set-Content -Path "requirements.txt" -Value ""
           }
         shell: powershell
 
-      # 安装 Python 依赖（pip + conda + pyinstaller）
-      - name: 安装 Python 依赖（pip + conda + pyinstaller）
+      # Install Python dependencies (pip + conda + pyinstaller)
+      - name: Install Python dependencies (pip + conda + pyinstaller)
         shell: bash -el {0}
         run: |
           conda activate py-xiaozhi
           
-          # 安装依赖
+          # Install dependencies
           pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple
           conda install pyqt=5.15.10 opencv=4.10.0 -y
           pip install pyinstaller
 
-      # 拉取 UnifyPy 仓库
-      - name: 拉取 UnifyPy 仓库
+      # Clone UnifyPy repository
+      - name: Clone UnifyPy repository
         run: git clone https://github.com/huangjunsen0406/UnifyPy.git
         shell: bash
 
-      # 运行 UnifyPy 构建项目
-      - name: 运行 UnifyPy 构建项目
+      # Run UnifyPy to build the project
+      - name: Run UnifyPy to build the project
         shell: bash -el {0}
         run: |
           conda activate py-xiaozhi
           export PYTHONIOENCODING=utf-8
           python UnifyPy/main.py . --config build.json
 
-      # 只上传 Inno Setup 安装程序
-      - name: 上传安装程序
+      # Upload Inno Setup installer only
+      - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
           name: installer-setup
