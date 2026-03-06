@@ -278,14 +278,14 @@ class CalendarManager:
         """
         json_file = "cache/calendar_data.json"
         if os.path.exists(json_file):
-            logger.info("发现旧的JSON数据文件，开始迁移到SQLite...")
+            logger.info("Found old JSON data file, starting migration to SQLite...")
             if self.db.migrate_from_json(json_file):
-                # 迁移成功后备份原文件
+                # Backup original file after successful migration
                 backup_file = f"{json_file}.backup"
                 os.rename(json_file, backup_file)
-                logger.info(f"数据迁移完成，原文件已备份为: {backup_file}")
+                logger.info(f"Data migration complete, original file backed up as: {backup_file}")
             else:
-                logger.warning("数据迁移失败，保留原JSON文件")
+                logger.warning("Data migration failed, keeping original JSON file")
 
     def add_event(self, event: CalendarEvent) -> bool:
         """

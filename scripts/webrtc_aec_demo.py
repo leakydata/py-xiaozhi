@@ -614,17 +614,17 @@ def aec_demo(audio_file):
             except Exception:
                 pass
 
-        print(f"原始录音已保存至: {original_output_path}")
-        print(f"处理后的录音已保存至: {processed_output_path}")
-        print(f"参考音频已保存至: {reference_output_path}")
+        print(f"Original recording saved to: {original_output_path}")
+        print(f"Processed recording saved to: {processed_output_path}")
+        print(f"Reference audio saved to: {reference_output_path}")
 
-        # 退出pygame
+        # Quit pygame
         pygame.quit()
 
 
 def save_wav(file_path, frames, sample_rate, channels):
     """
-    将音频帧保存为WAV文件.
+    Save audio frames as a WAV file.
     """
     with wave.open(file_path, "wb") as wf:
         wf.setnchannels(channels)

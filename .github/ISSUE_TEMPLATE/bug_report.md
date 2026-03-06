@@ -1,32 +1,32 @@
 ---
-name: Bug 报告（Bug Report）
-about: 反馈项目中的缺陷或问题
-title: "[Bug] 简短描述问题"
+name: Bug Report
+about: Report a defect or issue in the project
+title: "[Bug] Brief description of the issue"
 labels: bug
 assignees: ''
 ---
 
-## 🐛 问题描述
-<!-- 清晰简洁地描述问题是什么 -->
+## 🐛 Problem Description
+<!-- Clearly and concisely describe what the problem is -->
 
-## 🔍 复现步骤
-<!-- 详细描述复现问题的步骤 -->
-1. 打开 '...'
-2. 点击 '...'
-3. 滚动到 '...'
-4. 看到错误
+## 🔍 Steps to Reproduce
+<!-- Describe the steps to reproduce the issue in detail -->
+1. Open '...'
+2. Click on '...'
+3. Scroll to '...'
+4. See the error
 
-## 🤔 预期行为
-<!-- 简要描述预期的正确行为 -->
+## 🤔 Expected Behavior
+<!-- Briefly describe the expected correct behavior -->
 
-## 😯 截图
-<!-- 如果适用，添加问题的截图 -->
+## 😯 Screenshots
+<!-- If applicable, add screenshots of the issue -->
 
-## 🖥️ 环境信息
-- 操作系统: [例如 Windows 10]
-- 项目版本: [例如 1.0.0]
-- Python版本: [例如 3.9.13]
-- Nodejs版本: [例如 v20.14.0]
+## 🖥️ Environment Information
+- Operating System: [e.g. Windows 10]
+- Project Version: [e.g. 1.0.0]
+- Python Version: [e.g. 3.9.13]
+- Node.js Version: [e.g. v20.14.0]
 
-## 📋 其他信息
-<!-- 在此添加关于此问题的任何其他上下文信息 -->
+## 📋 Additional Information
+<!-- Add any other context about this issue here -->

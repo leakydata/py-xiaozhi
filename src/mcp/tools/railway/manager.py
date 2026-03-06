@@ -787,36 +787,36 @@ class RailwayToolsManager:
         return suggestions[:3]
 
     def _analyze_transfer_options(self, transfers, preferences: str) -> List[Dict]:
-        """分析中转方案."""
+        """Analyze transfer options."""
         suggestions = []
         
         if transfers:
-            # 推荐等待时间适中的方案
+            # Recommend options with moderate waiting time
             good_transfers = [t for t in transfers if "1小时" in t.wait_time or "2小时" in t.wait_time]
             if good_transfers:
                 suggestions.append({
                     "type": "transfer",
-                    "title": "推荐中转方案",
+                    "title": "Recommended Transfer Option",
                     "transfer": good_transfers[0],
-                    "reason": "换乘等待时间适中"
+                    "reason": "Moderate transfer waiting time"
                 })
         
         return suggestions[:2]
 
     def _format_travel_suggestions(self, suggestions, departure_city: str, arrival_city: str, travel_date: str, preferences: str) -> str:
-        """格式化出行建议."""
+        """Format travel suggestions."""
         if not suggestions:
-            return "暂无出行建议"
+            return "No travel suggestions available"
 
         result_lines = []
-        result_lines.append(f"💡 {travel_date} {departure_city} → {arrival_city} 出行建议\n")
-        
+        result_lines.append(f"💡 {travel_date} {departure_city} → {arrival_city} Travel Suggestions\n")
+
         if preferences:
-            result_lines.append(f"🎯 您的偏好: {preferences}\n")
-        
+            result_lines.append(f"🎯 Your preferences: {preferences}\n")
+
         for i, suggestion in enumerate(suggestions, 1):
-            result_lines.append(f"📍 建议 {i}: {suggestion['title']}")
-            result_lines.append(f"   💭 推荐理由: {suggestion['reason']}")
+            result_lines.append(f"📍 Suggestion {i}: {suggestion['title']}")
+            result_lines.append(f"   💭 Reason: {suggestion['reason']}")
             
             if suggestion['type'] == 'direct':
                 ticket = suggestion['ticket']
@@ -824,13 +824,13 @@ class RailwayToolsManager:
                 result_lines.append(f"   🚉 {ticket.from_station} → {ticket.to_station}")
                 if ticket.prices:
                     min_price = min([p.price for p in ticket.prices if p.num != "无" and p.num != "--"])
-                    result_lines.append(f"   💰 起价: ¥{min_price}")
+                    result_lines.append(f"   💰 Starting from: ¥{min_price}")
             
             elif suggestion['type'] == 'transfer':
                 transfer = suggestion['transfer']
-                result_lines.append(f"   🔄 {transfer.start_time} → {transfer.arrive_time} (总时长: {transfer.duration})")
+                result_lines.append(f"   🔄 {transfer.start_time} → {transfer.arrive_time} (Total duration: {transfer.duration})")
                 result_lines.append(f"   🚉 {transfer.from_station_name} → {transfer.middle_station_name} → {transfer.end_station_name}")
-                result_lines.append(f"   ⏰ 换乘等待: {transfer.wait_time}")
+                result_lines.append(f"   ⏰ Transfer wait: {transfer.wait_time}")
             
             result_lines.append("")
 
