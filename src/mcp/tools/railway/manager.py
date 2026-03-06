@@ -837,11 +837,11 @@ class RailwayToolsManager:
         return "\n".join(result_lines)
 
     def is_initialized(self) -> bool:
-        """检查管理器是否已初始化."""
+        """Check if manager is initialized."""
         return self._initialized
 
     def get_status(self) -> Dict[str, Any]:
-        """获取管理器状态."""
+        """Get manager status."""
         return {
             "initialized": self._initialized,
             "smart_tools_count": 4,
@@ -857,34 +857,34 @@ class RailwayToolsManager:
 
 class RailwayManager:
     """
-    铁路查询工具管理器.
+    Railway query tool manager.
     """
 
     def __init__(self):
         """
-        初始化铁路工具管理器.
+        Initialize railway tool manager.
         """
         self._initialized = False
-        logger.info("[12306_mcp] 初始化")
+        logger.info("[12306_mcp] Initialized")
 
     def init_tools(self, add_tool, PropertyList, Property, PropertyType):
         """
-        初始化并注册所有铁路查询工具.
+        Initialize and register all railway query tools.
         """
         try:
-            logger.info("[12306_mcp] 开始注册工具")
+            logger.info("[12306_mcp] Starting tool registration")
 
-            # 注册基础工具
+            # Register basic tools
             self._register_basic_tools(add_tool, PropertyList, Property, PropertyType)
 
-            # 注册查询工具
+            # Register query tools
             self._register_query_tools(add_tool, PropertyList, Property, PropertyType)
 
             self._initialized = True
-            logger.info("[12306_mcp] 工具注册完成")
+            logger.info("[12306_mcp] Tool registration complete")
 
         except Exception as e:
-            logger.error(f"[12306_mcp] 工具注册失败: {e}", exc_info=True)
+            logger.error(f"[12306_mcp] Tool registration failed: {e}", exc_info=True)
             raise
 
     def _register_basic_tools(self, add_tool, PropertyList, Property, PropertyType):
@@ -910,7 +910,7 @@ class RailwayManager:
             )
         )
 
-        # 查询城市中的车站
+        # Query stations in a city
         city_stations_props = PropertyList([Property("city", PropertyType.STRING)])
         add_tool(
             (
@@ -930,7 +930,7 @@ class RailwayManager:
             )
         )
 
-        # 获取城市主要车站编码
+        # Get main station codes for cities
         city_code_props = PropertyList([Property("cities", PropertyType.STRING)])
         add_tool(
             (
@@ -952,7 +952,7 @@ class RailwayManager:
             )
         )
 
-        # 根据车站名获取编码
+        # Get codes by station name
         station_name_props = PropertyList(
             [Property("station_names", PropertyType.STRING)]
         )

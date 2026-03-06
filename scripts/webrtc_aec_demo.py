@@ -628,7 +628,7 @@ def save_wav(file_path, frames, sample_rate, channels):
     """
     with wave.open(file_path, "wb") as wf:
         wf.setnchannels(channels)
-        wf.setsampwidth(2)  # 2字节(16位)
+        wf.setsampwidth(2)  # 2 bytes (16-bit)
         wf.setframerate(sample_rate)
         if isinstance(frames[0], bytes):
             wf.writeframes(b"".join(frames))
@@ -637,20 +637,20 @@ def save_wav(file_path, frames, sample_rate, channels):
 
 
 if __name__ == "__main__":
-    # 获取命令行参数
+    # Get command line arguments
     if len(sys.argv) > 1:
         audio_file = sys.argv[1]
     else:
-        # 默认使用scripts目录下的鞠婧祎.wav
-        audio_file = os.path.join(current_dir, "鞠婧祎.wav")
+        # Default to sample.wav in the scripts directory
+        audio_file = os.path.join(current_dir, "sample.wav")
 
-        # 如果默认文件不存在，尝试MP3版本
+        # If the default file does not exist, try the MP3 version
         if not os.path.exists(audio_file):
-            audio_file = os.path.join(current_dir, "鞠婧祎.mp3")
+            audio_file = os.path.join(current_dir, "sample.mp3")
             if not os.path.exists(audio_file):
-                print("错误: 找不到默认音频文件，请指定要播放的音频文件路径")
-                print("用法: python webrtc_aec_demo.py [音频文件路径]")
+                print("Error: Default audio file not found. Please specify the audio file path to play.")
+                print("Usage: python webrtc_aec_demo.py [audio_file_path]")
                 sys.exit(1)
 
-    # 运行演示
+    # Run the demo
     aec_demo(audio_file)

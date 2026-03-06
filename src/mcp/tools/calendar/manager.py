@@ -289,7 +289,7 @@ class CalendarManager:
 
     def add_event(self, event: CalendarEvent) -> bool:
         """
-        添加事件.
+        Add an event.
         """
         return self.db.add_event(event.to_dict())
 
@@ -297,24 +297,24 @@ class CalendarManager:
         self, start_date: str = None, end_date: str = None, category: str = None
     ) -> List[CalendarEvent]:
         """
-        获取事件列表.
+        Get list of events.
         """
         try:
             events_data = self.db.get_events(start_date, end_date, category)
             return [CalendarEvent.from_dict(event_data) for event_data in events_data]
         except Exception as e:
-            logger.error(f"获取日程失败: {e}")
+            logger.error(f"Failed to get events: {e}")
             return []
 
     def update_event(self, event_id: str, **kwargs) -> bool:
         """
-        更新事件.
+        Update an event.
         """
         return self.db.update_event(event_id, **kwargs)
 
     def delete_event(self, event_id: str) -> bool:
         """
-        删除事件.
+        Delete an event.
         """
         return self.db.delete_event(event_id)
 
@@ -326,13 +326,13 @@ class CalendarManager:
         delete_all: bool = False,
     ):
         """
-        批量删除事件.
+        Batch delete events.
         """
         return self.db.delete_events_batch(start_date, end_date, category, delete_all)
 
     def get_categories(self) -> List[str]:
         """
-        获取所有分类.
+        Get all categories.
         """
         return self.db.get_categories()
 
