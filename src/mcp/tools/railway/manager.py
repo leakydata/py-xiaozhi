@@ -343,22 +343,22 @@ class RailwayToolsManager:
                 return f"Query failed: {message}"
 
             if not tickets:
-                return f"未找到 {travel_date} 从 {departure_city} 到 {arrival_city} 的车票"
+                return f"No tickets found from {departure_city} to {arrival_city} on {travel_date}"
 
-            # 根据出发时间过滤
+            # Filter by departure time
             if departure_time:
                 tickets = self._filter_by_departure_time(tickets, departure_time)
 
-            # 格式化结果
+            # Format results
             return self._format_smart_tickets(tickets, departure_city, arrival_city, travel_date)
 
         except Exception as e:
-            logger.error(f"[Railway] 智能车票查询失败: {e}", exc_info=True)
-            return f"查询失败: {str(e)}"
+            logger.error(f"[Railway] Smart ticket query failed: {e}", exc_info=True)
+            return f"Query failed: {str(e)}"
 
     async def _smart_transfer_query_callback(self, args: Dict[str, Any]) -> str:
         """
-        智能中转查询回调.
+        Smart transfer query callback.
         """
         try:
             departure_city = args.get("departure_city", "")
@@ -386,12 +386,12 @@ class RailwayToolsManager:
             if not from_station_code or not to_station_code:
                 return f"Error: Unable to find station information for {departure_city} or {arrival_city}"
 
-            # 获取中转站编码
+            # Get transfer station code
             middle_station_code = ""
             if transfer_city:
                 middle_station_code = await self._get_station_code(transfer_city)
 
-            # 查询中转车票
+            # Query transfer tickets
             client = await get_railway_client()
             success, transfers, message = await client.query_transfer_tickets(
                 travel_date, from_station_code, to_station_code, 
@@ -402,14 +402,14 @@ class RailwayToolsManager:
                 return f"Query failed: {message}"
 
             if not transfers:
-                return f"未找到 {travel_date} 从 {departure_city} 到 {arrival_city} 的中转方案"
+                return f"No transfer options found from {departure_city} to {arrival_city} on {travel_date}"
 
-            # 格式化结果
+            # Format results
             return self._format_smart_transfers(transfers, departure_city, arrival_city, travel_date)
 
         except Exception as e:
-            logger.error(f"[Railway] 智能中转查询失败: {e}", exc_info=True)
-            return f"查询失败: {str(e)}"
+            logger.error(f"[Railway] Smart transfer query failed: {e}", exc_info=True)
+            return f"Query failed: {str(e)}"
 
     async def _smart_station_query_callback(self, args: Dict[str, Any]) -> str:
         """

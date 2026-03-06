@@ -516,16 +516,16 @@ def aec_demo(audio_file):
     except Exception:
         recording_time = 10  # Default to 10 seconds if length cannot be determined
 
-    recording_time += 1  # 额外1秒确保捕获所有音频
+    recording_time += 1  # Extra 1 second to ensure all audio is captured
 
     start_time = time.time()
     current_ref_frame_index = 0
     try:
         while time.time() - start_time < recording_time:
-            # 从麦克风读取一帧数据
+            # Read one frame of data from the microphone
             input_data = input_stream.read(CHUNK, exception_on_overflow=False)
 
-            # 保存原始录音
+            # Save original recording
             original_frames.append(input_data)
 
             # 将输入数据转换为short数组

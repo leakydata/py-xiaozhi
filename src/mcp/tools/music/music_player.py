@@ -868,7 +868,8 @@ class MusicPlayer:
                     time_sec = float(lrc.get("time", "0"))
                     text = lrc.get("lineLyric", "").strip()
 
-                    # Skip empty lyrics and meta-information lyrics
+                    # Skip empty lyrics and meta-information lines
+                    # (Chinese: Lyrics by, Composed by, Arranged by)
                     if (
                         text
                         and not text.startswith("作词")
