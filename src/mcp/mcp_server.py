@@ -316,12 +316,6 @@ class McpServer:
         amap_manager = get_amap_manager()
         amap_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
 
-        # Add Bazi numerology tools
-        from src.mcp.tools.bazi import get_bazi_manager
-
-        bazi_manager = get_bazi_manager()
-        bazi_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
-
         # Add weather tools (US-focused, Open-Meteo API, no key needed)
         try:
             from src.mcp.tools.weather import get_weather_manager

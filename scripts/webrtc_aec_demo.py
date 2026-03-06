@@ -481,16 +481,16 @@ def aec_demo(audio_file):
         print(f"Error loading reference audio: {e}")
         sys.exit(1)
 
-    # 创建WebRTC APM实例
+    # Create WebRTC APM instance
     apm = apm_lib.WebRTC_APM_Create()
 
-    # 应用APM配置
+    # Apply APM configuration
     config = create_apm_config()
     result = apm_lib.WebRTC_APM_ApplyConfig(apm, byref(config))
     if result != 0:
-        print(f"警告: APM配置应用失败，错误码: {result}")
+        print(f"Warning: APM configuration failed, error code: {result}")
 
-    # 创建流配置
+    # Create stream configuration
     stream_config = apm_lib.WebRTC_APM_CreateStreamConfig(SAMPLE_RATE, CHANNELS)
 
     # 设置较小的延迟时间以更准确匹配参考信号和麦克风信号

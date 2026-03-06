@@ -1,6 +1,6 @@
-"""12306铁路查询工具管理器.
+"""12306 railway query tool manager.
 
-负责注册和管理所有12306相关工具.
+Responsible for registering and managing all 12306-related tools.
 """
 
 import json
@@ -27,42 +27,42 @@ logger = get_logger(__name__)
 
 class RailwayToolsManager:
     """
-    Railway工具管理器 - 适配MCP服务器.
+    Railway tool manager - adapted for MCP server.
     """
 
     def __init__(self):
         """
-        初始化Railway工具管理器.
+        Initialize Railway tool manager.
         """
         self._initialized = False
-        logger.info("[Railway] Railway工具管理器初始化")
+        logger.info("[Railway] Railway tool manager initialized")
 
     def init_tools(self, add_tool, PropertyList, Property, PropertyType):
         """
-        初始化并注册所有Railway工具.
+        Initialize and register all Railway tools.
         """
         try:
-            logger.info("[Railway] 开始注册Railway工具")
+            logger.info("[Railway] Starting Railway tool registration")
 
-            # 注册智能工具
+            # Register smart tools
             self._register_smart_tools(add_tool, PropertyList, Property, PropertyType)
 
-            # 注册原子工具
+            # Register atomic tools
             self._register_atomic_tools(add_tool, PropertyList, Property, PropertyType)
 
             self._initialized = True
-            logger.info("[Railway] Railway工具注册完成")
+            logger.info("[Railway] Railway tool registration complete")
 
         except Exception as e:
-            logger.error(f"[Railway] Railway工具注册失败: {e}", exc_info=True)
+            logger.error(f"[Railway] Railway tool registration failed: {e}", exc_info=True)
             raise
 
     def _register_smart_tools(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册智能工具 - 用户友好的高级功能.
+        Register smart tools - user-friendly advanced features.
         """
-        
-        # 1. 智能火车票查询
+
+        # 1. Smart train ticket query
         smart_ticket_props = PropertyList([
             Property("departure_city", PropertyType.STRING),
             Property("arrival_city", PropertyType.STRING),
@@ -98,7 +98,7 @@ class RailwayToolsManager:
             self._smart_ticket_query_callback
         ))
 
-        # 2. 智能中转查询
+        # 2. Smart transfer query
         smart_transfer_props = PropertyList([
             Property("departure_city", PropertyType.STRING),
             Property("arrival_city", PropertyType.STRING),
@@ -121,7 +121,7 @@ class RailwayToolsManager:
             self._smart_transfer_query_callback
         ))
 
-        # 3. 智能车站查询
+        # 3. Smart station query
         smart_station_props = PropertyList([
             Property("query", PropertyType.STRING)
         ])
@@ -139,7 +139,7 @@ class RailwayToolsManager:
             self._smart_station_query_callback
         ))
 
-        # 4. 智能出行建议
+        # 4. Smart travel suggestion
         smart_suggestion_props = PropertyList([
             Property("departure_city", PropertyType.STRING),
             Property("arrival_city", PropertyType.STRING),
@@ -162,13 +162,13 @@ class RailwayToolsManager:
             self._smart_suggestion_callback
         ))
 
-        logger.debug("[Railway] 注册智能工具成功")
+        logger.debug("[Railway] Smart tools registered successfully")
 
     def _register_atomic_tools(self, add_tool, PropertyList, Property, PropertyType):
         """
-        注册原子工具 - 高级用户和开发者使用.
+        Register atomic tools - for advanced users and developers.
         """
-        # 获取当前日期
+        # Get current date
         add_tool(
             (
                 "self.railway.get_current_date",
