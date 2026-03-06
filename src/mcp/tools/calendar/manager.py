@@ -44,7 +44,7 @@ class CalendarManager:
                 Property("start_time", PropertyType.STRING),
                 Property("end_time", PropertyType.STRING, default_value=""),
                 Property("description", PropertyType.STRING, default_value=""),
-                Property("category", PropertyType.STRING, default_value="默认"),
+                Property("category", PropertyType.STRING, default_value="default"),
                 Property("reminder_minutes", PropertyType.INTEGER, default_value=15),
             ]
         )
@@ -60,9 +60,9 @@ class CalendarManager:
                 "3. Block time for work, personal activities\n"
                 "4. Set up recurring activities (meetings, breaks, etc.)\n"
                 "\nIntelligent Duration Rules:\n"
-                "- '提醒', '休息', '站立' category: 5 minutes\n"
-                "- '会议', '工作' category: 1 hour\n"
-                "- Title contains '提醒', '站立', '休息': 5 minutes\n"
+                "- 'reminder', 'rest', 'stand' category: 5 minutes\n"
+                "- 'meeting', 'work' category: 1 hour\n"
+                "- Title contains 'reminder', 'stand', 'rest': 5 minutes\n"
                 "- Default: 30 minutes\n"
                 "\nArgs:\n"
                 "  title: Event title (required)\n"
@@ -70,7 +70,7 @@ class CalendarManager:
                 "(required)\n"
                 "  end_time: End time, auto-calculated if not provided\n"
                 "  description: Event description\n"
-                "  category: Event category (默认/工作/个人/会议/提醒)\n"
+                "  category: Event category (default/work/personal/meeting/reminder)\n"
                 "  reminder_minutes: Reminder time in minutes before event",
                 create_event_props,
                 create_event,
@@ -262,11 +262,11 @@ class CalendarManager:
                 "3. What types of events can be created\n"
                 "4. Available options for event categorization\n"
                 "\nDefault Categories:\n"
-                "- Default (默认)\n"
-                "- Work (工作)\n"
-                "- Personal (个人)\n"
-                "- Meeting (会议)\n"
-                "- Reminder (提醒)",
+                "- default\n"
+                "- work\n"
+                "- personal\n"
+                "- meeting\n"
+                "- reminder",
                 PropertyList(),
                 get_categories,
             )

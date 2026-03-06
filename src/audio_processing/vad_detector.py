@@ -57,6 +57,12 @@ class VADDetector:
         self.enable_barge_in = config.get_config("INTERRUPTION.ENABLE_VAD_BARGE_IN", False)
         self.auto_start_on_speech = config.get_config("INTERRUPTION.AUTO_START_ON_SPEECH", False)
 
+        # Post-interruption deaf period to avoid picking up trailing TTS from speakers
+        self._post_interrupt_deaf_sec = float(
+            config.get_config("INTERRUPTION.POST_INTERRUPT_DEAF_SEC", 0.8)
+        )
+        self._last_interrupt_time = 0.0
+
         # State variables
         self.running = False
         self.paused = False
@@ -184,7 +190,11 @@ class VADDetector:
                 continue
 
             try:
-                if self.app.device_state == DeviceState.SPEAKING and self.enable_barge_in:
+                # Skip processing during post-interruption deaf period
+                # to avoid mic picking up trailing TTS audio from speakers
+                if time.time() - self._last_interrupt_time < self._post_interrupt_deaf_sec:
+                    self._reset_state()
+                elif self.app.device_state == DeviceState.SPEAKING and self.enable_barge_in:
                     self._process_frame("interrupt")
                 elif self.app.device_state == DeviceState.IDLE and self.auto_start_on_speech:
                     self._process_frame("auto_start")

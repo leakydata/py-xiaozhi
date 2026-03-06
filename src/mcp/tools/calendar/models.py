@@ -1,5 +1,5 @@
 """
-日程管理数据模型.
+Calendar management data models.
 """
 
 import uuid
@@ -9,7 +9,7 @@ from typing import Any, Dict
 
 class CalendarEvent:
     """
-    日程事件数据模型.
+    Calendar event data model.
     """
 
     def __init__(
@@ -18,13 +18,13 @@ class CalendarEvent:
         start_time: str,
         end_time: str,
         description: str = "",
-        category: str = "默认",
+        category: str = "default",
         reminder_minutes: int = 15,
         event_id: str = None,
     ):
         self.id = event_id or str(uuid.uuid4())
         self.title = title
-        self.start_time = start_time  # ISO格式: "2024-01-01T10:00:00"
+        self.start_time = start_time  # ISO format: "2024-01-01T10:00:00"
         self.end_time = end_time
         self.description = description
         self.category = category
@@ -36,7 +36,7 @@ class CalendarEvent:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        转换为字典.
+        Convert to dictionary.
         """
         return {
             "id": self.id,
@@ -55,14 +55,14 @@ class CalendarEvent:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "CalendarEvent":
         """
-        从字典创建事件.
+        Create an event from a dictionary.
         """
         event = cls(
             title=data["title"],
             start_time=data["start_time"],
             end_time=data["end_time"],
             description=data.get("description", ""),
-            category=data.get("category", "默认"),
+            category=data.get("category", "default"),
             reminder_minutes=data.get("reminder_minutes", 15),
             event_id=data["id"],
         )
@@ -74,7 +74,7 @@ class CalendarEvent:
 
     def _calculate_reminder_time(self) -> str:
         """
-        计算提醒时间.
+        Calculate the reminder time.
         """
         try:
             from datetime import timedelta
@@ -83,4 +83,4 @@ class CalendarEvent:
             reminder_dt = start_dt - timedelta(minutes=self.reminder_minutes)
             return reminder_dt.isoformat()
         except Exception:
-            return self.start_time  # 如果计算失败，返回开始时间
+            return self.start_time  # If calculation fails, return start time

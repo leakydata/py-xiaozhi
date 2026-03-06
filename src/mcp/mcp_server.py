@@ -272,23 +272,11 @@ class McpServer:
         timer_manager = get_timer_manager()
         timer_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
 
-        # Add music player tools
-        from src.mcp.tools.music import get_music_tools_manager
-
-        music_manager = get_music_tools_manager()
-        music_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
-
         # Add search tools
         from src.mcp.tools.search import get_search_manager
 
         search_manager = get_search_manager()
         search_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
-
-        # Add recipe tools
-        from src.mcp.tools.recipe import get_recipe_manager
-
-        recipe_manager = get_recipe_manager()
-        recipe_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
 
         # Add camera tools
         from src.mcp.tools.camera import take_photo
