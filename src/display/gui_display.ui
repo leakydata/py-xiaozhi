@@ -150,7 +150,7 @@ QPushButton:hover {
          </string>
         </property>
         <property name="text">
-         <string>Manual</string>
+         <string>Auto</string>
         </property>
        </widget>
       </item>

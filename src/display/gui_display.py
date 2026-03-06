@@ -144,7 +144,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self._last_emotion_name = None
 
         # Status management
-        self.auto_mode = False
+        self.auto_mode = True
         self._running = True
         self.current_status = ""
         self.is_connected = True
@@ -437,7 +437,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
 
             # Add welcome message
             self._add_chat_bubble(
-                "Hi! I'm your AI assistant. Press 'Hold to Talk' or type a message to get started.",
+                "Hi! I'm your AI assistant. Click 'Start Conversation' or type a message to get started.",
                 "assistant",
             )
 
@@ -474,7 +474,9 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             self.abort_btn.clicked.connect(self._on_abort_button_click)
         if self.auto_btn:
             self.auto_btn.clicked.connect(self._on_auto_button_click)
-            self.auto_btn.hide()
+            self.auto_btn.show()
+        if self.manual_btn:
+            self.manual_btn.hide()
         if self.mode_btn:
             self.mode_btn.clicked.connect(self._on_mode_button_click)
         if self.text_input and self.send_btn:
