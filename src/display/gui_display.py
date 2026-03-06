@@ -320,15 +320,8 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             self._add_chat_bubble(text, "user")
             self._current_assistant_bubble = None
         else:
-            # For assistant messages, update the current bubble or create a new one
-            if self._current_assistant_bubble:
-                # Append to existing bubble (streaming feel)
-                current_text = self._current_assistant_bubble.label.text()
-                if text != current_text:
-                    self._current_assistant_bubble.update_text(text)
-                    QTimer.singleShot(50, self._scroll_to_bottom)
-            else:
-                self._current_assistant_bubble = self._add_chat_bubble(text, "assistant")
+            # Each assistant sentence gets its own bubble
+            self._current_assistant_bubble = self._add_chat_bubble(text, "assistant")
 
         # Also update the hidden tts_text_label for backward compatibility
         self._safe_update_label(self.tts_text_label, text)
