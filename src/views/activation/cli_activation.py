@@ -117,7 +117,7 @@ class CLIActivation:
         self.is_activated = local_activated
 
         # Display device information
-        print("📱 Device Information:")
+        print("Device Information:")
         print(f"   Serial Number: {serial_number if serial_number else '--'}")
         print(f"   MAC Address: {mac_address if mac_address else '--'}")
 
@@ -224,13 +224,13 @@ class CLIActivation:
         print("Device activation failed")
         print("=" * 60)
         print("Possible reasons:")
-        print("• Unstable network connection")
-        print("• Incorrect or expired verification code")
-        print("• Server is temporarily unavailable")
+        print("- Unstable network connection")
+        print("- Incorrect or expired verification code")
+        print("- Server is temporarily unavailable")
         print("\nSolutions:")
-        print("• Check your network connection")
-        print("• Rerun the program to get a new verification code")
-        print("• Ensure the verification code is entered correctly on the website")
+        print("- Check your network connection")
+        print("- Rerun the program to get a new verification code")
+        print("- Ensure the verification code is entered correctly on the website")
         print("=" * 60)
 
     def _log_and_print(self, message: str):
