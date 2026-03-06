@@ -182,7 +182,7 @@ class CalendarManager:
             )
         )
 
-        # 删除日程
+        # Delete event
         delete_event_props = PropertyList([Property("event_id", PropertyType.STRING)])
         add_tool(
             (
@@ -202,7 +202,7 @@ class CalendarManager:
             )
         )
 
-        # 批量删除日程
+        # Batch delete events
         delete_batch_props = PropertyList(
             [
                 Property("start_date", PropertyType.STRING, default_value=""),
@@ -249,7 +249,7 @@ class CalendarManager:
             )
         )
 
-        # 获取分类
+        # Get categories
         add_tool(
             (
                 "self.calendar.get_categories",

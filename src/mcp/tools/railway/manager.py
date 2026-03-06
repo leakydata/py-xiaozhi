@@ -677,8 +677,8 @@ class RailwayToolsManager:
         return status_map.get(num, "Unknown")
 
     def _extract_city_from_query(self, query: str) -> str:
-        """从查询中提取城市名."""
-        # 简单正则提取
+        """Extract city name from query."""
+        # Simple regex extraction
         patterns = [
             r'([北京|上海|广州|深圳|杭州|南京|天津|重庆|成都|武汉|西安|郑州|长沙|南昌|福州|厦门|合肥|济南|青岛|大连|沈阳|哈尔滨|长春|石家庄|太原|呼和浩特|银川|西宁|乌鲁木齐|拉萨|昆明|贵阳|南宁|海口|兰州]+)',
             r'([A-Za-z]+)'
@@ -692,13 +692,13 @@ class RailwayToolsManager:
         return ""
 
     def _extract_station_from_query(self, query: str) -> str:
-        """从查询中提取车站名."""
-        # 去除常见的停用词
+        """Extract station name from query."""
+        # Remove common stop words
         stop_words = ['查询', '的', '车站', '编码', '信息', '详细']
         for word in stop_words:
             query = query.replace(word, '')
         
-        # 提取可能的车站名
+        # Extract possible station name
         query = query.strip()
         if len(query) > 1:
             return query
@@ -706,48 +706,48 @@ class RailwayToolsManager:
         return ""
 
     async def _query_city_stations(self, city: str) -> str:
-        """查询城市车站."""
+        """Query city stations."""
         client = await get_railway_client()
         stations = client.get_stations_in_city(city)
         
         if not stations:
-            return f"未找到城市 '{city}' 的车站信息"
-        
-        result_lines = [f"🏢 {city} 的火车站列表:\n"]
+            return f"No station information found for city '{city}'"
+
+        result_lines = [f"🏢 Railway stations in {city}:\n"]
         for i, station in enumerate(stations, 1):
             result_lines.append(f"{i}. {station.station_name} ({station.station_code})")
         
         return "\n".join(result_lines)
 
     async def _query_main_station(self, city: str) -> str:
-        """查询主要车站."""
+        """Query main station."""
         client = await get_railway_client()
         station = client.get_city_main_station(city)
         
         if not station:
-            return f"未找到城市 '{city}' 的主要车站"
-        
-        return f"🏢 {city} 的主要车站: {station.station_name} ({station.station_code})"
+            return f"Main station not found for city '{city}'"
+
+        return f"🏢 Main station in {city}: {station.station_name} ({station.station_code})"
 
     async def _query_station_code(self, station_name: str) -> str:
-        """查询车站编码."""
+        """Query station code."""
         client = await get_railway_client()
         station = client.get_station_by_name(station_name)
         
         if not station:
-            return f"未找到车站 '{station_name}'"
-        
-        return f"🏢 {station.station_name} 的车站编码: {station.station_code}"
+            return f"Station '{station_name}' not found"
+
+        return f"🏢 Station code for {station.station_name}: {station.station_code}"
 
     async def _query_station_info(self, station_name: str) -> str:
-        """查询车站信息."""
+        """Query station information."""
         client = await get_railway_client()
         station = client.get_station_by_name(station_name)
         
         if not station:
-            return f"未找到车站 '{station_name}'"
-        
-        return f"🏢 {station.station_name}\n编码: {station.station_code}\n城市: {station.city}\n拼音: {station.station_pinyin}"
+            return f"Station '{station_name}' not found"
+
+        return f"🏢 {station.station_name}\nCode: {station.station_code}\nCity: {station.city}\nPinyin: {station.station_pinyin}"
 
     def _analyze_direct_tickets(self, tickets, preferences: str) -> List[Dict]:
         """分析直达车票."""

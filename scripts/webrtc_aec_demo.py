@@ -579,20 +579,20 @@ def aec_demo(audio_file):
     except KeyboardInterrupt:
         print("\nRecording interrupted by user")
     finally:
-        print("\n录制和处理完成")
+        print("\nRecording and processing complete")
 
-        # 停止播放
+        # Stop playback
         mixer.music.stop()
 
-        # 关闭音频流
+        # Close audio stream
         input_stream.stop_stream()
         input_stream.close()
 
-        # 释放APM资源
+        # Release APM resources
         apm_lib.WebRTC_APM_DestroyStreamConfig(stream_config)
         apm_lib.WebRTC_APM_Destroy(apm)
 
-        # 关闭PyAudio
+        # Close PyAudio
         p.terminate()
 
         # 保存原始录音
