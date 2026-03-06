@@ -94,7 +94,12 @@ def detect_cameras():
     if current_camera_config:
         print("Current camera configuration:")
         print(f"  - Index: {current_camera_config.get('camera_index', 'Not set')}")
-        print(f"  - Resolution: {current_camera_config.get('frame_width', 'Not set')}x{current_camera_config.get('frame_height', 'Not set')}")
+        print(
+            f"  - Resolution: {current_camera_config.get('frame_width', 'Not set')}x{current_camera_config.get('frame_height', 'Not set')}"
+        )
+        print(
+            f"  - Resolution: {current_camera_config.get('frame_width', 'Not set')}x{current_camera_config.get('frame_height', 'Not set')}"
+        )
         print(f"  - FPS: {current_camera_config.get('fps', 'Not set')}")
         print(f"  - VL Model: {current_camera_config.get('models', 'Not set')}")
         print("")
@@ -140,13 +145,11 @@ def detect_cameras():
                 print(f"  - Supported Resolutions: {resolutions_str}")
                 print(f"  - FPS: {capabilities['fps']}")
                 print(f"  - Backend: {capabilities['backend']}")
-                
+
                 # Mark the camera used in the current configuration
-                current_index = current_camera_config.get('camera_index')
+                current_index = current_camera_config.get("camera_index")
                 if current_index == i:
-                    print(f"  - 📹 Camera used in current configuration")
-                
-                print("")
+                    print("Camera used in current configuration")
 
                 # Add to the device list
                 camera_devices.append(
@@ -159,27 +162,27 @@ def detect_cameras():
                     # Quick test - read a few frames
                     test_frames = 0
                     start_time = time.time()
-                    
+
                     while test_frames < 10 and time.time() - start_time < 2:
                         ret, frame = cap.read()
                         if ret:
                             test_frames += 1
                         else:
                             break
-                    
+
                     if test_frames >= 5:
                         print(f"  ✓ Camera functionality is normal (tested reading {test_frames} frames)")
                     else:
                         print(f"  ⚠ Camera functionality might be abnormal (only read {test_frames} frames)")
-                        
+
                 except Exception as e:
                     print(f"  ✗ Camera functionality test failed: {e}")
 
                 # Ask whether to show a preview
                 print(f"Show preview for device {i}? (y/n, default n): ", end="")
                 show_preview = input().strip().lower()
-                
-                if show_preview == 'y':
+
+                if show_preview == "y":
                     print(f"Showing preview for device {i}, press 'q' or wait 3 seconds to continue...")
                     preview_start = time.time()
 
@@ -191,7 +194,7 @@ def detect_cameras():
                                 break
 
                     cv2.destroyAllWindows()
-                
+
                 cap.release()
 
             else:
@@ -278,19 +281,25 @@ def detect_cameras():
 
         # Compare configuration changes
         print("\n===== Configuration Change Comparison =====\n")
-        current_index = current_camera_config.get('camera_index')
-        current_width = current_camera_config.get('frame_width')
-        current_height = current_camera_config.get('frame_height')
-        current_fps = current_camera_config.get('fps')
-        
+        current_index = current_camera_config.get("camera_index")
+        current_width = current_camera_config.get("frame_width")
+        current_height = current_camera_config.get("frame_height")
+        current_fps = current_camera_config.get("fps")
+
         changes = []
         if current_index != recommended_camera["index"]:
-            changes.append(f"Camera Index: {current_index} → {recommended_camera['index']}")
+            changes.append(
+                f"Camera Index: {current_index} → {recommended_camera['index']}"
+            )
         if current_width != r_width or current_height != r_height:
-            changes.append(f"Resolution: {current_width}x{current_height} → {r_width}x{r_height}")
+            changes.append(
+                f"Resolution: {current_width}x{current_height} → {r_width}x{r_height}"
+            )
         if current_fps != recommended_camera["capabilities"]["fps"]:
-            changes.append(f"FPS: {current_fps} → {recommended_camera['capabilities']['fps']}")
-        
+            changes.append(
+                f"FPS: {current_fps} → {recommended_camera['capabilities']['fps']}"
+            )
+
         if changes:
             print("The following configuration changes were detected:")
             for change in changes:
@@ -331,9 +340,9 @@ if __name__ == "__main__":
     try:
         cameras = detect_cameras()
         if cameras:
-            print(f"\nDetected {len(cameras)} camera devices!")
+            print("\nDetected {len(cameras)} camera devices!")
         else:
             print("\nNo available camera devices detected!")
-    except Exception as e:
-        logger.error(f"An error occurred during detection: {e}")
-        print(f"An error occurred during detection: {e}")
+    except Exception:
+        logger.error("Error occurred during detection: {e}")
+        print("Error occurred during detection: {e}")
