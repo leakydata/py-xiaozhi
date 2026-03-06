@@ -25,7 +25,7 @@ class CalendarManager:
 
     def init_tools(self, add_tool, PropertyList, Property, PropertyType):
         """
-        初始化并注册所有日程管理工具.
+        Initialize and register all calendar management tools.
         """
         from .tools import (
             create_event,
@@ -37,7 +37,7 @@ class CalendarManager:
             update_event,
         )
 
-        # 创建日程事件
+        # Create calendar event
         create_event_props = PropertyList(
             [
                 Property("title", PropertyType.STRING),

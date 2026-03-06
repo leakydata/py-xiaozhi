@@ -548,8 +548,8 @@ def aec_demo(audio_file):
             output_array = np.zeros(CHUNK, dtype=np.int16)
             output_ptr = output_array.ctypes.data_as(POINTER(c_short))
 
-            # 重要：先处理参考信号（扬声器输出）
-            # 创建参考信号的输出缓冲区（虽然不使用但必须提供）
+            # Important: process the reference signal (speaker output) first
+            # Create output buffer for reference signal (not used but must be provided)
             ref_output_array = np.zeros(CHUNK, dtype=np.int16)
             ref_output_ptr = ref_output_array.ctypes.data_as(POINTER(c_short))
 
@@ -558,15 +558,15 @@ def aec_demo(audio_file):
             )
 
             if result_reverse != 0:
-                print(f"\r警告: 参考信号处理失败，错误码: {result_reverse}")
+                print(f"\rWarning: Reference signal processing failed, error code: {result_reverse}")
 
-            # 然后处理麦克风信号，应用回声消除
+            # Then process the microphone signal, applying echo cancellation
             result = apm_lib.WebRTC_APM_ProcessStream(
                 apm, input_ptr, stream_config, stream_config, output_ptr
             )
 
             if result != 0:
-                print(f"\r警告: 处理失败，错误码: {result}")
+                print(f"\rWarning: Processing failed, error code: {result}")
 
             # 保存处理后的音频帧
             processed_frames.append(output_array.tobytes())

@@ -513,23 +513,23 @@ class RailwayToolsManager:
             logger.error(f"[Railway] Smart travel suggestion failed: {e}", exc_info=True)
             return f"Suggestion generation failed: {str(e)}"
 
-    # ==================== 辅助方法 ====================
+    # ==================== Helper methods ====================
 
     async def _get_current_date(self) -> str:
-        """获取当前日期."""
+        """Get current date."""
         client = await get_railway_client()
         return client.get_current_date()
 
     async def _get_station_code(self, city_or_station: str) -> str:
-        """获取车站编码."""
+        """Get station code."""
         client = await get_railway_client()
-        
-        # 先尝试作为车站名查询
+
+        # First try querying as station name
         station = client.get_station_by_name(city_or_station)
         if station:
             return station.station_code
         
-        # 再尝试作为城市查询主要车站
+        # Then try querying main station by city name
         station = client.get_city_main_station(city_or_station)
         if station:
             return station.station_code
@@ -537,9 +537,9 @@ class RailwayToolsManager:
         return ""
 
     def _parse_date(self, date_str: str, current_date: str) -> str:
-        """解析日期字符串."""
+        """Parse date string."""
         try:
-            # 处理相对日期
+            # Handle relative dates
             if "今天" in date_str or "today" in date_str.lower():
                 return current_date
             elif "明天" in date_str or "tomorrow" in date_str.lower():
@@ -549,19 +549,19 @@ class RailwayToolsManager:
                 date_obj = datetime.strptime(current_date, "%Y-%m-%d")
                 return (date_obj + timedelta(days=2)).strftime("%Y-%m-%d")
             elif "这周" in date_str or "this week" in date_str.lower():
-                # 简单处理，返回当前日期
+                # Simple handling, return current date
                 return current_date
             elif re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
-                # 已经是标准格式
+                # Already in standard format
                 return date_str
             else:
-                # 尝试解析其他格式
+                # Try parsing other formats
                 return current_date
         except Exception:
             return current_date
 
     def _convert_train_type(self, train_type: str) -> str:
-        """转换车次类型."""
+        """Convert train type."""
         if not train_type:
             return ""
         
@@ -581,7 +581,7 @@ class RailwayToolsManager:
         return type_mapping.get(train_type, "")
 
     def _filter_by_departure_time(self, tickets, departure_time: str):
-        """根据出发时间过滤车票."""
+        """Filter tickets by departure time."""
         if not departure_time:
             return tickets
         
@@ -608,12 +608,12 @@ class RailwayToolsManager:
         return filtered_tickets
 
     def _format_smart_tickets(self, tickets, departure_city: str, arrival_city: str, travel_date: str) -> str:
-        """格式化智能车票结果."""
+        """Format smart ticket results."""
         if not tickets:
-            return "没有找到符合条件的车票"
+            return "No tickets matching the criteria were found"
 
         result_lines = []
-        result_lines.append(f"🚄 {travel_date} {departure_city} → {arrival_city} 火车票查询结果\n")
+        result_lines.append(f"🚄 {travel_date} {departure_city} → {arrival_city} Train Ticket Query Results\n")
         
         for i, ticket in enumerate(tickets[:10], 1):
             result_lines.append(f"📍 {i}. {ticket.start_train_code}")
