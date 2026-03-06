@@ -6,216 +6,452 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>500</height>
+    <width>480</width>
+    <height>700</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>550</height>
+   </size>
+  </property>
   <property name="windowTitle">
-   <string>Xiaozhi AI Client</string>
+   <string>AI Assistant</string>
+  </property>
+  <property name="styleSheet">
+   <string>
+QWidget#MainWindow {
+    background-color: #f5f5f5;
+}
+   </string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
 
+   <!-- Top bar with status and emotion -->
    <item>
-         <widget class="QFrame" name="status_card">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+    <widget class="QFrame" name="top_bar">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>64</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string>
+QFrame#top_bar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+}
+      </string>
+     </property>
+     <layout class="QHBoxLayout" name="top_bar_layout">
+      <property name="leftMargin">
+       <number>16</number>
       </property>
-      <property name="frameShape">
-       <enum>QFrame::NoFrame</enum>
+      <property name="rightMargin">
+       <number>16</number>
       </property>
-      <property name="frameShadow">
-       <enum>QFrame::Plain</enum>
-      </property>
-     <layout class="QVBoxLayout" name="card_layout">
+      <item>
+       <widget class="QLabel" name="emotion_label">
+        <property name="maximumSize">
+         <size>
+          <width>40</width>
+          <height>40</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>22</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string>
+QLabel {
+    background-color: transparent;
+    border: none;
+}
+         </string>
+        </property>
+        <property name="text">
+         <string>&#x1f916;</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QLabel" name="status_label">
         <property name="font">
          <font>
-          <pointsize>14</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
+          <pointsize>12</pointsize>
+          <weight>50</weight>
          </font>
         </property>
         <property name="styleSheet">
          <string>
 QLabel {
-    color: #2196F3;
-    padding: 12px 20px;
-    background-color: #E3F2FD;
-    border-radius: 12px;
-    border: none;
-    margin: 10px;
-}
-         </string>
-        </property>
-        <property name="text">
-         <string>Status: Not Connected</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="emotion_label">
-        <property name="font">
-         <font>
-          <pointsize>48</pointsize>
-         </font>
-        </property>
-        <property name="styleSheet">
-         <string>
-QLabel {
-    margin: 20px;
-    padding: 20px;
+    color: #666666;
+    padding-left: 8px;
     background-color: transparent;
     border: none;
 }
          </string>
         </property>
         <property name="text">
-         <string>😊</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <string>Ready</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="tts_text_label">
-        <property name="font">
-         <font>
-          <pointsize>14</pointsize>
-         </font>
+       <spacer name="top_spacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="mode_btn">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>32</height>
+         </size>
         </property>
         <property name="styleSheet">
          <string>
-QLabel {
+QPushButton {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 14px;
+    padding: 4px 12px;
     color: #555555;
-    padding: 15px 20px;
-    background-color: transparent;
-    border: none;
-    margin: 5px 15px;
+    font-size: 11px;
+}
+QPushButton:hover {
+    background-color: #e8e8e8;
 }
          </string>
         </property>
         <property name="text">
-         <string>Standby</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
+         <string>Manual</string>
         </property>
        </widget>
       </item>
      </layout>
     </widget>
    </item>
+
+   <!-- Chat area (scrollable) -->
    <item>
-    <layout class="QHBoxLayout" name="button_layout">
-     <property name="spacing">
-      <number>8</number>
+    <widget class="QScrollArea" name="chat_scroll_area">
+     <property name="widgetResizable">
+      <bool>true</bool>
      </property>
-     <property name="leftMargin">
-      <number>10</number>
+     <property name="styleSheet">
+      <string>
+QScrollArea {
+    background-color: #f5f5f5;
+    border: none;
+}
+QScrollBar:vertical {
+    width: 6px;
+    background: transparent;
+}
+QScrollBar::handle:vertical {
+    background: #c0c0c0;
+    border-radius: 3px;
+    min-height: 20px;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+      </string>
      </property>
-     <property name="rightMargin">
-      <number>10</number>
-     </property>
-     <property name="bottomMargin">
-      <number>10</number>
-     </property>
-     <item>
-      <widget class="QPushButton" name="manual_btn">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>36</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Hold to Talk</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="abort_btn">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>36</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Interrupt</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="text_input_layout">
+     <widget class="QWidget" name="chat_content">
+      <property name="styleSheet">
+       <string>
+QWidget#chat_content {
+    background-color: #f5f5f5;
+}
+       </string>
+      </property>
+      <layout class="QVBoxLayout" name="chat_layout">
        <property name="spacing">
-        <number>4</number>
+        <number>8</number>
        </property>
+       <property name="leftMargin">
+        <number>16</number>
+       </property>
+       <property name="topMargin">
+        <number>16</number>
+       </property>
+       <property name="rightMargin">
+        <number>16</number>
+       </property>
+       <property name="bottomMargin">
+        <number>16</number>
+       </property>
+       <!-- tts_text_label kept for compatibility but hidden -->
        <item>
-        <widget class="QLineEdit" name="text_input">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>36</height>
-          </size>
+        <widget class="QLabel" name="tts_text_label">
+         <property name="text">
+          <string></string>
          </property>
-         <property name="placeholderText">
-          <string>Enter text...</string>
+         <property name="visible">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="send_btn">
-         <property name="minimumSize">
+        <spacer name="chat_spacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
           <size>
-           <width>60</width>
-           <height>36</height>
+           <width>20</width>
+           <height>40</height>
           </size>
          </property>
-         <property name="text">
-          <string>Send</string>
-         </property>
-        </widget>
+        </spacer>
        </item>
       </layout>
-     </item>
-     <item>
-      <widget class="QPushButton" name="auto_btn">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>36</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Start Conversation</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="mode_btn">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>36</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Manual Conversation</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+     </widget>
+    </widget>
+   </item>
+
+   <!-- Bottom controls -->
+   <item>
+    <widget class="QFrame" name="bottom_bar">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>120</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string>
+QFrame#bottom_bar {
+    background-color: #ffffff;
+    border-top: 1px solid #e0e0e0;
+}
+      </string>
+     </property>
+     <layout class="QVBoxLayout" name="bottom_layout">
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <property name="leftMargin">
+       <number>16</number>
+      </property>
+      <property name="topMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>16</number>
+      </property>
+      <property name="bottomMargin">
+       <number>12</number>
+      </property>
+
+      <!-- Text input row -->
+      <item>
+       <layout class="QHBoxLayout" name="text_input_layout">
+        <property name="spacing">
+         <number>8</number>
+        </property>
+        <item>
+         <widget class="QLineEdit" name="text_input">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string>
+QLineEdit {
+    border: 1px solid #d0d0d0;
+    border-radius: 20px;
+    padding: 8px 16px;
+    background-color: #f5f5f5;
+    font-size: 13px;
+    color: #333333;
+}
+QLineEdit:focus {
+    border-color: #4CAF50;
+    background-color: #ffffff;
+}
+           </string>
+          </property>
+          <property name="placeholderText">
+           <string>Type a message...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="send_btn">
+          <property name="minimumSize">
+           <size>
+            <width>40</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>40</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string>
+QPushButton {
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+QPushButton:hover {
+    background-color: #45a049;
+}
+QPushButton:pressed {
+    background-color: #3d8b40;
+}
+           </string>
+          </property>
+          <property name="text">
+           <string>&#x27A4;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+
+      <!-- Action buttons row -->
+      <item>
+       <layout class="QHBoxLayout" name="button_layout">
+        <property name="spacing">
+         <number>8</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="manual_btn">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string>
+QPushButton {
+    background-color: #2196F3;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 0 20px;
+}
+QPushButton:hover {
+    background-color: #1e88e5;
+}
+QPushButton:pressed {
+    background-color: #1976d2;
+}
+           </string>
+          </property>
+          <property name="text">
+           <string>Hold to Talk</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="auto_btn">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string>
+QPushButton {
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 0 20px;
+}
+QPushButton:hover {
+    background-color: #45a049;
+}
+QPushButton:pressed {
+    background-color: #3d8b40;
+}
+           </string>
+          </property>
+          <property name="text">
+           <string>Start Conversation</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="abort_btn">
+          <property name="minimumSize">
+           <size>
+            <width>80</width>
+            <height>40</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string>
+QPushButton {
+    background-color: #f44336;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 0 16px;
+}
+QPushButton:hover {
+    background-color: #e53935;
+}
+QPushButton:pressed {
+    background-color: #d32f2f;
+}
+           </string>
+          </property>
+          <property name="text">
+           <string>Stop</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>
