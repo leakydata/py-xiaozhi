@@ -29,23 +29,23 @@ def detect_audio_devices():
         
         # Mark default devices
         if i == default_input:
-            print("  - 🎤 System Default Input Device")
+            print("  - [DEFAULT] System Default Input Device")
         if i == default_output:
-            print("  - 🔊 System Default Output Device")
+            print("  - [DEFAULT] System Default Output Device")
 
         # Identify input devices (microphones)
         if dev_info["max_input_channels"] > 0:
             input_devices.append((i, dev_info["name"]))
             if "USB" in dev_info["name"]:
-                print("  - Likely a USB microphone 🎤")
+                print("  - Likely a USB microphone")
 
         # Identify output devices (speakers)
         if dev_info["max_output_channels"] > 0:
             output_devices.append((i, dev_info["name"]))
             if "Headphones" in dev_info["name"]:
-                print("  - Likely a headphone output 🎧")
+                print("  - Likely a headphone output")
             elif "USB" in dev_info["name"] and dev_info["max_output_channels"] > 0:
-                print("  - Likely a USB speaker 🔊")
+                print("  - Likely a USB speaker")
 
         print("")
 
@@ -137,9 +137,9 @@ def detect_audio_devices():
             test_recording = sd.rec(int(1 * 16000), samplerate=16000, channels=1,
                                   device=recommended_mic[0], dtype=np.int16)
             sd.wait()
-            print("✓ Microphone test successful")
+            print("[OK] Microphone test successful")
         except Exception as e:
-            print(f"✗ Microphone test failed: {e}")
+            print(f"[FAIL] Microphone test failed: {e}")
     
     if recommended_speaker:
         print(f"Testing speaker (Device {recommended_speaker[0]})...")
@@ -152,9 +152,9 @@ def detect_audio_devices():
             
             sd.play(test_audio, samplerate=sample_rate, device=recommended_speaker[0])
             sd.wait()
-            print("✓ Speaker test successful")
+            print("[OK] Speaker test successful")
         except Exception as e:
-            print(f"✗ Speaker test failed: {e}")
+            print(f"[FAIL] Speaker test failed: {e}")
 
     return recommended_mic, recommended_speaker
 

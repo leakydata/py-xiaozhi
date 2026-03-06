@@ -289,6 +289,8 @@ class VADDetector:
 
     def _trigger_interrupt(self):
         """Triggers an interruption."""
+        self._last_interrupt_time = time.time()
+
         if not self.loop or self.loop.is_closed():
             logger.warning("Cannot trigger interruption: event loop is unavailable")
             return
