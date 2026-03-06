@@ -188,23 +188,23 @@ class CalendarReminderService:
         self, title: str, time_str: str, category: str, description: str
     ) -> str:
         """
-        格式化提醒文本.
+        Format reminder text for TTS output.
         """
-        # 基本提醒信息
-        if time_str == "现在":
-            message = f"【{category}】日程提醒：{title} 即将开始"
+        # Basic reminder message
+        if time_str == "now":
+            message = f"[{category}] Reminder: {title} is about to start"
         else:
-            message = f"【{category}】日程提醒：{title} 将在{time_str}开始"
+            message = f"[{category}] Reminder: {title} starts {time_str}"
 
-        # 添加描述信息
+        # Add description
         if description:
-            message += f"，备注：{description}"
+            message += f", note: {description}"
 
         return message
 
     async def _mark_reminder_sent(self, event_id: str):
         """
-        标记提醒已发送.
+        Mark reminder as sent.
         """
         try:
             with self.db._get_connection() as conn:
@@ -218,14 +218,14 @@ class CalendarReminderService:
                 )
                 conn.commit()
 
-            logger.debug(f"已标记提醒为已发送: {event_id}")
+            logger.debug(f"Marked reminder as sent: {event_id}")
 
         except Exception as e:
-            logger.error(f"标记提醒已发送失败: {e}", exc_info=True)
+            logger.error(f"Failed to mark reminder as sent: {e}", exc_info=True)
 
     async def check_daily_events(self):
         """
-        检查今日事件（可在程序启动时调用）
+        Check today's events (can be called on program startup).
         """
         try:
             now = datetime.now()
@@ -245,9 +245,9 @@ class CalendarReminderService:
                 today_events = cursor.fetchall()
 
             if today_events:
-                logger.info(f"今日有 {len(today_events)} 个日程")
+                logger.info(f"Today has {len(today_events)} scheduled events")
 
-                # 构建今日日程摘要
+                # Build today's schedule summary
                 summary_message = {
                     "type": "daily_schedule",
                     "date": today_start.strftime("%Y-%m-%d"),
@@ -258,26 +258,26 @@ class CalendarReminderService:
 
                 summary_json = json.dumps(summary_message, ensure_ascii=False)
 
-                # 获取应用实例并发送日程摘要
+                # Get application instance and send schedule summary
                 application = self._get_application()
                 if application and hasattr(application, "_send_text_tts"):
                     await application._send_text_tts(summary_json)
-                    logger.info("已发送今日日程摘要")
+                    logger.info("Sent today's schedule summary")
 
             else:
-                logger.info("今日无日程安排")
+                logger.info("No events scheduled for today")
 
         except Exception as e:
-            logger.error(f"检查今日事件失败: {e}", exc_info=True)
+            logger.error(f"Failed to check today's events: {e}", exc_info=True)
 
     def _format_daily_summary(self, events) -> str:
         """
-        格式化今日日程摘要.
+        Format today's schedule summary for TTS output.
         """
         if not events:
-            return "今天没有安排任何日程"
+            return "No events scheduled for today"
 
-        summary = f"今天共有{len(events)}个日程："
+        summary = f"You have {len(events)} events today:"
 
         for i, event in enumerate(events, 1):
             start_dt = datetime.fromisoformat(event["start_time"])
@@ -285,19 +285,19 @@ class CalendarReminderService:
             summary += f" {i}.{time_str} {event['title']}"
 
             if i < len(events):
-                summary += "，"
+                summary += ","
 
         return summary
 
     async def reset_reminder_flags_for_future_events(self):
         """
-        重置未来事件的提醒标志（程序重启时调用）
+        Reset reminder flags for future events (called on program restart).
         """
         try:
             now = datetime.now()
 
             with self.db._get_connection() as conn:
-                # 重置所有未来事件的提醒标志
+                # Reset reminder flags for all future events
                 cursor = conn.execute(
                     """
                     UPDATE events
@@ -311,14 +311,14 @@ class CalendarReminderService:
                 conn.commit()
 
             if reset_count > 0:
-                logger.info(f"已重置 {reset_count} 个未来事件的提醒标志")
+                logger.info(f"Reset reminder flags for {reset_count} future events")
 
         except Exception as e:
-            logger.error(f"重置提醒标志失败: {e}", exc_info=True)
+            logger.error(f"Failed to reset reminder flags: {e}", exc_info=True)
 
     async def _cleanup_expired_reminders(self):
         """
-        清理过期事件的提醒标志（超过24小时的过期事件）
+        Clean up reminder flags for expired events (events expired for over 24 hours).
         """
         try:
             now = datetime.now()
@@ -338,19 +338,19 @@ class CalendarReminderService:
                 conn.commit()
 
             if cleanup_count > 0:
-                logger.info(f"已清理 {cleanup_count} 个过期事件的提醒标志")
+                logger.info(f"Cleaned up reminder flags for {cleanup_count} expired events")
 
         except Exception as e:
-            logger.error(f"清理过期提醒标志失败: {e}", exc_info=True)
+            logger.error(f"Failed to clean up expired reminder flags: {e}", exc_info=True)
 
 
-# 全局提醒服务实例
+# Global reminder service instance
 _reminder_service = None
 
 
 def get_reminder_service() -> CalendarReminderService:
     """
-    获取提醒服务单例.
+    Get the reminder service singleton.
     """
     global _reminder_service
     if _reminder_service is None:

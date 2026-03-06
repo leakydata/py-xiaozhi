@@ -23,7 +23,7 @@ async def create_event(args: Dict[str, Any]) -> str:
         start_time = args["start_time"]
         end_time = args.get("end_time")
         description = args.get("description", "")
-        category = args.get("category", "默认")
+        category = args.get("category", "default")
         reminder_minutes = args.get("reminder_minutes", 15)
 
         # If no end time, intelligently set default duration based on category
@@ -31,30 +31,30 @@ async def create_event(args: Dict[str, Any]) -> str:
             start_dt = datetime.fromisoformat(start_time)
 
             # Set different default durations based on category
-            if category in ["提醒", "休息", "站立"]:
+            if category in ["reminder", "rest", "stand"]:
                 # Short activity: 5 minutes
                 end_dt = start_dt + timedelta(minutes=5)
-            elif category in ["会议", "工作"]:
+            elif category in ["meeting", "work"]:
                 # Work-related: 1 hour
                 end_dt = start_dt + timedelta(hours=1)
             elif (
-                "提醒" in title.lower()
-                or "站立" in title.lower()
-                or "休息" in title.lower()
+                "reminder" in title.lower()
+                or "stand" in title.lower()
+                or "rest" in title.lower()
             ):
-                # 根据标题判断：短时间活动
+                # Determine by title: short activity
                 end_dt = start_dt + timedelta(minutes=5)
             else:
-                # 默认情况：30分钟
+                # Default case: 30 minutes
                 end_dt = start_dt + timedelta(minutes=30)
 
             end_time = end_dt.isoformat()
 
-        # 验证时间格式
+        # Validate time format
         datetime.fromisoformat(start_time)
         datetime.fromisoformat(end_time)
 
-        # 创建事件
+        # Create event
         event = CalendarEvent(
             title=title,
             start_time=start_time,
@@ -69,7 +69,7 @@ async def create_event(args: Dict[str, Any]) -> str:
             return json.dumps(
                 {
                     "success": True,
-                    "message": "日程创建成功",
+                    "message": "Event created successfully",
                     "event_id": event.id,
                     "event": event.to_dict(),
                 },
@@ -77,20 +77,20 @@ async def create_event(args: Dict[str, Any]) -> str:
             )
         else:
             return json.dumps(
-                {"success": False, "message": "日程创建失败，可能存在时间冲突"},
+                {"success": False, "message": "Failed to create event, possible time conflict"},
                 ensure_ascii=False,
             )
 
     except Exception as e:
-        logger.error(f"创建日程失败: {e}")
+        logger.error(f"Failed to create event: {e}")
         return json.dumps(
-            {"success": False, "message": f"创建日程失败: {str(e)}"}, ensure_ascii=False
+            {"success": False, "message": f"Failed to create event: {str(e)}"}, ensure_ascii=False
         )
 
 
 async def get_events_by_date(args: Dict[str, Any]) -> str:
     """
-    按日期查询日程.
+    Query events by date.
     """
     try:
         date_type = args.get("date_type", "today")  # today, tomorrow, week, month
@@ -107,14 +107,14 @@ async def get_events_by_date(args: Dict[str, Any]) -> str:
             )
             end_date = start_date + timedelta(days=1)
         elif date_type == "week":
-            # 本周
+            # This week
             days_since_monday = now.weekday()
             start_date = (now - timedelta(days=days_since_monday)).replace(
                 hour=0, minute=0, second=0, microsecond=0
             )
             end_date = start_date + timedelta(days=7)
         elif date_type == "month":
-            # 本月
+            # This month
             start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             if now.month == 12:
                 end_date = start_date.replace(year=now.year + 1, month=1)
@@ -268,14 +268,14 @@ async def delete_events_batch(args: Dict[str, Any]) -> str:
                 )
                 end_date = start_date + timedelta(days=1)
             elif date_type == "week":
-                # 本周
+                # This week
                 days_since_monday = now.weekday()
                 start_date = (now - timedelta(days=days_since_monday)).replace(
                     hour=0, minute=0, second=0, microsecond=0
                 )
                 end_date = start_date + timedelta(days=7)
             elif date_type == "month":
-                # 本月
+                # This month
                 start_date = now.replace(
                     day=1, hour=0, minute=0, second=0, microsecond=0
                 )
