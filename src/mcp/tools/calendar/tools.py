@@ -35,7 +35,7 @@ async def create_event(args: Dict[str, Any]) -> str:
                 # Short activity: 5 minutes
                 end_dt = start_dt + timedelta(minutes=5)
             elif category in ["会议", "工作"]:
-                # 工作相关：1小时
+                # Work-related: 1 hour
                 end_dt = start_dt + timedelta(hours=1)
             elif (
                 "提醒" in title.lower()

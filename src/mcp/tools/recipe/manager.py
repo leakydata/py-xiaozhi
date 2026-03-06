@@ -465,17 +465,17 @@ class RecipeManager:
 
         if meal_type == "breakfast":
             filtered_recipes = [
-                r for r in all_recipes if "早餐" in r.category or "早餐" in r.name
+                r for r in all_recipes if "breakfast" in r.category.lower() or "早餐" in r.category
             ]
         elif meal_type == "lunch":
             filtered_recipes = [
-                r for r in all_recipes if "午餐" in r.category or "主食" in r.category
+                r for r in all_recipes if "lunch" in r.category.lower() or "午餐" in r.category
             ]
         elif meal_type == "dinner":
             filtered_recipes = [
                 r
                 for r in all_recipes
-                if "晚餐" in r.category or "荤菜" in r.category or "素菜" in r.category
+                if "dinner" in r.category.lower() or "晚餐" in r.category
             ]
         else:
             filtered_recipes = all_recipes
@@ -509,17 +509,17 @@ class RecipeManager:
 
         if meal_type == "breakfast":
             filtered_recipes = [
-                r for r in all_recipes if "早餐" in r.category or "早餐" in r.name
+                r for r in all_recipes if "breakfast" in r.category.lower() or "早餐" in r.category
             ]
         elif meal_type == "lunch":
             filtered_recipes = [
-                r for r in all_recipes if "午餐" in r.category or "主食" in r.category
+                r for r in all_recipes if "lunch" in r.category.lower() or "午餐" in r.category
             ]
         elif meal_type == "dinner":
             filtered_recipes = [
                 r
                 for r in all_recipes
-                if "晚餐" in r.category or "荤菜" in r.category or "素菜" in r.category
+                if "dinner" in r.category.lower() or "晚餐" in r.category
             ]
         else:
             filtered_recipes = all_recipes
