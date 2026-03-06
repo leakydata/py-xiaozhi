@@ -229,7 +229,7 @@ class RailwayToolsManager:
             )
         )
 
-        # 查询车票
+        # Query tickets
         ticket_props = PropertyList(
             [
                 Property("date", PropertyType.STRING),
@@ -251,7 +251,7 @@ class RailwayToolsManager:
             )
         )
 
-        # 查询中转车票
+        # Query transfer tickets
         transfer_props = PropertyList(
             [
                 Property("date", PropertyType.STRING),
@@ -275,7 +275,7 @@ class RailwayToolsManager:
             )
         )
 
-        # 查询车次经停站
+        # Query train route stops
         route_props = PropertyList(
             [
                 Property("train_no", PropertyType.STRING),
@@ -294,13 +294,13 @@ class RailwayToolsManager:
             )
         )
 
-        logger.debug("[Railway] 注册原子工具成功")
+        logger.debug("[Railway] Atomic tools registered successfully")
 
-    # ==================== 智能工具回调函数 ====================
+    # ==================== Smart tool callback functions ====================
 
     async def _smart_ticket_query_callback(self, args: Dict[str, Any]) -> str:
         """
-        智能火车票查询回调.
+        Smart train ticket query callback.
         """
         try:
             departure_city = args.get("departure_city", "")
@@ -311,28 +311,28 @@ class RailwayToolsManager:
             limit = args.get("limit", 10)
 
             if not departure_city or not arrival_city:
-                return "错误：出发城市和到达城市不能为空"
+                return "Error: Departure city and arrival city cannot be empty"
 
-            # 获取当前日期
+            # Get current date
             current_date = await self._get_current_date()
             
-            # 处理日期
+            # Process date
             if not travel_date:
                 travel_date = current_date
             else:
                 travel_date = self._parse_date(travel_date, current_date)
 
-            # 获取车站编码
+            # Get station codes
             from_station_code = await self._get_station_code(departure_city)
             to_station_code = await self._get_station_code(arrival_city)
 
             if not from_station_code or not to_station_code:
-                return f"错误：无法找到 {departure_city} 或 {arrival_city} 的车站信息"
+                return f"Error: Unable to find station information for {departure_city} or {arrival_city}"
 
-            # 转换车次类型
+            # Convert train type
             train_filters = self._convert_train_type(train_type)
 
-            # 查询车票
+            # Query tickets
             client = await get_railway_client()
             success, tickets, message = await client.query_tickets(
                 travel_date, from_station_code, to_station_code, 
@@ -340,7 +340,7 @@ class RailwayToolsManager:
             )
 
             if not success:
-                return f"查询失败: {message}"
+                return f"Query failed: {message}"
 
             if not tickets:
                 return f"未找到 {travel_date} 从 {departure_city} 到 {arrival_city} 的车票"
@@ -368,23 +368,23 @@ class RailwayToolsManager:
             limit = args.get("limit", 5)
 
             if not departure_city or not arrival_city:
-                return "错误：出发城市和到达城市不能为空"
+                return "Error: Departure city and arrival city cannot be empty"
 
-            # 获取当前日期
+            # Get current date
             current_date = await self._get_current_date()
             
-            # 处理日期
+            # Process date
             if not travel_date:
                 travel_date = current_date
             else:
                 travel_date = self._parse_date(travel_date, current_date)
 
-            # 获取车站编码
+            # Get station codes
             from_station_code = await self._get_station_code(departure_city)
             to_station_code = await self._get_station_code(arrival_city)
 
             if not from_station_code or not to_station_code:
-                return f"错误：无法找到 {departure_city} 或 {arrival_city} 的车站信息"
+                return f"Error: Unable to find station information for {departure_city} or {arrival_city}"
 
             # 获取中转站编码
             middle_station_code = ""
@@ -399,7 +399,7 @@ class RailwayToolsManager:
             )
 
             if not success:
-                return f"查询失败: {message}"
+                return f"Query failed: {message}"
 
             if not transfers:
                 return f"未找到 {travel_date} 从 {departure_city} 到 {arrival_city} 的中转方案"
@@ -462,23 +462,23 @@ class RailwayToolsManager:
             preferences = args.get("preferences", "")
 
             if not departure_city or not arrival_city:
-                return "错误：出发城市和到达城市不能为空"
+                return "Error: Departure city and arrival city cannot be empty"
 
-            # 获取当前日期
+            # Get current date
             current_date = await self._get_current_date()
             
-            # 处理日期
+            # Process date
             if not travel_date:
                 travel_date = current_date
             else:
                 travel_date = self._parse_date(travel_date, current_date)
 
-            # 获取车站编码
+            # Get station codes
             from_station_code = await self._get_station_code(departure_city)
             to_station_code = await self._get_station_code(arrival_city)
 
             if not from_station_code or not to_station_code:
-                return f"错误：无法找到 {departure_city} 或 {arrival_city} 的车站信息"
+                return f"Error: Unable to find station information for {departure_city} or {arrival_city}"
 
             # 查询直达车票
             client = await get_railway_client()
@@ -891,7 +891,7 @@ class RailwayManager:
         """
         注册基础工具.
         """
-        # 获取当前日期
+        # Get current date
         add_tool(
             (
                 "self.railway.get_current_date",

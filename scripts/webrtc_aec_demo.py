@@ -501,20 +501,20 @@ def aec_demo(audio_file):
     processed_frames = []
     reference_frames = []
 
-    # 等待一会让音频系统准备好
+    # Wait a moment for the audio system to be ready
     time.sleep(0.5)
 
-    print("开始录制和处理...")
-    print("播放参考音频...")
+    print("Starting recording and processing...")
+    print("Playing reference audio...")
 
     mixer.music.play()
 
-    # 录制持续时间(根据音频文件长度)
+    # Recording duration (based on audio file length)
     try:
         sound_length = mixer.Sound(temp_wav_path).get_length()
         recording_time = sound_length if sound_length > 0 else 10
     except Exception:
-        recording_time = 10  # 如果无法获取长度，默认10秒
+        recording_time = 10  # Default to 10 seconds if length cannot be determined
 
     recording_time += 1  # 额外1秒确保捕获所有音频
 
