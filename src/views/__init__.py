@@ -1,9 +1,9 @@
-# Views包 - 所有PyQt界面组件
-"""Views模块包含所有的PyQt界面组件.
+# Views package - All PyQt UI components
+"""Views module containing all PyQt UI components.
 
-- base: 基础组件和通用类
-- activation: 设备激活界面
-- settings: 设置界面
+- base: Base components and common classes
+- activation: Device activation interface
+- settings: Settings interface
 """
 
 __version__ = "1.0.0"
