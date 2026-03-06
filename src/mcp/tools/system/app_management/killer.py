@@ -215,30 +215,30 @@ def _kill_app_sync(app: Dict[str, Any], force: bool, system: str) -> bool:
 def _kill_windows_app_group(
     apps: List[Dict[str, Any]], app_name: str, force: bool
 ) -> bool:
-    """Windows系统的分组关闭策略.
+    """Windows system grouped close strategy.
 
     Args:
-        apps: 匹配的应用程序进程列表
-        app_name: 应用程序名称
-        force: 是否强制关闭
+        apps: List of matching application processes
+        app_name: Application name
+        force: Whether to force close
 
     Returns:
-        bool: 关闭是否成功
+        bool: Whether the close was successful
     """
     try:
         from .windows.killer import kill_application_group
 
         return kill_application_group(apps, app_name, force)
     except Exception as e:
-        logger.error(f"[AppKiller] Windows分组关闭失败: {e}")
+        logger.error(f"[AppKiller] Windows grouped close failed: {e}")
         return False
 
 
 def get_system_killer():
-    """根据当前系统获取对应的关闭器模块.
+    """Get the killer module for the current system.
 
     Returns:
-        对应系统的关闭器模块
+        The killer module for the corresponding system
     """
     system = platform.system()
 
@@ -255,5 +255,5 @@ def get_system_killer():
 
         return killer
     else:
-        logger.warning(f"[AppKiller] 不支持的系统: {system}")
+        logger.warning(f"[AppKiller] Unsupported system: {system}")
         return None

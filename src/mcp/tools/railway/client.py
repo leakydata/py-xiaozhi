@@ -579,7 +579,7 @@ class Railway12306Client:
                 if len(values) < 57:  # Incomplete data
                     continue
 
-                # 解析基本信息
+                # Parse basic information
                 train_no = values[2]
                 train_code = values[3]
                 start_time = values[8]
@@ -589,7 +589,7 @@ class Railway12306Client:
                 to_code = values[7]
                 start_date_str = values[13]
 
-                # 计算日期
+                # Calculate date
                 start_date = datetime.strptime(start_date_str, "%Y%m%d")
 
                 # Safely parse time, handle possible format issues
@@ -897,7 +897,7 @@ class Railway12306Client:
                 from_station_code = ticket_data.get("from_station_telecode", "")
                 to_station_code = ticket_data.get("to_station_telecode", "")
 
-                # 计算日期
+                # Calculate date
                 try:
                     start_date = datetime.strptime(start_date_str, "%Y%m%d")
                     start_hour, start_minute = map(int, start_time.split(":"))
@@ -1034,40 +1034,40 @@ class Railway12306Client:
         limit: int,
     ) -> List[TransferTicket]:
         """
-        过滤和排序中转票.
+        Filter and sort transfer tickets.
         """
         result = transfers
 
-        # 过滤车次类型
+        # Filter train types
         if train_filters:
             filtered = []
             for transfer in result:
                 for filter_char in train_filters:
                     if filter_char in self.train_filters:
-                        # 检查是否有车次符合筛选条件
+                        # Check if any train matches filter criteria
                         if any(
                             self.train_filters[filter_char](ticket.start_train_code)
                             for ticket in transfer.ticket_list
                         ):
                             filtered.append(transfer)
                             break
-                    elif filter_char == "F":  # 复兴号
+                    elif filter_char == "F":  # Fuxing
                         if any(
-                            "复兴号" in ticket.features
+                            "Fuxing" in ticket.features
                             for ticket in transfer.ticket_list
                         ):
                             filtered.append(transfer)
                             break
-                    elif filter_char == "S":  # 智能动车组
+                    elif filter_char == "S":  # Smart EMU
                         if any(
-                            "智能动车组" in ticket.features
+                            "Smart EMU" in ticket.features
                             for ticket in transfer.ticket_list
                         ):
                             filtered.append(transfer)
                             break
             result = filtered
 
-        # 排序
+        # Sort
         if sort_by == "start_time":
             result.sort(key=lambda t: (t.start_date, t.start_time))
         elif sort_by == "arrive_time":
@@ -1078,20 +1078,20 @@ class Railway12306Client:
         if reverse:
             result.reverse()
 
-        # 限制数量
+        # Limit count
         if limit > 0:
             result = result[:limit]
 
         return result
 
 
-# 全局客户端实例
+# Global client instance
 _client = None
 
 
 async def get_railway_client() -> Railway12306Client:
     """
-    获取铁路客户端单例.
+    Get railway client singleton.
     """
     global _client
     if _client is None:

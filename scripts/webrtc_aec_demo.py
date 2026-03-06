@@ -462,23 +462,23 @@ def aec_demo(audio_file):
             wf.setframerate(SAMPLE_RATE)
             wf.writeframes(ref_audio_data.tobytes())
 
-        # 将参考音频分成CHUNK大小的帧
+        # Split reference audio into CHUNK-sized frames
         ref_audio_frames = []
         for i in range(0, len(ref_audio_data), CHUNK):
             if i + CHUNK <= len(ref_audio_data):
                 ref_audio_frames.append(ref_audio_data[i : i + CHUNK])
             else:
-                # 最后一帧不足CHUNK大小，补零
+                # Last frame is smaller than CHUNK size, pad with zeros
                 last_frame = np.zeros(CHUNK, dtype=np.int16)
                 last_frame[: len(ref_audio_data) - i] = ref_audio_data[i:]
                 ref_audio_frames.append(last_frame)
 
-        print(f"参考音频准备完成，共{len(ref_audio_frames)}帧")
+        print(f"Reference audio ready, total {len(ref_audio_frames)} frames")
 
-        # 加载处理后的临时WAV文件
+        # Load the processed temporary WAV file
         mixer.music.load(temp_wav_path)
     except Exception as e:
-        print(f"加载参考音频时出错: {e}")
+        print(f"Error loading reference audio: {e}")
         sys.exit(1)
 
     # 创建WebRTC APM实例

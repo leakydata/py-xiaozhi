@@ -1,6 +1,6 @@
-"""统一的应用程序启动器.
+"""Unified application launcher.
 
-根据系统自动选择对应的启动器实现
+Automatically selects the appropriate launcher implementation based on the current system.
 """
 
 import asyncio
@@ -15,26 +15,26 @@ logger = get_logger(__name__)
 
 
 async def launch_application(args: Dict[str, Any]) -> bool:
-    """启动应用程序.
+    """Launch an application.
 
     Args:
-        args: 包含应用程序名称的参数字典
-            - app_name: 应用程序名称
+        args: Parameter dictionary containing the application name
+            - app_name: Application name
 
     Returns:
-        bool: 启动是否成功
+        bool: Whether the launch was successful
     """
     try:
         app_name = args["app_name"]
-        logger.info(f"[AppLauncher] 尝试启动应用程序: {app_name}")
+        logger.info(f"[AppLauncher] Attempting to launch application: {app_name}")
 
-        # 首先尝试通过扫描找到精确匹配的应用程序
+        # First try to find an exact matching application through scanning
         matched_app = await _find_matching_application(app_name)
         if matched_app:
             logger.info(
-                f"[AppLauncher] 找到匹配的应用程序: {matched_app.get('display_name', matched_app.get('name', ''))}"
+                f"[AppLauncher] Found matching application: {matched_app.get('display_name', matched_app.get('name', ''))}"
             )
-            # 根据应用程序类型使用不同的启动方法
+            # Use different launch methods based on application type
             success = await _launch_matched_app(matched_app, app_name)
         else:
             # 如果没有找到匹配，使用原来的方法
