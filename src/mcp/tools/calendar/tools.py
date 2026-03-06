@@ -26,13 +26,13 @@ async def create_event(args: Dict[str, Any]) -> str:
         category = args.get("category", "默认")
         reminder_minutes = args.get("reminder_minutes", 15)
 
-        # 如果没有结束时间，根据分类智能设置默认时长
+        # If no end time, intelligently set default duration based on category
         if not end_time:
             start_dt = datetime.fromisoformat(start_time)
 
-            # 根据分类设置不同的默认时长
+            # Set different default durations based on category
             if category in ["提醒", "休息", "站立"]:
-                # 短时间活动：5分钟
+                # Short activity: 5 minutes
                 end_dt = start_dt + timedelta(minutes=5)
             elif category in ["会议", "工作"]:
                 # 工作相关：1小时
