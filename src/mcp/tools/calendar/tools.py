@@ -1,5 +1,5 @@
 """
-日程管理MCP工具函数 提供给MCP服务器调用的异步工具函数.
+Calendar management MCP tool functions providing async tool functions for MCP server calls.
 """
 
 import json
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 async def create_event(args: Dict[str, Any]) -> str:
     """
-    创建日程事件.
+    Create a calendar event.
     """
     try:
         title = args["title"]

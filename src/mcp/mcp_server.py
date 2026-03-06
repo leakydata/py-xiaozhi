@@ -278,12 +278,6 @@ class McpServer:
         music_manager = get_music_tools_manager()
         music_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
 
-        # Add 12306 railway query tools
-        from src.mcp.tools.railway import get_railway_tools_manager
-
-        railway_manager = get_railway_tools_manager()
-        railway_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
-
         # Add search tools
         from src.mcp.tools.search import get_search_manager
 
@@ -309,12 +303,6 @@ class McpServer:
                 take_photo,
             )
         )
-
-        # Add Gaode Map tools
-        from src.mcp.tools.amap import get_amap_manager
-
-        amap_manager = get_amap_manager()
-        amap_manager.init_tools(self.add_tool, PropertyList, Property, PropertyType)
 
         # Add weather tools (US-focused, Open-Meteo API, no key needed)
         try:

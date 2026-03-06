@@ -337,13 +337,13 @@ class CalendarManager:
         return self.db.get_categories()
 
 
-# 全局管理器实例
+# Global manager instance
 _calendar_manager = None
 
 
 def get_calendar_manager() -> CalendarManager:
     """
-    获取日程管理器单例.
+    Get the calendar manager singleton.
     """
     global _calendar_manager
     if _calendar_manager is None:
