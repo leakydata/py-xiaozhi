@@ -413,47 +413,47 @@ class RailwayToolsManager:
 
     async def _smart_station_query_callback(self, args: Dict[str, Any]) -> str:
         """
-        智能车站查询回调.
+        Smart station query callback.
         """
         try:
             query = args.get("query", "")
             if not query:
-                return "错误：查询内容不能为空"
+                return "Error: Query content cannot be empty"
 
-            # 判断查询类型
+            # Determine query type
             if "有哪些" in query or "stations" in query.lower():
-                # 城市车站查询
+                # City stations query
                 city = self._extract_city_from_query(query)
                 if city:
                     return await self._query_city_stations(city)
             
             elif "主要" in query or "main" in query.lower():
-                # 主要车站查询
+                # Main station query
                 city = self._extract_city_from_query(query)
                 if city:
                     return await self._query_main_station(city)
             
             elif "编码" in query or "code" in query.lower():
-                # 车站编码查询
+                # Station code query
                 station_name = self._extract_station_from_query(query)
                 if station_name:
                     return await self._query_station_code(station_name)
             
             else:
-                # 通用车站信息查询
+                # General station info query
                 station_name = self._extract_station_from_query(query)
                 if station_name:
                     return await self._query_station_info(station_name)
 
-            return "无法理解您的查询，请提供更具体的信息"
+            return "Unable to understand your query, please provide more specific information"
 
         except Exception as e:
-            logger.error(f"[Railway] 智能车站查询失败: {e}", exc_info=True)
-            return f"查询失败: {str(e)}"
+            logger.error(f"[Railway] Smart station query failed: {e}", exc_info=True)
+            return f"Query failed: {str(e)}"
 
     async def _smart_suggestion_callback(self, args: Dict[str, Any]) -> str:
         """
-        智能出行建议回调.
+        Smart travel suggestion callback.
         """
         try:
             departure_city = args.get("departure_city", "")
@@ -480,7 +480,7 @@ class RailwayToolsManager:
             if not from_station_code or not to_station_code:
                 return f"Error: Unable to find station information for {departure_city} or {arrival_city}"
 
-            # 查询直达车票
+            # Query direct tickets
             client = await get_railway_client()
             success, tickets, _ = await client.query_tickets(
                 travel_date, from_station_code, to_station_code, 
@@ -490,28 +490,28 @@ class RailwayToolsManager:
             suggestions = []
             
             if success and tickets:
-                # 分析直达车票
+                # Analyze direct tickets
                 suggestions.extend(self._analyze_direct_tickets(tickets, preferences))
             
-            # 查询中转方案
+            # Query transfer options
             transfer_success, transfers, _ = await client.query_transfer_tickets(
                 travel_date, from_station_code, to_station_code, 
                 "", False, "", "start_time", False, 5
             )
 
             if transfer_success and transfers:
-                # 分析中转方案
+                # Analyze transfer options
                 suggestions.extend(self._analyze_transfer_options(transfers, preferences))
 
             if not suggestions:
-                return f"抱歉，未找到 {travel_date} 从 {departure_city} 到 {arrival_city} 的出行方案"
+                return f"Sorry, no travel options found from {departure_city} to {arrival_city} on {travel_date}"
 
-            # 格式化建议
+            # Format suggestions
             return self._format_travel_suggestions(suggestions, departure_city, arrival_city, travel_date, preferences)
 
         except Exception as e:
-            logger.error(f"[Railway] 智能出行建议失败: {e}", exc_info=True)
-            return f"建议生成失败: {str(e)}"
+            logger.error(f"[Railway] Smart travel suggestion failed: {e}", exc_info=True)
+            return f"Suggestion generation failed: {str(e)}"
 
     # ==================== 辅助方法 ====================
 

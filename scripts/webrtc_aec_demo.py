@@ -528,23 +528,23 @@ def aec_demo(audio_file):
             # Save original recording
             original_frames.append(input_data)
 
-            # 将输入数据转换为short数组
+            # Convert input data to short array
             input_array = np.frombuffer(input_data, dtype=np.int16)
             input_ptr = input_array.ctypes.data_as(POINTER(c_short))
 
-            # 获取当前参考音频帧
+            # Get current reference audio frame
             if current_ref_frame_index < len(ref_audio_frames):
                 ref_array = ref_audio_frames[current_ref_frame_index]
                 reference_frames.append(ref_array.tobytes())
                 current_ref_frame_index += 1
             else:
-                # 如果参考音频播放完毕，使用静音帧
+                # If reference audio playback is finished, use a silent frame
                 ref_array = np.zeros(CHUNK, dtype=np.int16)
                 reference_frames.append(ref_array.tobytes())
 
             ref_ptr = ref_array.ctypes.data_as(POINTER(c_short))
 
-            # 创建输出缓冲区
+            # Create output buffer
             output_array = np.zeros(CHUNK, dtype=np.int16)
             output_ptr = output_array.ctypes.data_as(POINTER(c_short))
 

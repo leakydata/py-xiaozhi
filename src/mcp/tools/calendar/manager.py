@@ -1,5 +1,5 @@
 """
-日程管理器 负责日程数据的存储、查询、更新等核心功能.
+Calendar manager responsible for core functions such as event data storage, querying, and updating.
 """
 
 import os
@@ -15,12 +15,12 @@ logger = get_logger(__name__)
 
 class CalendarManager:
     """
-    日程管理器.
+    Calendar manager.
     """
 
     def __init__(self):
         self.db = get_calendar_database()
-        # 尝试从旧的JSON文件迁移数据
+        # Try to migrate data from old JSON file
         self._migrate_from_json_if_exists()
 
     def init_tools(self, add_tool, PropertyList, Property, PropertyType):

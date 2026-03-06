@@ -121,16 +121,15 @@ class SystemToolsManager:
                 "macOS, and Linux platforms. It automatically detects the operating "
                 "system and uses appropriate launch methods.\n"
                 "Use this tool when the user wants to:\n"
-                "1. Open specific software applications (e.g., 'QQ', 'QQ音乐', 'WeChat', '微信')\n"
-                "2. Launch system utilities (e.g., 'Calculator', '计算器', 'Notepad', '记事本')\n"
+                "1. Open specific software applications (e.g., 'Spotify', 'Discord', 'WeChat')\n"
+                "2. Launch system utilities (e.g., 'Calculator', 'Notepad', 'Terminal')\n"
                 "3. Start browsers (e.g., 'Chrome', 'Firefox', 'Safari')\n"
                 "4. Open media players (e.g., 'VLC', 'Windows Media Player')\n"
                 "5. Launch development tools (e.g., 'VS Code', 'PyCharm')\n"
                 "6. Start games or other installed programs\n\n"
                 "Examples of valid app names:\n"
-                "- Chinese: 'QQ音乐', '微信', '计算器', '记事本', '浏览器'\n"
-                "- English: 'QQ', 'WeChat', 'Calculator', 'Notepad', 'Chrome'\n"
-                "- Mixed: 'QQ Music', 'Microsoft Word', 'Adobe Photoshop'\n\n"
+                "- 'Spotify', 'Discord', 'Calculator', 'Notepad', 'Chrome'\n"
+                "- 'Microsoft Word', 'Adobe Photoshop', 'VS Code'\n\n"
                 "The system will try multiple launch strategies including direct execution, "
                 "system commands, and path searching to find and start the application.",
                 app_props,
@@ -164,7 +163,7 @@ class SystemToolsManager:
                 "and user-installed software (QQ, WeChat, Chrome, etc.). Each application "
                 "entry contains the clean name for launching and display name for reference.\n\n"
                 "After scanning, use the 'name' field from results with self.application.launch "
-                "to start applications. For example, if scan shows {name: 'QQ', display_name: 'QQ音乐'}, "
+                "to start applications. For example, if scan shows {name: 'Notepad', display_name: 'Notepad'}, "
                 "use self.application.launch with app_name='QQ' to launch it.",
                 scanner_props,
                 scan_installed_applications,
