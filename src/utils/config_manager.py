@@ -29,8 +29,8 @@ class ConfigManager:
         },
         "WAKE_WORD_OPTIONS": {
             "USE_WAKE_WORD": False,
-            "MODEL_PATH": "models/vosk-model-small-cn-0.22",
-            "WAKE_WORDS": ["xiao zhi", "xiao mei"],
+            "MODEL_PATH": "models/vosk-model-small-en-us-0.22",
+            "WAKE_WORDS": ["hey assistant", "hello assistant", "hey jarvis", "ok computer"],
         },
         "CAMERA": {
             "camera_index": 0,

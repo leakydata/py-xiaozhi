@@ -1,11 +1,52 @@
+[project]
+name = "py-xiaozhi"
+version = "0.0.0"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "aiofiles==25.1.0",
+  "aiohttp==3.12.13",
+  "beautifulsoup4==4.12.3",
+  "brotli==1.1.0",
+  "colorlog==6.9.0",
+  "comtypes==1.4.6",
+  "cryptography==44.0.1",
+  "lunar_python==1.4.4",
+  "mutagen==1.47.0",
+  "numpy==1.26.4",
+  "openai==1.86.0",
+  "opencv-python-headless==4.11.0.86",
+  "opuslib==3.0.1",
+  "paho-mqtt==2.1.0",
+  "pendulum==3.1.0",
+  "psutil==7.0.0",
+  "py-machineid==0.8.0",
+  "pycaw==20240210",
+  "pygame==2.6.1",
+  "pynput==1.8.1",
+  "pyperclip==1.9.0",
+  "pypinyin==0.53.0",
+  "PyQt5==5.15.11",
+  "python-dateutil==2.9.0.post0",
+  "qasync==0.27.1",
+  "requests==2.32.3",
+  "sounddevice>=0.4.4",
+  "soxr==0.5.0.post1",
+  "vosk==0.3.44",
+  "webrtcvad-wheels==2.0.14",
+  "websockets==11.0.3",
+]
+
+[tool.uv]
+constraint-dependencies = [
+  "PyQt5-Qt5==5.15.2",
+]
+
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ["py311"]
 include = '\.pyi?$'
-# 确保复杂表达式会被适当换行
 extend-exclude = '''
 /(
-  # directories
   \.eggs
   | \.git
   | \.hg
@@ -27,3 +68,6 @@ use_parentheses = true
 ensure_newline_before_comments = true
 known_first_party = ["src", "py_xiaozhi"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
+[dependency-groups]
+dev = []

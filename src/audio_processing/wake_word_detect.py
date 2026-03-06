@@ -8,7 +8,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Optional
 
-from pypinyin import Style, lazy_pinyin
 from vosk import KaldiRecognizer, Model, SetLogLevel
 
 from src.constants.constants import AudioConfig
@@ -19,7 +18,7 @@ logger = get_logger(__name__)
 
 
 class WakeWordDetector:
-    """Wake Word Detector - Advanced Matching Algorithm Version"""
+    """Wake Word Detector - English-optimized with fuzzy matching"""
 
     def __init__(self):
         # Basic properties
@@ -27,11 +26,11 @@ class WakeWordDetector:
         self.is_running_flag = False
         self.paused = False
         self.detection_task = None
-        
+
         # Anti-repeat trigger mechanism
         self.last_detection_time = 0
         self.detection_cooldown = 3.0  # 3-second cooldown
-        
+
         # Callback functions
         self.on_detected_callback: Optional[Callable] = None
         self.on_error: Optional[Callable] = None
@@ -50,18 +49,20 @@ class WakeWordDetector:
         # Wake word configuration
         self.wake_words = config.get_config(
             "WAKE_WORD_OPTIONS.WAKE_WORDS",
-            ["Hello Xiaoming", "Hello Xiaozhi", "Hello Xiaotian", "Xiaoai Speaker", "Jarvis"],
+            ["hey assistant", "hello assistant", "hey jarvis", "ok computer"],
         )
 
-        # Pre-calculate pinyin variants to improve performance
-        self.wake_word_patterns = self._build_wake_word_patterns()
+        # Pre-process wake words for matching
+        self.wake_word_normalized = {
+            word: self._normalize_text(word) for word in self.wake_words
+        }
 
         # Matching parameters
         self.similarity_threshold = config.get_config(
-            "WAKE_WORD_OPTIONS.SIMILARITY_THRESHOLD", 0.85
+            "WAKE_WORD_OPTIONS.SIMILARITY_THRESHOLD", 0.80
         )
         self.max_edit_distance = config.get_config(
-            "WAKE_WORD_OPTIONS.MAX_EDIT_DISTANCE", 1
+            "WAKE_WORD_OPTIONS.MAX_EDIT_DISTANCE", 2
         )
 
         # Performance optimization: cache recent recognition results
@@ -70,65 +71,20 @@ class WakeWordDetector:
 
         # Initialize model
         self._init_model(config)
-        
+
         # Validate configuration
         self._validate_config()
 
-    def _build_wake_word_patterns(self):
-        """
-        Build pinyin patterns for wake words, including multiple variants.
-        """
-        patterns = {}
-        for word in self.wake_words:
-            # Standard pinyin (without tones)
-            standard_pinyin = "".join(lazy_pinyin(word, style=Style.NORMAL))
-
-            # Pinyin with first letter
-            initials_pinyin = "".join(lazy_pinyin(word, style=Style.FIRST_LETTER))
-
-            # Pinyin with tones
-            tone_pinyin = "".join(lazy_pinyin(word, style=Style.TONE))
-
-            # Pinyin finals
-            finals_pinyin = "".join(lazy_pinyin(word, style=Style.FINALS))
-
-            patterns[word] = {
-                "standard": standard_pinyin.lower(),
-                "initials": initials_pinyin.lower(),
-                "tone": tone_pinyin.lower(),
-                "finals": finals_pinyin.lower(),
-                "original": word,
-                "length": len(standard_pinyin),
-            }
-
-        return patterns
-
-    @lru_cache(maxsize=128)
-    def _get_text_pinyin_variants(self, text):
-        """
-        Get pinyin variants of text (with cache).
-        """
-        if not text or not text.strip():
-            return {}
-
-        # Clean text
-        cleaned_text = re.sub(r"[^\u4e00-\u9fff\w]", "", text)
-        if not cleaned_text:
-            return {}
-
-        return {
-            "standard": "".join(lazy_pinyin(cleaned_text, style=Style.NORMAL)).lower(),
-            "initials": "".join(
-                lazy_pinyin(cleaned_text, style=Style.FIRST_LETTER)
-            ).lower(),
-            "tone": "".join(lazy_pinyin(cleaned_text, style=Style.TONE)).lower(),
-            "finals": "".join(lazy_pinyin(cleaned_text, style=Style.FINALS)).lower(),
-        }
+    @staticmethod
+    def _normalize_text(text: str) -> str:
+        """Normalize text for comparison: lowercase, strip punctuation, collapse whitespace."""
+        text = text.lower().strip()
+        text = re.sub(r"[^\w\s]", "", text)
+        text = re.sub(r"\s+", " ", text)
+        return text
 
     def _init_model(self, config):
-        """
-        Initialize the speech recognition model.
-        """
+        """Initialize the speech recognition model."""
         try:
             model_path = self._get_model_path(config)
             if not os.path.exists(model_path):
@@ -139,20 +95,18 @@ class WakeWordDetector:
             self.model = Model(model_path=model_path)
             self.recognizer = KaldiRecognizer(self.model, self.sample_rate)
             self.recognizer.SetWords(True)
-            logger.info(f"Model loaded, {len(self.wake_words)} wake words configured")
+            logger.info(f"Model loaded, {len(self.wake_words)} wake words configured: {self.wake_words}")
 
         except Exception as e:
             logger.error(f"Initialization failed: {e}", exc_info=True)
             self.enabled = False
 
     def _get_model_path(self, config):
-        """
-        Get the model path.
-        """
+        """Get the model path."""
         from src.utils.resource_finder import resource_finder
 
         model_name = config.get_config(
-            "WAKE_WORD_OPTIONS.MODEL_PATH", "vosk-model-small-cn-0.22"
+            "WAKE_WORD_OPTIONS.MODEL_PATH", "vosk-model-small-en-us-0.22"
         )
 
         model_path = Path(model_name)
@@ -180,7 +134,6 @@ class WakeWordDetector:
             if direct_model_path.exists():
                 return str(direct_model_path)
 
-            # Traverse subdirectories to find
             for item in models_dir.iterdir():
                 if item.is_dir() and item.name == model_name_only:
                     return str(item)
@@ -191,59 +144,67 @@ class WakeWordDetector:
         logger.warning(f"Model not found, will use default path: {default_path}")
         return str(default_path)
 
-    def _calculate_similarity(self, text_variants, pattern):
-        """
-        Calculate the similarity between the text and the wake word pattern.
-        """
-        max_similarity = 0.0
-        best_match_type = None
+    def _calculate_similarity(self, recognized_text: str, wake_word: str) -> float:
+        """Calculate similarity between recognized text and a wake word using multiple strategies."""
+        norm_text = self._normalize_text(recognized_text)
+        norm_wake = self.wake_word_normalized.get(wake_word, self._normalize_text(wake_word))
 
-        # Check matching for various pinyin variants
-        for variant_type in ["standard", "tone", "initials", "finals"]:
-            text_variant = text_variants.get(variant_type, "")
-            pattern_variant = pattern.get(variant_type, "")
+        if not norm_text or not norm_wake:
+            return 0.0
 
-            if not text_variant or not pattern_variant:
-                continue
+        # 1. Exact substring match
+        if norm_wake in norm_text:
+            return 1.0
 
-            # 1. Exact match (highest priority)
-            if pattern_variant in text_variant:
-                return 1.0, f"exact_{variant_type}"
+        # 2. Check if wake word words appear in the text in order
+        wake_words = norm_wake.split()
+        text_words = norm_text.split()
+        if self._words_in_order(wake_words, text_words):
+            return 0.95
 
-            # 2. SequenceMatcher similarity
-            similarity = difflib.SequenceMatcher(
-                None, text_variant, pattern_variant
-            ).ratio()
+        # 3. SequenceMatcher on the full strings
+        seq_sim = difflib.SequenceMatcher(None, norm_text, norm_wake).ratio()
 
-            # 3. Edit distance matching (for short text)
-            if len(pattern_variant) <= 10:
-                edit_distance = self._levenshtein_distance(
-                    text_variant, pattern_variant
-                )
-                max_allowed_distance = min(
-                    self.max_edit_distance, len(pattern_variant) // 2
-                )
-                if edit_distance <= max_allowed_distance:
-                    edit_similarity = 1.0 - (edit_distance / len(pattern_variant))
-                    similarity = max(similarity, edit_similarity)
+        # 4. Word-level matching for multi-word wake words
+        if len(wake_words) > 1:
+            matched = sum(1 for w in wake_words if w in text_words)
+            word_sim = matched / len(wake_words)
+            seq_sim = max(seq_sim, word_sim)
 
-            # 4. Subsequence matching (for initials)
-            if variant_type == "initials" and len(pattern_variant) >= 2:
-                if self._is_subsequence(pattern_variant, text_variant):
-                    similarity = max(similarity, 0.80)
+        # 5. Sliding window over text for partial matches
+        if len(norm_text) > len(norm_wake):
+            window_size = len(norm_wake)
+            best_window = 0.0
+            for i in range(len(norm_text) - window_size + 1):
+                window = norm_text[i:i + window_size]
+                window_sim = difflib.SequenceMatcher(None, window, norm_wake).ratio()
+                best_window = max(best_window, window_sim)
+            seq_sim = max(seq_sim, best_window)
 
-            if similarity > max_similarity:
-                max_similarity = similarity
-                best_match_type = variant_type
+        # 6. Edit distance for short wake words
+        if len(norm_wake) <= 15:
+            edit_dist = self._levenshtein_distance(norm_text, norm_wake)
+            max_allowed = min(self.max_edit_distance, len(norm_wake) // 3)
+            if edit_dist <= max_allowed:
+                edit_sim = 1.0 - (edit_dist / max(len(norm_wake), 1))
+                seq_sim = max(seq_sim, edit_sim)
 
-        return max_similarity, best_match_type
+        return seq_sim
 
-    def _levenshtein_distance(self, s1, s2):
-        """
-        Calculate the Levenshtein distance.
-        """
+    @staticmethod
+    def _words_in_order(pattern_words, text_words):
+        """Check if all pattern words appear in text_words in order."""
+        idx = 0
+        for tw in text_words:
+            if idx < len(pattern_words) and tw == pattern_words[idx]:
+                idx += 1
+        return idx == len(pattern_words)
+
+    @staticmethod
+    def _levenshtein_distance(s1, s2):
+        """Calculate the Levenshtein distance."""
         if len(s1) < len(s2):
-            return self._levenshtein_distance(s2, s1)
+            return WakeWordDetector._levenshtein_distance(s2, s1)
 
         if len(s2) == 0:
             return len(s1)
@@ -260,26 +221,12 @@ class WakeWordDetector:
 
         return previous_row[-1]
 
-    def _is_subsequence(self, pattern, text):
-        """
-        Check if pattern is a subsequence of text.
-        """
-        i = 0
-        for char in text:
-            if i < len(pattern) and char == pattern[i]:
-                i += 1
-        return i == len(pattern)
-
     def on_detected(self, callback: Callable):
-        """
-        Set the callback function for when a wake word is detected.
-        """
+        """Set the callback function for when a wake word is detected."""
         self.on_detected_callback = callback
 
     async def start(self, audio_codec) -> bool:
-        """
-        Start the wake word detector.
-        """
+        """Start the wake word detector."""
         if not self.enabled:
             logger.warning("Wake word function is not enabled")
             return False
@@ -289,20 +236,17 @@ class WakeWordDetector:
             self.is_running_flag = True
             self.paused = False
 
-            # Start detection task
             self.detection_task = asyncio.create_task(self._detection_loop())
 
-            logger.info("Asynchronous wake word detector started successfully")
+            logger.info("Wake word detector started successfully")
             return True
         except Exception as e:
-            logger.error(f"Failed to start asynchronous wake word detector: {e}")
+            logger.error(f"Failed to start wake word detector: {e}")
             self.enabled = False
             return False
 
     async def _detection_loop(self):
-        """
-        Detection loop.
-        """
+        """Detection loop."""
         error_count = 0
         MAX_ERRORS = 5
 
@@ -316,10 +260,7 @@ class WakeWordDetector:
                     await asyncio.sleep(0.5)
                     continue
 
-                # Get data from the audio codec and process it
                 await self._process_audio()
-
-                # Short delay to avoid excessive CPU usage
                 await asyncio.sleep(0.02)
                 error_count = 0
 
@@ -341,55 +282,45 @@ class WakeWordDetector:
                     logger.critical("Maximum number of errors reached, stopping detection")
                     break
 
-                await asyncio.sleep(1)  # Delay before retrying after an error
+                await asyncio.sleep(1)
 
     async def _process_audio(self):
-        """
-        Process audio data - using the old full processing logic.
-        """
+        """Process audio data."""
         try:
-            # Use the public interface of AudioCodec to get audio data
             if not self.audio_codec:
                 return
 
-            # Get raw audio data for wake word detection
             data = await self.audio_codec.get_raw_audio_for_detection()
             if not data:
                 return
 
-            # Process audio data
             await self._process_audio_data(data)
 
         except Exception as e:
             logger.debug(f"Audio processing error: {e}")
 
     async def _process_audio_data(self, data):
-        """
-        Asynchronously process audio data.
-        """
+        """Process audio data for wake word detection."""
         try:
-            # Process full recognition result
             if self.recognizer.AcceptWaveform(data):
                 result = json.loads(self.recognizer.Result())
                 if text := result.get("text", "").strip():
-                    # Filter out text that is too short to reduce false positives
-                    if len(text) >= 3:
+                    if len(text) >= 2:
                         await self._check_wake_word_text(text)
 
-            # Process partial recognition result (at a lower frequency)
+            # Check partial results periodically
             if hasattr(self, "_partial_check_counter"):
                 self._partial_check_counter += 1
             else:
                 self._partial_check_counter = 0
 
-            # Check partial result only every 3 times
             if self._partial_check_counter % 3 == 0:
                 partial = (
                     json.loads(self.recognizer.PartialResult())
                     .get("partial", "")
                     .strip()
                 )
-                if partial and len(partial) >= 3:
+                if partial and len(partial) >= 2:
                     await self._check_wake_word_text(partial)
 
         except json.JSONDecodeError as e:
@@ -398,9 +329,7 @@ class WakeWordDetector:
             logger.error(f"Audio data processing error: {e}")
 
     async def _check_wake_word_text(self, text):
-        """
-        Check for wake words in the text.
-        """
+        """Check for wake words in the recognized text."""
         if not text or not text.strip():
             return
 
@@ -413,46 +342,33 @@ class WakeWordDetector:
         if text in self._recent_texts:
             return
 
-        # Update recent text cache
         self._recent_texts.append(text)
         if len(self._recent_texts) > self._max_recent_cache:
             self._recent_texts.pop(0)
 
-        # Get pinyin variants of the text
-        text_variants = self._get_text_pinyin_variants(text)
-        if not text_variants or not any(text_variants.values()):
-            return
-
         best_match = None
         best_similarity = 0.0
-        best_match_info = None
 
-        # Check each wake word pattern
-        for wake_word, pattern in self.wake_word_patterns.items():
-            similarity, match_type = self._calculate_similarity(text_variants, pattern)
+        for wake_word in self.wake_words:
+            similarity = self._calculate_similarity(text, wake_word)
 
             if similarity > best_similarity and similarity >= self.similarity_threshold:
                 best_similarity = similarity
                 best_match = wake_word
-                best_match_info = match_type
 
-        # Trigger detection
         if best_match:
             self.last_detection_time = current_time
             logger.info(
                 f"Detected wake word '{best_match}' "
-                f"(Similarity: {best_similarity:.3f}, Match type: {best_match_info})"
+                f"(similarity: {best_similarity:.3f}, text: '{text}')"
             )
 
             await self._trigger_callbacks(best_match, text)
             self.recognizer.Reset()
-            # Clear cache to avoid repeated triggers
             self._recent_texts.clear()
 
     async def _trigger_callbacks(self, wake_word, text):
-        """
-        Trigger callback functions.
-        """
+        """Trigger callback functions."""
         if self.on_detected_callback:
             try:
                 if asyncio.iscoroutinefunction(self.on_detected_callback):
@@ -462,12 +378,8 @@ class WakeWordDetector:
             except Exception as e:
                 logger.error(f"Wake word callback execution failed: {e}")
 
-
-
     async def stop(self):
-        """
-        Stop the detector.
-        """
+        """Stop the detector."""
         self.is_running_flag = False
 
         if self.detection_task:
@@ -480,82 +392,62 @@ class WakeWordDetector:
         logger.info("Wake word detector stopped")
 
     async def pause(self):
-        """
-        Pause detection.
-        """
+        """Pause detection."""
         self.paused = True
 
     async def resume(self):
-        """
-        Resume detection.
-        """
+        """Resume detection."""
         self.paused = False
 
     def is_running(self) -> bool:
-        """
-        Check if it is running.
-        """
+        """Check if it is running."""
         return self.is_running_flag and not self.paused
 
     def _validate_config(self):
-        """
-        Validate configuration parameters.
-        """
+        """Validate configuration parameters."""
         if not self.enabled:
             return
 
-        # Validate similarity threshold
         if not 0.1 <= self.similarity_threshold <= 1.0:
             logger.warning(
-                f"Similarity threshold {self.similarity_threshold} is out of reasonable range, resetting to 0.85"
+                f"Similarity threshold {self.similarity_threshold} out of range, resetting to 0.80"
             )
-            self.similarity_threshold = 0.85
+            self.similarity_threshold = 0.80
 
-        # Validate edit distance
         if self.max_edit_distance < 0 or self.max_edit_distance > 5:
             logger.warning(
-                f"Max edit distance {self.max_edit_distance} is out of reasonable range, resetting to 1"
+                f"Max edit distance {self.max_edit_distance} out of range, resetting to 2"
             )
-            self.max_edit_distance = 1
+            self.max_edit_distance = 2
 
-        # Validate wake words
         if not self.wake_words:
             logger.error("No wake words configured")
             self.enabled = False
             return
 
-        # Check wake word length
         for word in self.wake_words:
             if len(word) < 2:
                 logger.warning(f"Wake word '{word}' is too short, may cause false positives")
-            elif len(word) > 10:
+            elif len(word) > 30:
                 logger.warning(f"Wake word '{word}' is too long, may affect recognition accuracy")
 
         logger.info(
-            f"Configuration validation complete - Threshold: {self.similarity_threshold}, Edit distance: {self.max_edit_distance}"
+            f"Config validated - Threshold: {self.similarity_threshold}, "
+            f"Edit distance: {self.max_edit_distance}, "
+            f"Wake words: {self.wake_words}"
         )
 
     def get_performance_stats(self):
-        """
-        Get performance statistics.
-        """
-        cache_info = self._get_text_pinyin_variants.cache_info()
+        """Get performance statistics."""
         return {
             "enabled": self.enabled,
             "wake_words_count": len(self.wake_words),
             "similarity_threshold": self.similarity_threshold,
             "max_edit_distance": self.max_edit_distance,
-            "cache_hits": cache_info.hits,
-            "cache_misses": cache_info.misses,
-            "cache_size": cache_info.currsize,
             "recent_texts_count": len(self._recent_texts),
         }
 
     def clear_cache(self):
-        """
-        Clear the cache.
-        """
-        self._get_text_pinyin_variants.cache_clear()
+        """Clear the cache."""
         self._recent_texts.clear()
         logger.info("Cache cleared")
-

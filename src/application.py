@@ -12,6 +12,7 @@ from src.protocols.mqtt_protocol import MqttProtocol
 from src.protocols.websocket_protocol import WebsocketProtocol
 from src.utils.common_utils import handle_verification_code
 from src.utils.config_manager import ConfigManager
+from src.utils.conversation_history import ConversationHistory
 from src.utils.logging_config import get_logger
 from src.utils.opus_loader import setup_opus
 
@@ -105,6 +106,9 @@ class Application:
 
         # Save the event loop of the main thread (set later in the run method)
         self._main_loop = None
+
+        # Conversation history for natural multi-turn dialogue
+        self.conversation = ConversationHistory.get_instance()
 
         # MCP server
         self.mcp_server = McpServer.get_instance()
@@ -703,8 +707,9 @@ class Application:
 
     def set_chat_message(self, role, message):
         """
-        Set a chat message.
+        Set a chat message and track in conversation history.
         """
+        self.conversation.add_message(role, message)
         self._update_display_async(self.display.update_text, message)
 
     def set_emotion(self, emotion):
@@ -830,12 +835,14 @@ class Application:
                 await self.audio_codec.wait_for_audio_complete()
                 logger.debug("TTS audio playback complete")
 
-            # Only wait for a short period for the buffer to stabilize if not interrupted
+            # Brief stabilization wait if not interrupted
             if not self.aborted:
-                await asyncio.sleep(0.2)  # Extra 200ms to ensure the tail end of the audio is played completely
+                await asyncio.sleep(0.05)
 
-            # State transition
-            if self.keep_listening:
+            # State transition - auto-continue listening if in conversation mode
+            # or if the assistant ended with a question
+            should_keep_listening = self.keep_listening or self.conversation.ended_with_question()
+            if should_keep_listening and self.protocol.is_audio_channel_opened():
                 await self.protocol.send_start_listening(ListeningMode.AUTO_STOP)
                 await self._set_device_state(DeviceState.LISTENING)
             else:

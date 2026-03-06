@@ -417,8 +417,8 @@ class AudioCodec:
         while not self._output_buffer.empty() and time.time() - start < timeout:
             await asyncio.sleep(0.05)
         
-        # Extra wait to ensure the last audio playback is complete
-        await asyncio.sleep(0.3)
+        # Brief wait for the last buffer to drain to the audio device
+        await asyncio.sleep(0.08)
         
         # Check for timeout
         if not self._output_buffer.empty():

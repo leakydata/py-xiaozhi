@@ -10,7 +10,7 @@ from src.protocols.protocol import Protocol
 from src.utils.config_manager import ConfigManager
 from src.utils.logging_config import get_logger
 
-ssl_context = ssl._create_unverified_context()
+ssl_context = ssl.create_default_context()
 
 logger = get_logger(__name__)
 
