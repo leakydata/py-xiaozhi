@@ -40,6 +40,9 @@ class AudioCodec:
         # Closing status flag
         self._is_closing = False
 
+        # Mute flag - when True, output callback produces silence immediately
+        self._output_muted = False
+
         # Audio stream objects
         self.input_stream = None
         self.output_stream = None
@@ -247,6 +250,11 @@ class AudioCodec:
         if status:
             if "underflow" not in str(status).lower():
                 logger.warning(f"Output stream status: {status}")
+
+        # Immediately output silence when muted (e.g. after interruption)
+        if self._output_muted:
+            outdata.fill(0)
+            return
 
         try:
             try:
