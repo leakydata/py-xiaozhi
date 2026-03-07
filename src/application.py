@@ -585,13 +585,20 @@ class Application:
     def _build_interruption_context(self):
         """
         Build start-listening context for interruption follow-up turns.
+        Includes what the assistant said before being interrupted so the
+        server/LLM can maintain conversational continuity.
         """
         if not self._pending_interruption_followup:
             return None
-        return {
+        context = {
             "interruption_followup": True,
             "interruption_reason": self._last_interrupt_reason,
         }
+        if self._current_response_sentences:
+            context["assistant_spoken_before_interrupt"] = " ".join(
+                self._current_response_sentences
+            )
+        return context
 
     async def _send_start_listening(self, mode):
         """
@@ -892,6 +899,7 @@ class Application:
         Handle the TTS start event.
         """
         logger.info(f"TTS started, current state: {self.device_state}")
+        self._current_response_sentences = []
 
         async with self._abort_lock:
             self.aborted = False
