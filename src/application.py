@@ -908,6 +908,10 @@ class Application:
         logger.info(f"TTS started, current state: {self.device_state}")
         self._current_response_sentences = []
 
+        # Reset audio diagnostics for this TTS session
+        if self.audio_codec:
+            self.audio_codec._reset_audio_diagnostics()
+
         async with self._abort_lock:
             self.aborted = False
             if self.vad_detector and not self.vad_detector.is_running():
@@ -926,6 +930,8 @@ class Application:
                 logger.debug("Waiting for TTS audio playback to complete...")
                 await self.audio_codec.wait_for_audio_complete()
                 logger.debug("TTS audio playback complete")
+                # Log final audio stats for this response
+                self.audio_codec._log_audio_diagnostics()
 
             # Brief stabilization wait if not interrupted
             if not self.aborted:

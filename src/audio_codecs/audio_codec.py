@@ -54,6 +54,14 @@ class AudioCodec:
         # Real-time encoding callback
         self._encoded_audio_callback = None
 
+        # Audio diagnostics
+        self._diag_underflow_count = 0
+        self._diag_frames_played = 0
+        self._diag_frames_received = 0
+        self._diag_last_report_time = 0
+        self._diag_decode_errors = 0
+        self._diag_enabled = True  # Set False to disable periodic stats
+
     async def initialize(self):
         """
         Initialize audio devices and codecs
@@ -260,6 +268,7 @@ class AudioCodec:
             try:
                 # Get audio data from the output buffer
                 audio_data = self._output_buffer.get_nowait()
+                self._diag_frames_played += 1
 
                 # Write audio data
                 if len(audio_data) >= frames:
@@ -271,6 +280,9 @@ class AudioCodec:
             except asyncio.QueueEmpty:
                 # Output silence when there is no data
                 outdata.fill(0)
+                # Only count as underflow if we're supposed to be playing
+                if self._diag_frames_received > self._diag_frames_played:
+                    self._diag_underflow_count += 1
 
         except Exception as e:
             logger.error(f"Output callback error: {e}")
@@ -409,11 +421,45 @@ class AudioCodec:
 
             # Put into playback buffer
             self._put_audio_data_safe(self._output_buffer, audio_array)
+            self._diag_frames_received += 1
+
+            # Periodic diagnostics (every 5 seconds during playback)
+            if self._diag_enabled:
+                now = time.time()
+                if now - self._diag_last_report_time >= 5.0:
+                    self._log_audio_diagnostics()
+                    self._diag_last_report_time = now
 
         except opuslib.OpusError as e:
+            self._diag_decode_errors += 1
             logger.warning(f"Opus decoding failed, dropping this frame: {e}")
         except Exception as e:
             logger.warning(f"Audio write failed, dropping this frame: {e}")
+
+    def _log_audio_diagnostics(self):
+        """Log audio pipeline health diagnostics."""
+        buf_level = self._output_buffer.qsize()
+        buf_max = self._output_buffer.maxsize
+        logger.info(
+            f"[Audio Stats] buffer: {buf_level}/{buf_max} | "
+            f"received: {self._diag_frames_received} | "
+            f"played: {self._diag_frames_played} | "
+            f"underflows: {self._diag_underflow_count} | "
+            f"decode_errors: {self._diag_decode_errors}"
+        )
+        if self._diag_underflow_count > 5:
+            logger.warning(
+                f"[Audio Health] High underflow count ({self._diag_underflow_count}) - "
+                f"possible network jitter or WiFi packet loss causing audio clips"
+            )
+
+    def _reset_audio_diagnostics(self):
+        """Reset diagnostic counters for a new TTS session."""
+        self._diag_underflow_count = 0
+        self._diag_frames_played = 0
+        self._diag_frames_received = 0
+        self._diag_decode_errors = 0
+        self._diag_last_report_time = time.time()
 
     async def wait_for_audio_complete(self, timeout=10.0):
         """
