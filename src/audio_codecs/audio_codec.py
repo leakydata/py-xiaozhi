@@ -439,6 +439,10 @@ class AudioCodec:
         """
         Clear the audio queues
         """
+        # Mute output immediately so the callback outputs silence
+        # while we drain the queues - this prevents any buffered audio from playing
+        self._output_muted = True
+
         cleared_count = 0
 
         # Clear all queues
@@ -460,8 +464,9 @@ class AudioCodec:
             cleared_count += len(self._resample_input_buffer)
             self._resample_input_buffer.clear()
 
-        # Wait for currently processing audio data to complete
+        # Brief wait then unmute - queues are now empty so no stale audio will play
         await asyncio.sleep(0.01)
+        self._output_muted = False
 
         if cleared_count > 0:
             logger.info(f"Cleared audio queues, discarded {cleared_count} frames of audio data")
