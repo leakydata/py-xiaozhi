@@ -295,10 +295,6 @@ class AudioCodec:
                 # Only count as underflow if we're supposed to be playing
                 if self._diag_frames_received > self._diag_frames_played:
                     self._diag_underflow_count += 1
-                    # If we underflowed, re-engage the jitter buffer to
-                    # accumulate frames again before resuming playback
-                    if self._diag_underflow_count > 0 and self._diag_frames_received > 0:
-                        self._jitter_buffering = True
 
         except Exception as e:
             logger.error(f"Output callback error: {e}")
