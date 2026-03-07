@@ -678,6 +678,12 @@ class Application:
         if self.audio_codec:
             await self.audio_codec.clear_audio_queue()
 
+        # Show interruption in chat
+        if reason == AbortReason.USER_INTERRUPTION:
+            self._update_display_async(
+                self.display.update_status, "Interrupted - listening..."
+            )
+
         try:
             intentional_interruption = reason in [
                 AbortReason.USER_INTERRUPTION,
@@ -692,6 +698,7 @@ class Application:
                     "intentional": intentional_interruption,
                     "timestamp_ms": int(time.time() * 1000),
                     "assistant_last_text": self.conversation.get_last_assistant_message(),
+                    "assistant_spoken_text": " ".join(self._current_response_sentences) if self._current_response_sentences else None,
                 },
             )
             await self._set_device_state(DeviceState.IDLE)
