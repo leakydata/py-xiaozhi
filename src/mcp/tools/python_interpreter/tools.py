@@ -26,8 +26,16 @@ MAX_EXECUTION_TIME = 10  # seconds
 MAX_OUTPUT_LENGTH = 10000  # characters
 
 
+ALLOWED_MODULES = {
+    "math", "json", "datetime", "re", "random",
+    "itertools", "functools", "collections", "statistics",
+    "string", "textwrap", "decimal", "fractions",
+}
+
+
 def _create_safe_globals():
     """Create a restricted globals dict for safe code execution."""
+    import builtins as _builtins
     import math
     import json
     import datetime
@@ -38,17 +46,14 @@ def _create_safe_globals():
     import collections
     import statistics
 
+    # Build safe builtins from the builtins module directly
     safe_builtins = {}
-    for name in dir(__builtins__) if isinstance(__builtins__, dict) else dir(__builtins__):
+    for name in dir(_builtins):
         if name not in BLOCKED_BUILTINS and not name.startswith("_"):
-            if isinstance(__builtins__, dict):
-                safe_builtins[name] = __builtins__[name]
-            else:
-                safe_builtins[name] = getattr(__builtins__, name)
+            safe_builtins[name] = getattr(_builtins, name)
 
-    # Add safe standard library modules
-    safe_globals = {
-        "__builtins__": safe_builtins,
+    # Pre-import allowed modules so they're available
+    allowed_module_objects = {
         "math": math,
         "json": json,
         "datetime": datetime,
@@ -59,6 +64,22 @@ def _create_safe_globals():
         "collections": collections,
         "statistics": statistics,
     }
+
+    # Provide a restricted __import__ that only allows safe modules
+    def _safe_import(name, *args, **kwargs):
+        if name in BLOCKED_MODULES:
+            raise ImportError(f"Module '{name}' is not allowed in sandboxed execution")
+        if name in allowed_module_objects:
+            return allowed_module_objects[name]
+        if name in ALLOWED_MODULES:
+            import importlib
+            return importlib.import_module(name)
+        raise ImportError(f"Module '{name}' is not available in sandboxed execution")
+
+    safe_builtins["__import__"] = _safe_import
+
+    safe_globals = {"__builtins__": safe_builtins}
+    safe_globals.update(allowed_module_objects)
 
     return safe_globals
 
