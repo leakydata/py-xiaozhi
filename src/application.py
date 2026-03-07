@@ -773,6 +773,11 @@ class Application:
         # Update IoT states
         await self._update_iot_states(True)
 
+    @staticmethod
+    def _sanitize_tts_text(text: str) -> str:
+        """Replace em/en dashes with plain hyphens to avoid TTS pauses."""
+        return text.replace("\u2014", "-").replace("\u2013", "-") if text else text
+
     async def _send_text_tts(self, text):
         """
         Send text for TTS.
@@ -780,12 +785,12 @@ class Application:
         if not self.protocol.is_audio_channel_opened():
             await self.protocol.open_audio_channel()
 
-        payload = text
-        if self._pending_interruption_followup and text:
+        payload = self._sanitize_tts_text(text)
+        if self._pending_interruption_followup and payload:
             payload = (
                 "[User intentionally interrupted the assistant's prior response. "
                 "Treat this as a follow-up and continue naturally.] "
-                f"{text}"
+                f"{payload}"
             )
             self._pending_interruption_followup = False
             self._last_interrupt_reason = AbortReason.NONE
@@ -890,7 +895,7 @@ class Application:
         elif state == "stop":
             await self._handle_tts_stop()
         elif state == "sentence_start":
-            text = data.get("text", "")
+            text = self._sanitize_tts_text(data.get("text", ""))
             if text:
                 logger.info(f"<< {text}")
                 self._current_response_sentences.append(text)
