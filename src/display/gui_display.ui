@@ -161,6 +161,42 @@ QPushButton:hover {
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="interrupt_btn">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string>
+QPushButton {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 14px;
+    padding: 4px 12px;
+    color: #555555;
+    font-size: 11px;
+}
+QPushButton:hover {
+    background-color: #e8e8e8;
+}
+QPushButton:checked {
+    background-color: #4CAF50;
+    color: white;
+    border: 1px solid #388E3C;
+}
+         </string>
+        </property>
+        <property name="text">
+         <string>Interrupt</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="away_btn">
         <property name="maximumSize">
          <size>

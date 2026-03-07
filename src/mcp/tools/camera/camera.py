@@ -20,7 +20,7 @@ class Camera:
 
         # Read camera parameters from configuration
         config = ConfigManager.get_instance()
-        self.camera_index = config.get_config("CAMERA.camera_index", 0)
+        self.camera_index = config.get_config("CAMERA.camera_index", 2)
         self.frame_width = config.get_config("CAMERA.frame_width", 640)
         self.frame_height = config.get_config("CAMERA.frame_height", 480)
 

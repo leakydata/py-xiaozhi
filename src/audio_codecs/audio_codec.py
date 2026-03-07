@@ -54,6 +54,13 @@ class AudioCodec:
         # Real-time encoding callback
         self._encoded_audio_callback = None
 
+        # Jitter buffer: accumulate frames before starting playback to absorb
+        # network jitter.  While buffering, the output callback sees an empty
+        # queue and outputs silence; once the threshold is reached we let
+        # frames flow through normally.
+        self._jitter_buffering = False  # True while we are pre-buffering
+        self._jitter_threshold = 5     # Frames to accumulate before playback starts (~100ms @ 20ms/frame)
+
         # Audio diagnostics
         self._diag_underflow_count = 0
         self._diag_frames_played = 0
@@ -264,6 +271,11 @@ class AudioCodec:
             outdata.fill(0)
             return
 
+        # Jitter buffer: hold back playback until we have enough frames queued
+        if self._jitter_buffering:
+            outdata.fill(0)
+            return
+
         try:
             try:
                 # Get audio data from the output buffer
@@ -283,6 +295,10 @@ class AudioCodec:
                 # Only count as underflow if we're supposed to be playing
                 if self._diag_frames_received > self._diag_frames_played:
                     self._diag_underflow_count += 1
+                    # If we underflowed, re-engage the jitter buffer to
+                    # accumulate frames again before resuming playback
+                    if self._diag_underflow_count > 0 and self._diag_frames_received > 0:
+                        self._jitter_buffering = True
 
         except Exception as e:
             logger.error(f"Output callback error: {e}")
@@ -423,6 +439,13 @@ class AudioCodec:
             self._put_audio_data_safe(self._output_buffer, audio_array)
             self._diag_frames_received += 1
 
+            # Release jitter buffer once we've accumulated enough frames
+            if self._jitter_buffering and self._output_buffer.qsize() >= self._jitter_threshold:
+                self._jitter_buffering = False
+                logger.debug(
+                    f"Jitter buffer released, queued {self._output_buffer.qsize()} frames"
+                )
+
             # Periodic diagnostics (every 5 seconds during playback)
             if self._diag_enabled:
                 now = time.time()
@@ -440,8 +463,10 @@ class AudioCodec:
         """Log audio pipeline health diagnostics."""
         buf_level = self._output_buffer.qsize()
         buf_max = self._output_buffer.maxsize
+        jitter_status = "buffering" if self._jitter_buffering else "playing"
         logger.info(
             f"[Audio Stats] buffer: {buf_level}/{buf_max} | "
+            f"jitter: {jitter_status} | "
             f"received: {self._diag_frames_received} | "
             f"played: {self._diag_frames_played} | "
             f"underflows: {self._diag_underflow_count} | "
@@ -450,7 +475,8 @@ class AudioCodec:
         if self._diag_underflow_count > 5:
             logger.warning(
                 f"[Audio Health] High underflow count ({self._diag_underflow_count}) - "
-                f"possible network jitter or WiFi packet loss causing audio clips"
+                f"possible network jitter or WiFi packet loss causing audio gaps. "
+                f"Jitter buffer will re-engage automatically on underflow."
             )
 
     def _reset_audio_diagnostics(self):
@@ -460,6 +486,8 @@ class AudioCodec:
         self._diag_frames_received = 0
         self._diag_decode_errors = 0
         self._diag_last_report_time = time.time()
+        # Engage jitter buffer for the new TTS response
+        self._jitter_buffering = True
 
     async def wait_for_audio_complete(self, timeout=10.0):
         """
@@ -513,6 +541,7 @@ class AudioCodec:
         # Brief wait then unmute - queues are now empty so no stale audio will play
         await asyncio.sleep(0.01)
         self._output_muted = False
+        self._jitter_buffering = False
 
         if cleared_count > 0:
             logger.info(f"Cleared audio queues, discarded {cleared_count} frames of audio data")

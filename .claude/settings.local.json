@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m py_compile src/audio_codecs/audio_codec.py)",
+      "Bash(python -m py_compile src/application.py)",
+      "Bash(python -m py_compile src/display/gui_display.py)",
+      "Bash(python -m py_compile src/display/cli_display.py)",
+      "Bash(python -m py_compile src/display/base_display.py)"
+    ]
+  }
+}

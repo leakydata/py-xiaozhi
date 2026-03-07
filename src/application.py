@@ -432,6 +432,7 @@ class Application:
                 ),
                 send_text_callback=self._send_text_tts,
                 away_callback=self._create_async_callback(self.toggle_away),
+                interrupt_toggle_callback=self._on_interrupt_toggled,
             )
         )
 
@@ -1169,6 +1170,45 @@ class Application:
     async def toggle_away(self):
         """Toggle away/receptionist mode."""
         self.presence.toggle_away()
+
+    def _on_interrupt_toggled(self, enabled: bool):
+        """Handle interrupt toggle button - enable/disable VAD barge-in at runtime."""
+        logger.info(f"Voice interruption (barge-in) {'enabled' if enabled else 'disabled'}")
+        if self.vad_detector:
+            self.vad_detector.enable_barge_in = enabled
+            if enabled and not self.vad_detector.is_running():
+                import threading
+                threading.Thread(
+                    target=self.vad_detector.start, daemon=True
+                ).start()
+        else:
+            if enabled:
+                # VAD was never initialized - initialize it now
+                asyncio.create_task(self._initialize_vad_detector_for_barge_in())
+
+    async def _initialize_vad_detector_for_barge_in(self):
+        """Initialize VAD detector specifically for barge-in when toggled on."""
+        if not self.audio_codec:
+            logger.warning("Cannot enable barge-in: audio codec not available")
+            return
+        try:
+            from src.audio_processing.vad_detector import VADDetector
+            self.vad_detector = VADDetector(
+                audio_codec=self.audio_codec,
+                protocol=self.protocol,
+                app_instance=self,
+                loop=self._main_loop,
+            )
+            self.vad_detector.enable_barge_in = True
+            started = await asyncio.to_thread(self.vad_detector.start)
+            if started:
+                logger.info("VAD detector initialized for barge-in")
+            else:
+                logger.warning("VAD detector failed to start for barge-in")
+                self.vad_detector = None
+        except Exception as e:
+            logger.error(f"Failed to initialize VAD detector for barge-in: {e}")
+            self.vad_detector = None
 
     def _on_mode_changed(self):
         """

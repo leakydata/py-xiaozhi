@@ -157,6 +157,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.abort_callback = None
         self.send_text_callback = None
         self.away_callback = None
+        self.interrupt_toggle_callback = None
 
         # Away mode state
         self._is_away = False
@@ -173,6 +174,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         abort_callback: Optional[Callable] = None,
         send_text_callback: Optional[Callable] = None,
         away_callback: Optional[Callable] = None,
+        interrupt_toggle_callback: Optional[Callable] = None,
     ):
         """Set callback functions."""
         self.button_press_callback = press_callback
@@ -182,6 +184,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.abort_callback = abort_callback
         self.send_text_callback = send_text_callback
         self.away_callback = away_callback
+        self.interrupt_toggle_callback = interrupt_toggle_callback
 
     def _add_chat_bubble(self, text: str, role: str = "assistant"):
         """Add a chat bubble to the chat area."""
@@ -235,6 +238,13 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         """Handle abort button click event."""
         if self.abort_callback:
             self.abort_callback()
+
+    def _on_interrupt_button_click(self):
+        """Toggle voice interruption (barge-in) capability."""
+        if self.interrupt_btn:
+            enabled = self.interrupt_btn.isChecked()
+            if self.interrupt_toggle_callback:
+                self.interrupt_toggle_callback(enabled)
 
     def _on_away_button_click(self):
         """Toggle away/receptionist mode."""
@@ -480,6 +490,7 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
         self.text_input = self.root.findChild(QLineEdit, "text_input")
         self.send_btn = self.root.findChild(QPushButton, "send_btn")
         self.away_btn = self.root.findChild(QPushButton, "away_btn")
+        self.interrupt_btn = self.root.findChild(QPushButton, "interrupt_btn")
 
         # Chat area
         self.chat_scroll_area = self.root.findChild(QScrollArea, "chat_scroll_area")
@@ -503,6 +514,8 @@ class GuiDisplay(BaseDisplay, QObject, metaclass=CombinedMeta):
             self.mode_btn.clicked.connect(self._on_mode_button_click)
         if self.away_btn:
             self.away_btn.clicked.connect(self._on_away_button_click)
+        if self.interrupt_btn:
+            self.interrupt_btn.clicked.connect(self._on_interrupt_button_click)
         if self.text_input and self.send_btn:
             self.send_btn.clicked.connect(self._on_send_button_click)
             self.text_input.returnPressed.connect(self._on_send_button_click)

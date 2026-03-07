@@ -21,6 +21,8 @@ class BaseDisplay(ABC):
         auto_callback: Optional[Callable] = None,
         abort_callback: Optional[Callable] = None,
         send_text_callback: Optional[Callable] = None,
+        away_callback: Optional[Callable] = None,
+        interrupt_toggle_callback: Optional[Callable] = None,
     ):
         """
         Set callback functions.
