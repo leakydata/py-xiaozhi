@@ -471,8 +471,8 @@ class AudioCodec:
         if self._diag_underflow_count > 5:
             logger.warning(
                 f"[Audio Health] High underflow count ({self._diag_underflow_count}) - "
-                f"possible network jitter or WiFi packet loss causing audio gaps. "
-                f"Jitter buffer will re-engage automatically on underflow."
+                f"possible network jitter, WiFi packet loss, or server TTS pausing on "
+                f"special characters (e.g. em dash) causing audio gaps"
             )
 
     def _reset_audio_diagnostics(self):
