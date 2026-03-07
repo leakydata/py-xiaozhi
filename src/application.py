@@ -93,6 +93,7 @@ class Application:
         self.aborted = False
         self._pending_interruption_followup = False
         self._last_interrupt_reason = AbortReason.NONE
+        self._current_response_sentences = []  # Track sentences in current TTS response
 
         # Asynchronous components
         self.audio_codec = None
@@ -877,6 +878,7 @@ class Application:
             text = data.get("text", "")
             if text:
                 logger.info(f"<< {text}")
+                self._current_response_sentences.append(text)
                 self.set_chat_message("assistant", text)
 
                 import re
